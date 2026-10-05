@@ -3260,7 +3260,7 @@ class Component extends DCLogic {
   pilihWs(id, tujuan) {
     try { localStorage.setItem(this.WSKEY, id); } catch (e) {}
     this._dirty = false; this._draftDb = null;
-    this.setState({ wsId: id, role: tujuan || 'login', userId: null, panel: null, adminSessionId: null, draftPending: false }, () => { if (this.api()) this.apiGet(true).catch(() => {}); });
+    this.setState({ wsId: id, loginGlobal: false, role: tujuan || 'login', userId: null, panel: null, adminSessionId: null, draftPending: false }, () => { if (this.api()) this.apiGet(true).catch(() => {}); });
   }
   /* ── Alamat laman (hash routing) — bisa dibagikan & dibuka langsung ── */
   slugify(t) {
@@ -3275,7 +3275,7 @@ class Component extends DCLogic {
     if (st.role === 'verif' && m) return '#/workshop/' + this.slugWs(m) + '/sertifikat/' + encodeURIComponent(st.verifKode || '');
     if (st.role === 'lembaga') return '#/daftarkan-lembaga';
     if (st.role === 'register' && m) return '#/workshop/' + this.slugWs(m) + '/daftar';
-    if (st.role === 'login') return m ? '#/workshop/' + this.slugWs(m) + '/masuk' : '#/masuk';
+    if (st.role === 'login') return m && !st.loginGlobal ? '#/workshop/' + this.slugWs(m) + '/masuk' : '#/masuk';
     if (st.role === 'adminLogin') return '#/panitia';
     if (st.role === 'pickWs') return 'ROOT';
     if (st.role === 'peserta') return '#/peserta';
@@ -3311,7 +3311,7 @@ class Component extends DCLogic {
       this.setState({ wsId: m.id, role: 'verif', verifKode: decodeURIComponent(vf[2]) }, () => { if (this.api()) this.apiGet(true).catch(() => {}); });
       return;
     }
-    if (h === 'masuk') return this.setState({ role: 'login' });
+    if (h === 'masuk') return this.setState({ wsId: '', loginGlobal: true, role: 'login', loginError: '' });
     /* Alamat dasbor hanya berlaku bila sesi masih tersimpan; selain itu ke halaman masuk. */
     if (h === 'peserta' || h === 'admin' || h === 'super') {
       if (this.state.role === h) return;
@@ -4439,8 +4439,8 @@ class Component extends DCLogic {
       },
       /* Server lama tidak mengirim daftar workshop: platform berjalan satu workshop,
          etalase dilewati sepenuhnya agar berkas ini tetap bisa dipasang di sana. */
-      isLogin: st.role === 'login' && (!!st.wsId || st.soloMode),
-      isPickWs: !st.soloMode && (st.role === 'pickWs' || (st.role === 'login' && !st.wsId)),
+      isLogin: st.role === 'login' && (!!st.wsId || st.soloMode || !!st.loginGlobal),
+      isPickWs: !st.soloMode && (st.role === 'pickWs' || (st.role === 'login' && !st.wsId && !st.loginGlobal)),
       isRegister: st.role === 'register', isProfil: st.role === 'profil', isLembaga: st.role === 'lembaga', isVerif: st.role === 'verif',
       isPeserta: st.role === 'peserta', isProjector: st.role === 'projector', isSuperDash: st.role === 'super',
       goSuper: () => { this.setState({ role: 'super' }); this.muatPlatform(); },
@@ -4519,9 +4519,19 @@ class Component extends DCLogic {
       v.sessionMeta = [{ label: 'Status', value: 'Panitia sedang menyiapkan sesi selanjutnya.' }];
     }
 
-    const tryLogin = () => {
+    const tryLogin = async () => {
       const code = st.formCode.trim().toUpperCase();
       if (!code) return this.setState({ loginError: 'Masukkan kode peserta Anda.' });
+      if (st.loginGlobal && this.api()) {
+        this.setState({ loginError: '' });
+        const out = await this.apiPost({ action: 'findCode', code });
+        if (!out || !out.ok) return this.setState({ loginError: (out && out.error) || 'Kode peserta tidak dikenali.' });
+        try { localStorage.setItem(this.WSKEY, out.data.ws); } catch (e) {}
+        this.remember({ role: 'peserta', userId: out.data.id });
+        this._ulang = {}; this._autoSent = null; this._tries = {};
+        this.setState({ wsId: out.data.ws, loginGlobal: false, role: 'peserta', userId: out.data.id, panel: null, loginError: '', draft: {}, formDraft: {}, formError: '', formSent: false }, () => this.apiGet(true).catch(() => {}));
+        return;
+      }
       const hits = db.participants.filter(x => String(x.code).trim().toUpperCase() === code);
       if (!hits.length) return this.setState({ loginError: 'Kode peserta tidak dikenali. Periksa kembali atau tanyakan ke panitia.' });
       if (hits.length > 1) return this.setState({ loginError: 'Kode ini terdaftar lebih dari sekali. Hubungi panitia.' });
@@ -4868,9 +4878,8 @@ class Component extends DCLogic {
     v.etalaseCount = terbit.length;
     v.etalaseMasuk = () => this.setState({ role: 'adminLogin', adminError: '' });
     v.etalaseMasukPeserta = () => {
-      const pilih = terbit.filter(m => m.unggulan)[0] || terbit[0];
-      if (pilih) this.pilihWs(pilih.id, 'login');
-      else this.setState({ role: 'login', loginError: '' });
+      /* Masuk umum: event ditemukan dari kodenya, bukan dipilih lebih dulu. */
+      this.setState({ wsId: '', loginGlobal: true, role: 'login', loginError: '', formCode: '' });
     };
     v.bukaFormLembaga = () => this.setState({ role: 'lembaga', lembagaErr: '', lembagaOk: false });
     const gulir = id => () => {
