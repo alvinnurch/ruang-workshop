@@ -3246,13 +3246,18 @@ class Component extends DCLogic {
     if (st.role === 'register' && m) return '#/workshop/' + this.slugWs(m) + '/daftar';
     if (st.role === 'login') return m ? '#/workshop/' + this.slugWs(m) + '/masuk' : '#/masuk';
     if (st.role === 'adminLogin') return '#/panitia';
-    if (st.role === 'pickWs') return '#/';
+    if (st.role === 'pickWs') return 'ROOT';
+    if (st.role === 'peserta') return '#/peserta';
+    if (st.role === 'admin') return '#/admin';
+    if (st.role === 'super') return '#/super';
     return '';
   }
   pasangRute() {
     if (this._rutePending) return;
     const r = this.rute();
     if (!r || typeof location === 'undefined') return;
+    /* Beranda = alamat bersih, tanpa #/ di belakang domain. */
+    if (r === 'ROOT') { this._rute = ''; if (typeof history !== 'undefined' && location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
     if (location.hash !== r) { this._rute = r; history.replaceState(null, '', r); }
   }
   bacaRute(hash) {
@@ -3276,6 +3281,14 @@ class Component extends DCLogic {
       return;
     }
     if (h === 'masuk') return this.setState({ role: 'login' });
+    /* Alamat dasbor hanya berlaku bila sesi masih tersimpan; selain itu ke halaman masuk. */
+    if (h === 'peserta' || h === 'admin' || h === 'super') {
+      if (this.state.role === h) return;
+      let sesi = null;
+      try { sesi = JSON.parse(localStorage.getItem(this.SESSKEY) || 'null'); } catch (e) {}
+      if (h === 'peserta') return this.setState({ role: sesi && sesi.role === 'peserta' && sesi.userId ? 'peserta' : 'login' });
+      return this.setState({ role: sesi && sesi.role === 'admin' && sesi.pw ? (sesi.superadmin ? 'super' : 'admin') : 'adminLogin' });
+    }
     const bagian = h.split('/');
     if (bagian[0] !== 'workshop' || !bagian[1]) return;
     const m = (this.state.wsMeta || []).filter(x => this.slugWs(x) === bagian[1])[0];
@@ -3592,7 +3605,7 @@ class Component extends DCLogic {
     if (out && typeof out.zoom === 'boolean' && out.zoom !== this.state.zoomOn) this.setState({ zoomOn: out.zoom });
     if (out && typeof out.mail === 'boolean' && out.mail !== this.state.mailOn) this.setState({ mailOn: out.mail });
     if (out && typeof out.fee !== 'undefined') this.setState({ fee: Number(out.fee) || 0 });
-    if (out && out.ok && out.data && out.data.sessions && !out.meta && !this.state.soloMode) this.setState({ soloMode: true });
+    if (out && out.ok && out.data && out.data.sessions && !out.meta && !this.state.soloMode) this.setState({ soloMode: true, role: this.state.role === 'pickWs' ? 'login' : this.state.role });
     if (out && out.meta) {
       /* Pilihan workshop hanya boleh datang dari pengguna (pilihWs) atau localStorage —
          jangan pernah ditetapkan oleh jawaban server, agar laman platform tidak terlewat. */
@@ -3645,7 +3658,8 @@ class Component extends DCLogic {
     if (typeof window !== 'undefined') {
       this._onHash = () => { if (location.hash !== this._rute) this.bacaRute(); };
       window.addEventListener('hashchange', this._onHash);
-      if (this._hashAwal) this.bacaRute(this._hashAwal);
+      /* Domain saja (tanpa #/…) selalu membuka beranda, bukan workshop terakhir dibuka. */
+      this.bacaRute(this._hashAwal || '');
     }
     /* Mode demo: satu workshop lokal agar tab Workshop tetap bisa dicoba. */
     if (!this.api() && !(this.state.wsMeta || []).length) {
@@ -3665,9 +3679,11 @@ class Component extends DCLogic {
         }]
       }, () => { if (this._hashAwal) this.bacaRute(this._hashAwal); });
     }
-    const rutePublik = /^#\/(workshop|daftarkan-lembaga|masuk)/.test(this._hashAwal || '');
+    /* Sesi login dipulihkan hanya bila alamatnya alamat dasbor (#/admin, #/super, #/peserta).
+       Membuka domain saja selalu menampilkan beranda. */
+    const ruteDasbor = /^#\/(admin|super|peserta)\/?$/.test(this._hashAwal || '');
     try {
-      const sesi = rutePublik ? null : JSON.parse(localStorage.getItem(this.SESSKEY) || 'null');
+      const sesi = ruteDasbor ? JSON.parse(localStorage.getItem(this.SESSKEY) || 'null') : null;
       if (sesi && sesi.role === 'peserta' && sesi.userId) this.setState({ role: 'peserta', userId: sesi.userId });
       else if (sesi && sesi.role === 'admin' && sesi.pw) {
         this._pw = sesi.pw; this._user = sesi.user || '';
@@ -4812,7 +4828,7 @@ class Component extends DCLogic {
     /* Dari laman mana pun: pulang ke etalase, lalu turun ke katalog. */
     v.keKatalog = () => {
       try { localStorage.setItem(this.WSKEY, ''); } catch (e) {}
-      if (typeof location !== 'undefined') location.hash = '#/';
+      if (typeof location !== 'undefined') { this._rute = ''; if (typeof history !== 'undefined' && location.hash) history.replaceState(null, '', location.pathname + location.search); }
       this.setState({ wsId: '', role: 'pickWs', panel: null, loginError: '' }, () => setTimeout(gulir('katalog'), 120));
     };
     v.etalaseCara = gulir('cara');
@@ -5020,7 +5036,7 @@ class Component extends DCLogic {
     v.goBeranda = () => {
       if (st.soloMode) return this.setState({ role: st.role === 'admin' || st.role === 'super' ? st.role : 'login', panel: null });
       try { localStorage.setItem(this.WSKEY, ''); } catch (e) {}
-      if (typeof location !== 'undefined') location.hash = '#/';
+      if (typeof location !== 'undefined') { this._rute = ''; if (typeof history !== 'undefined' && location.hash) history.replaceState(null, '', location.pathname + location.search); }
       this.setState({ wsId: '', role: 'pickWs', panel: null, loginError: '', lembagaOk: false });
     };
     v.dividerStyle = logoMitra ? { width: '1px', height: '26px', background: '#E6DFD6', display: 'block' } : { display: 'none' };
