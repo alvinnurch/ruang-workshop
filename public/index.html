@@ -4859,7 +4859,13 @@ class Component extends DCLogic {
         kategori: this.jenisOf(m) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
         lokasi: lokasiOf(m), harga: this.hargaLabel(m.price),
-        coverStyle: { background: w.cover, color: '#FFF7EE', border: 'none', height: '112px', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', cursor: 'pointer', font: 'inherit', width: '100%' },
+        /* Flyer (16:9) menjadi sampul kartu; tanpa flyer, warna format seperti biasa. */
+        coverStyle: Object.assign(
+          { color: '#FFF7EE', border: 'none', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', cursor: 'pointer', font: 'inherit', width: '100%' },
+          m.flyer
+            ? { aspectRatio: '16 / 9', height: 'auto', backgroundColor: '#3B3238', backgroundImage: 'linear-gradient(180deg,rgba(27,23,20,.55) 0%,rgba(27,23,20,0) 42%),url("' + m.flyer + '")', backgroundSize: 'cover', backgroundPosition: 'center', textShadow: '0 1px 6px rgba(0,0,0,.45)' }
+            : { background: w.cover, height: '112px' }
+        ),
         open: () => bukaProfil(m.id)
       };
     });
