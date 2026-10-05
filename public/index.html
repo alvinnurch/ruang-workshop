@@ -123,19 +123,17 @@
             <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(22px,3vw,32px);margin:0 0 8px;font-weight:700;color:#3B3238;letter-spacing:-.02em">Event yang Sedang Dibuka</h2>
             <p style="font-size:14px;color:#6B6168;margin:0;line-height:1.6">{{ katalogMeta }}</p>
           </div>
-          <input value="{{ cari }}" onChange="{{ onCari }}" placeholder="Cari judul atau lembaga" style="border:1px solid #EAD9C6;border-radius:100px;padding:13px 20px;font-size:14px;background:#FFF;outline:none;min-width:min(100%,250px)" style-focus="border-color:#B31F24" />
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1 1 420px;justify-content:flex-end">
+            <select value="{{ jenisPilih }}" onChange="{{ onJenisPilih }}" aria-label="Jenis event" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237A6F76' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
+              <sc-for list="{{ jenisFilters }}" as="f" hint-placeholder-count="5"><option value="{{ f.id }}">{{ f.label }}</option></sc-for>
+            </select>
+            <select value="{{ fmtPilih }}" onChange="{{ onFmtPilih }}" aria-label="Format" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237A6F76' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
+              <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4"><option value="{{ f.id }}">{{ f.label }}</option></sc-for>
+            </select>
+            <input value="{{ cari }}" onChange="{{ onCari }}" placeholder="Cari judul atau lembaga" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 20px;font-size:14px;background:#FFF;outline:none;flex:1 1 220px;min-width:min(100%,200px)" style-focus="border-color:#B31F24" />
+          </div>
         </div>
 
-        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">
-          <sc-for list="{{ jenisFilters }}" as="f" hint-placeholder-count="4">
-            <button onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.label }}</button>
-          </sc-for>
-        </div>
-        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:24px">
-          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
-            <button onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.label }}</button>
-          </sc-for>
-        </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,248px),1fr));gap:min(3vw,20px)">
           <sc-for list="{{ katalog }}" as="w" hint-placeholder-count="3">
@@ -194,10 +192,7 @@
         <button onClick="{{ bukaFormLembaga }}" style="background:#FFF7EE;color:#B31F24;border:none;border-radius:100px;padding:14px 24px;font-size:14px;font-weight:700;white-space:nowrap" style-hover="background:#FFF">Daftarkan Lembaga</button>
       </div>
 
-      <div style="max-width:1200px;margin:0 auto;padding:26px 8px 34px;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;font-size:12.5px;color:#7A6F76">
-        <span>ruang islami.co</span>
-        <span>Jelajahi · Cara Kerja · Kebijakan Privasi · Kontak</span>
-      </div>
+      <div style="height:min(6vw,44px)"></div>
     </div>
   </sc-if>
 
@@ -1585,6 +1580,26 @@
               </div>
             </div>
             <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:22px">
+              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Tautan footer</h3>
+              <p style="font-size:13px;color:#7A6F66;margin:0 0 14px;line-height:1.6;text-wrap:pretty">Tampil di strip putih paling bawah beranda. Isi alamat dengan URL (https://…), email (mailto:nama@domain), atau tautan dalam: <b>#katalog</b>, <b>#cara</b>, <b>#lembaga</b>.</p>
+              <div style="display:grid;gap:8px">
+                <sc-for list="{{ footerRows }}" as="f" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto auto auto;gap:7px;align-items:center">
+                    <input value="{{ f.label }}" onChange="{{ f.onLabel }}" placeholder="Label" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
+                    <input value="{{ f.url }}" onChange="{{ f.onUrl }}" placeholder="https://… atau #katalog" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
+                    <button onClick="{{ f.up }}" title="Naik" style="background:#FFF;border:1px solid #E0D8CE;border-radius:7px;width:32px;height:34px;color:#5C534B">↑</button>
+                    <button onClick="{{ f.down }}" title="Turun" style="background:#FFF;border:1px solid #E0D8CE;border-radius:7px;width:32px;height:34px;color:#5C534B">↓</button>
+                    <button onClick="{{ f.remove }}" title="Hapus" style="background:#FFF;border:1px solid #F0C9CC;border-radius:7px;width:32px;height:34px;color:#A5121C">×</button>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px">
+                <button onClick="{{ footerAdd }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">+ Tambah tautan</button>
+                <button onClick="{{ footerSave }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">Simpan</button>
+                <span style="font-size:12.5px;color:#7A6F66">{{ footerMsg }}</span>
+              </div>
+            </div>
+            <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:22px">
               <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Ilustrasi beranda</h3>
               <p style="font-size:13px;color:#7A6F66;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Gambar ini tampil di dalam lingkaran oranye pada beranda etalase — misalnya ilustrasi dua orang sedang membaca buku, dengan setengah badan terpotong oleh lingkaran. Pakai PNG berlatar transparan agar menyatu. Logo lembaga penyelenggara otomatis beredar mengitarinya.</p>
               <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
@@ -2932,8 +2947,15 @@
     </div>
   </sc-if>
 
-  <footer style="margin-top:auto;border-top:1px solid #E6DFD6;background:#FFF;padding:16px 22px;font-size:12px;color:#8C8078;display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap">
+  <footer style="margin-top:auto;border-top:1px solid #E6DFD6;background:#FFF;padding:14px 22px;font-size:12px;color:#8C8078;display:flex;gap:10px 18px;justify-content:space-between;align-items:center;flex-wrap:wrap">
     <span>@islamiinstitute {{ tahunKini }}</span>
+    <sc-if value="{{ isPickWs }}" hint-placeholder-val="{{ false }}">
+      <nav style="display:flex;gap:4px 20px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-left:auto">
+        <sc-for list="{{ footerLinks }}" as="l" hint-placeholder-count="4">
+          <button onClick="{{ l.go }}" style="background:none;border:none;padding:6px 0;font-size:13px;font-weight:600;color:#6B6168;cursor:pointer" style-hover="color:#B31F24">{{ l.label }}</button>
+        </sc-for>
+      </nav>
+    </sc-if>
 
   </footer>
 </div>
@@ -2961,6 +2983,11 @@ class Component extends DCLogic {
   }
   KINDS = { checkin: 'Check in', ppt: 'Bahan bacaan', video: 'Video', zoom: 'Tautan Zoom', countdown: 'Hitung mundur', icebreak: 'Ice breaking', quiz: 'Kuis', wordcloud: 'Word cloud', feedback: 'Umpan balik', form: 'Formulir' };
   SESSKEY = 'ws_sesi_v1';
+  FOOTER_BAWAAN = [
+    { label: 'Jelajahi', url: '#katalog' }, { label: 'Cara Kerja', url: '#cara' },
+    { label: 'Kebijakan Privasi', url: '' }, { label: 'Kontak', url: 'mailto:' }
+  ];
+  footerList() { const f = this.state.footer; return Array.isArray(f) ? f : this.FOOTER_BAWAAN; }
   FEE_STATUS = { belum: 'Belum disepakati', sepakat: 'Disepakati', ditagih: 'Sudah ditagih', lunas: 'Lunas' };
   TIKET_W = 1772; TIKET_H = 591;
   muatGambar(src) {
@@ -3609,6 +3636,7 @@ class Component extends DCLogic {
     if (out && typeof out.zoom === 'boolean' && out.zoom !== this.state.zoomOn) this.setState({ zoomOn: out.zoom });
     if (out && typeof out.mail === 'boolean' && out.mail !== this.state.mailOn) this.setState({ mailOn: out.mail });
     if (out && typeof out.fee !== 'undefined') this.setState({ fee: Number(out.fee) || 0 });
+    if (out && Array.isArray(out.footer) && !this.state.footerEdit) this.setState({ footer: out.footer });
     if (out && out.ok && out.data && out.data.sessions && !out.meta && !this.state.soloMode) this.setState({ soloMode: true, role: this.state.role === 'pickWs' ? 'login' : this.state.role });
     if (out && out.meta) {
       /* Pilihan workshop hanya boleh datang dari pengguna (pilihWs) atau localStorage —
@@ -4723,6 +4751,27 @@ class Component extends DCLogic {
         };
       });
     }
+    {
+      const daftar = this.footerList();
+      const ganti = fn => { const baru = JSON.parse(JSON.stringify(daftar)); fn(baru); this.setState({ footer: baru, footerEdit: true, footerMsg: 'Belum disimpan.' }); };
+      v.footerMsg = st.footerMsg || '';
+      v.footerRows = daftar.map((l, i) => ({
+        label: l.label, url: l.url,
+        onLabel: e => { const t = e.target.value; ganti(x => { x[i].label = t; }); },
+        onUrl: e => { const t = e.target.value; ganti(x => { x[i].url = t; }); },
+        up: () => { if (i > 0) ganti(x => { const [a] = x.splice(i, 1); x.splice(i - 1, 0, a); }); },
+        down: () => { if (i < daftar.length - 1) ganti(x => { const [a] = x.splice(i, 1); x.splice(i + 1, 0, a); }); },
+        remove: () => ganti(x => { x.splice(i, 1); })
+      }));
+      v.footerAdd = () => ganti(x => { x.push({ label: 'Tautan baru', url: '' }); });
+      v.footerSave = async () => {
+        this.setState({ footerMsg: 'Menyimpan…' });
+        if (!this.api()) return this.setState({ footerEdit: false, footerMsg: 'Tersimpan di pratinjau.' });
+        const out = await this.apiPost({ action: 'putFooter', password: this._pw || '', user: this._user || '', links: this.footerList() });
+        if (out && out.ok) this.setState({ footer: out.data.footer, footerEdit: false, footerMsg: 'Tersimpan.' });
+        else this.setState({ footerMsg: (out && out.error) || 'Gagal menyimpan.' });
+      };
+    }
     v.heroPreviewStyle = st.heroImg
       ? { width: '150px', height: '150px', borderRadius: '50%', border: '1px solid #E0D8CE', backgroundImage: 'url("' + st.heroImg + '")', backgroundSize: 'cover', backgroundPosition: 'center top', flex: 'none' }
       : { width: '150px', height: '150px', borderRadius: '50%', border: '1px dashed #DCD3C8', background: '#FAF6F0', flex: 'none' };
@@ -4836,6 +4885,17 @@ class Component extends DCLogic {
       this.setState({ wsId: '', role: 'pickWs', panel: null, loginError: '' }, () => setTimeout(gulir('katalog'), 120));
     };
     v.etalaseCara = gulir('cara');
+    v.footerLinks = this.footerList().map(l => ({
+      label: l.label,
+      go: () => {
+        const u = String(l.url || '').trim();
+        if (!u || u === '#katalog') return gulir('katalog')();
+        if (u === '#cara') return gulir('cara')();
+        if (u === '#lembaga') return v.bukaFormLembaga();
+        if (/^(mailto:|tel:|https?:)/i.test(u)) return window.open(u, /^https?:/i.test(u) ? '_blank' : '_self', 'noopener');
+        window.open('https://' + u.replace(/^\/+/, ''), '_blank', 'noopener');
+      }
+    }));
     v.formatCards = ['online', 'offline', 'hybrid'].map(f => ({
       label: this.FORMATS[f],
       note: f === 'online' ? 'Ikuti dari mana saja' : f === 'offline' ? 'Tatap muka di lokasi' : 'Pilih cara hadir',
@@ -4843,8 +4903,10 @@ class Component extends DCLogic {
       style: { textAlign: 'left', background: 'rgba(255,247,238,.14)', border: '1px solid rgba(255,247,238,.3)', color: '#FFF7EE', borderRadius: '20px', padding: '16px 17px', cursor: 'pointer', font: 'inherit', minWidth: 0 }
     }));
     const fFilter = st.fmtFilter || 'semua';
-    v.filters = [['semua', 'Semua'], ['online', 'Online'], ['offline', 'Offline'], ['hybrid', 'Hybrid']].map(([id, label]) => ({
-      label,
+    v.fmtPilih = fFilter;
+    v.onFmtPilih = e => this.setState({ fmtFilter: e.target.value });
+    v.filters = [['semua', 'Semua format'], ['online', 'Online'], ['offline', 'Offline'], ['hybrid', 'Hybrid']].map(([id, label]) => ({
+      id, label,
       pick: () => this.setState({ fmtFilter: id }),
       style: {
         background: fFilter === id ? '#B31F24' : '#FFF', color: fFilter === id ? '#FFF7EE' : '#4A3F46',
@@ -4856,8 +4918,10 @@ class Component extends DCLogic {
     v.onCari = e => this.setState({ cari: e.target.value });
     const q = String(st.cari || '').trim().toLowerCase();
     const jFilter = st.jenisFilter || 'semua';
-    v.jenisFilters = [['semua', 'Semua event']].concat(Object.keys(this.JENIS).map(k => [k, this.JENIS[k]])).map(([id, label]) => ({
-      label: id === 'semua' ? label : label + ' (' + terbit.filter(m => (m.jenis || 'workshop') === id).length + ')',
+    v.jenisPilih = jFilter;
+    v.onJenisPilih = e => this.setState({ jenisFilter: e.target.value });
+    v.jenisFilters = [['semua', 'Semua jenis']].concat(Object.keys(this.JENIS).map(k => [k, this.JENIS[k]])).map(([id, label]) => ({
+      id, label: id === 'semua' ? label : label + ' (' + terbit.filter(m => (m.jenis || 'workshop') === id).length + ')',
       pick: () => this.setState({ jenisFilter: id }),
       style: { background: jFilter === id ? '#3B3238' : 'transparent', color: jFilter === id ? '#FFF7EE' : '#4A3F46', border: '1px solid ' + (jFilter === id ? '#3B3238' : '#EAD9C6'), borderRadius: '100px', padding: '9px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
     }));
