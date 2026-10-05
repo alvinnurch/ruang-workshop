@@ -668,6 +668,15 @@ function handleAction(p) {
       return { ok: true };
     }
 
+    case 'putFooter': {
+      if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin yang boleh mengubah tautan footer.' };
+      store.footer = (Array.isArray(p.links) ? p.links : []).slice(0, 12).map(x => ({
+        label: String((x && x.label) || '').trim().slice(0, 40), url: String((x && x.url) || '').trim().slice(0, 400)
+      })).filter(x => x.label);
+      touch();
+      return { ok: true, data: { footer: store.footer } };
+    }
+
     case 'putFee': {
       if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin yang boleh mengubah biaya layanan.' };
       store.fee = Math.max(0, Math.min(100, Number(p.fee) || 0));
@@ -1121,7 +1130,7 @@ const server = http.createServer(async (req, res) => {
       const wid = pakai(decodeURIComponent(wsParam || ''));
       if (url.indexOf('action=health') >= 0) return json(res, { ok: true, data: { version, workshops: store.meta.length } });
       if (url.indexOf('action=list') >= 0) return json(res, { ok: true, data: { meta: metaPublik() }, version });
-      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
+      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0, footer: Array.isArray(store.footer) ? store.footer : null, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
     }
     if (req.method === 'POST') {
       try {
