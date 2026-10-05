@@ -82,7 +82,7 @@
             </div>
           </div>
 
-          <div style="position:relative;display:grid;place-items:center;min-height:min(82vw,330px);margin-top:min(3vw,0px)">
+          <div style="position:relative;display:grid;place-items:center;min-height:min(92vw,384px);margin:min(2vw,8px) 0">
             <div style="position:absolute;width:min(72vw,310px);height:min(72vw,310px);border-radius:50%;background:#FDBB6E"></div>
             <div style="position:absolute;width:min(84vw,360px);height:min(84vw,360px);border-radius:50%;border:1px solid rgba(179,31,36,.22)"></div>
             <div style="{{ heroArtStyle }}"></div>
@@ -96,7 +96,7 @@
         </div>
       </div>
 
-      <div style="max-width:1140px;margin:min(-3vw,-26px) auto 0;background:#B31F24;color:#FFF7EE;border-radius:min(5vw,40px);padding:min(4vw,34px) min(5vw,40px);position:relative;z-index:2;box-shadow:0 20px 44px -26px rgba(139,23,28,.75)">
+      <div style="max-width:1140px;margin:clamp(26px,3.4vw,40px) auto 0;background:#B31F24;color:#FFF7EE;border-radius:min(5vw,40px);padding:min(4vw,34px) min(5vw,40px);position:relative;z-index:2;box-shadow:0 20px 44px -26px rgba(139,23,28,.75)">
         <div style="display:flex;gap:min(3vw,26px);align-items:center;flex-wrap:wrap">
           <div style="flex:1 1 230px;min-width:min(100%,200px)">
             <div style="width:44px;height:44px;border-radius:50%;background:#FFF7EE;display:grid;place-items:center;color:#B31F24;font-size:20px;margin-bottom:14px">✦</div>
@@ -1440,7 +1440,10 @@
                     <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#8C8078">{{ l.label }}</span><b>{{ l.value }}</b></div>
                   </sc-for>
                 </div>
-                <button onClick="{{ w.manage }}" style="background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700;margin-top:auto" style-hover="background:#8A0F17">{{ w.manageLabel }}</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
+                  <button onClick="{{ w.edit }}" style="flex:1 1 120px;background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:700" style-hover="background:#F6F1EA">Edit detail</button>
+                  <button onClick="{{ w.manage }}" style="flex:1 1 150px;background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700" style-hover="background:#8A0F17">{{ w.manageLabel }}</button>
+                </div>
               </div>
             </sc-for>
           </div>
@@ -4582,7 +4585,11 @@ class Component extends DCLogic {
           { label: 'Terbayar', value: m.price > 0 ? lunasWs.length + ' dari ' + bayarWs.length : '—' }
         ],
         manageLabel: 'Kelola ' + this.jenisOf(m).toLowerCase() + ' ini',
-        manage: () => { this.pilihWs(m.id); this.setState({ role: 'admin', tab: 'control' }); }
+        manage: () => { this.pilihWs(m.id); this.setState({ role: 'admin', tab: 'control' }); },
+        edit: () => {
+          this.pilihWs(m.id);
+          this.setState(x => ({ role: 'admin', tab: 'workshops', wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) }));
+        }
       };
     });
     /* Super admin membuat kegiatan sendiri, lalu langsung masuk ke panel kelolanya. */
