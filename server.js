@@ -468,6 +468,21 @@ function handleAction(p) {
   }
 
   switch (p.action) {
+    case 'findCode': {
+      /* Masuk dari beranda: kode dicari di semua event yang terbit. */
+      const code = String(p.code || '').trim().toUpperCase();
+      if (!code) return { ok: false, error: 'Masukkan kode peserta Anda.' };
+      const temu = [];
+      store.meta.forEach(m => {
+        const d = store.data[m.id];
+        ((d && d.participants) || []).forEach(x => { if (String(x.code || '').toUpperCase() === code) temu.push({ ws: m.id, p: x }); });
+      });
+      if (!temu.length) return { ok: false, error: 'Kode peserta tidak dikenali. Periksa kembali atau tanyakan ke panitia.' };
+      if (temu.length > 1) return { ok: false, error: 'Kode ini terdaftar di lebih dari satu event. Masuk lewat halaman event-nya.' };
+      if (temu[0].p.status === 'menunggu') return { ok: false, error: 'Pendaftaran Anda belum disetujui panitia.' };
+      return { ok: true, data: { ws: temu[0].ws, id: temu[0].p.id } };
+    }
+
     case 'login': {
       const code = String(p.code || '').trim().toUpperCase();
       const hit = db.participants.filter(x => String(x.code || '').toUpperCase() === code);
