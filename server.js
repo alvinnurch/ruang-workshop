@@ -505,10 +505,8 @@ function wsUnggulan() {
 }
 /* Sumber gambar pratinjau: flyer event → ilustrasi beranda → logo platform. */
 function gambarOg(kunci) {
-  if (kunci === 'home') {
-    const u = wsUnggulan();
-    return (u && u.flyer) || store.hero || 'assets/ruang-logo.png';
-  }
+  /* Beranda: kartu khusus yang meniru bagian teratas beranda, bukan flyer event. */
+  if (kunci === 'home') return store.ogHome || 'assets/og-beranda.jpg';
   const m = (store.meta || []).filter(x => x.id === kunci)[0];
   return (m && m.flyer) || (m && m.partnerLogo) || store.hero || 'assets/ruang-logo.png';
 }
@@ -1212,6 +1210,9 @@ function handleAction(p) {
       db.participants = incoming.participants || [];
       db.groups = Array.isArray(incoming.groups) ? incoming.groups : (db.groups || []);
       db.activeSessionId = incoming.activeSessionId || (db.sessions[0] ? db.sessions[0].id : null);
+      /* Saklar "Semua sesi terbuka" ikut tersimpan saat admin penuh menyimpan susunan. */
+      if (typeof incoming.allOpen === 'boolean') db.allOpen = incoming.allOpen;
+      { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(incoming.activeIds)) db.activeIds = sahIds(incoming.activeIds); }
       const keep = db.responses || {};
       db.responses = {};
       db.sessions.forEach(s => {
@@ -1228,8 +1229,9 @@ function handleAction(p) {
       if (!BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Peran pemantau tidak boleh menjalankan sesi.' };
       const map = {};
       (p.open || []).forEach(o => { map[o.id] = !!o.open; });
-      db.activeSessionId = p.activeSessionId || db.activeSessionId;
+      if (typeof p.activeSessionId !== 'undefined') db.activeSessionId = p.activeSessionId || null;
       if (typeof p.allOpen === 'boolean') db.allOpen = p.allOpen;
+      { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(p.activeIds)) db.activeIds = sahIds(p.activeIds); }
       db.sessions.forEach(s => {
         (s.blocks || []).forEach(b => { if (Object.prototype.hasOwnProperty.call(map, b.id)) b.open = map[b.id]; });
         if (s.id === p.sessionId) {
