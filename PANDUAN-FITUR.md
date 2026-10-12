@@ -387,3 +387,67 @@ Notifikasi diverifikasi dengan tanda tangan SHA-512 dari Server Key, jadi kirima
 4. `sudo systemctl daemon-reload && sudo systemctl restart workshop`
 
 Di editor materi **Tautan Zoom** kini ada kotak **Rapat Zoom otomatis**: isi waktu mulai (opsional) dan durasi, tekan **Buat rapat Zoom otomatis** — tautan, Meeting ID, dan passcode terisi sendiri. Tombol **Mulai sebagai host** mengambil tautan host baru setiap kali ditekan. Rapat dibuat dengan ruang tunggu aktif dan peserta dibisukan saat masuk.
+
+
+## Rekaman Zoom otomatis untuk peserta
+
+Saat membuat rapat dari platform, centang **Rekam otomatis ke cloud Zoom** (bawaan: tercentang).
+Setelah rapat selesai dan Zoom memproses rekaman, tautannya muncul sendiri di materi Zoom itu.
+Untuk peserta, materi itu berubah menjadi **Rekaman Zoom**: selalu tersedia, ikut tampil di Perpustakaan,
+lengkap dengan passcode rekaman.
+
+Syarat: akun Zoom **Pro atau lebih tinggi** (rekaman cloud tidak tersedia di akun gratis).
+
+### Supaya masuk sendiri (sekali pasang)
+1. marketplace.zoom.us → aplikasi Server-to-Server OAuth Anda → **Feature** → nyalakan **Event Subscription**.
+2. **Add Event Subscription** → nama bebas → *Event notification endpoint URL*:
+   `https://ruang.islami.co/api/zoom-webhook`
+3. **Add Events** → *Recording* → centang **All Recordings have completed**.
+4. Salin **Secret Token** di halaman yang sama, lalu pasang di server:
+   ```bash
+   sudo systemctl edit ruang
+   # tambahkan di bawah [Service]:
+   Environment=ZOOM_WEBHOOK_SECRET=isi_secret_token
+   ```
+   ```bash
+   sudo systemctl daemon-reload && sudo systemctl restart ruang
+   ```
+5. Kembali ke Zoom, tekan **Validate** di samping URL endpoint — harus berhasil. Lalu **Save**.
+6. Di tab **Scopes**, tambahkan juga `cloud_recording:read:list_recording_files:admin`
+   (tampilan lama: `recording:read:admin`) untuk tombol **Ambil rekaman**.
+
+### Tanpa webhook
+Tekan **Ambil rekaman** di kartu Zoom setelah rapat selesai, atau tempel sendiri tautan rekaman
+dan passcode-nya dari zoom.us → Recordings.
+
+### Pengaturan rekaman yang perlu dicek di zoom.us
+Settings → Recording → **Cloud recording** aktif. Bila peserta diminta login Zoom saat menonton,
+matikan **Only authenticated users can view cloud recordings**.
+
+## Semua sesi terbuka (belajar mandiri)
+
+Tombol **Sesi dibuka admin / Semua sesi terbuka** ada di bagian *Pilihan materi dalam sesi ini*.
+Bila diaktifkan:
+- Peserta melihat deretan **Pilih sesi** dan bisa membuka sesi mana pun beserta semua materinya
+  (kuis, formulir, umpan balik, word cloud) tanpa menunggu admin.
+- **Layar proyektor tetap mengikuti sesi aktif** yang Anda pilih di panel, dan hanya menampilkan
+  materi yang Anda buka di sesi itu.
+- Check in tetap butuh barcode yang tampil di proyektor.
+- Kuis berwaktu per soal tetap dijalankan admin; kuis tanpa waktu bisa dikerjakan kapan saja.
+
+
+## Host Zoom per event & jadwal bentrok
+
+Satu akun host Zoom hanya bisa memimpin satu rapat dalam satu waktu. Agar beberapa event bisa
+ber-Zoom di jam yang sama, beri tiap event host sendiri:
+
+1. Di zoom.us (admin akun), tambahkan pengguna berlisensi: **User Management → Users → Add Users**.
+   Semua pengguna harus berada di **akun Zoom yang sama** dengan aplikasi Server-to-Server OAuth.
+2. Dasbor super admin → tab **Event** → buka event → isi **Host Zoom (email)** dengan email pengguna itu.
+   Dikosongkan = memakai akun utama (`ZOOM_USER`, bawaan: pemilik aplikasi).
+3. Rapat yang dibuat dari event itu otomatis atas nama host tersebut.
+
+Saat admin menekan **Buat rapat Zoom otomatis**, platform memeriksa semua rapat di host yang sama.
+Bila jamnya beririsan, muncul peringatan berisi event, sesi, dan jamnya, dengan pilihan **Tetap buat**
+atau **Batal**. Rapat instan (tanpa jam mulai) dihitung mulai saat itu juga.
+Pemeriksaan hanya mencakup rapat yang dibuat lewat platform.

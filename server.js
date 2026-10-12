@@ -51,6 +51,8 @@ const ZOOM_CLIENT = process.env.ZOOM_CLIENT_ID || '';
 const ZOOM_SECRET = process.env.ZOOM_CLIENT_SECRET || '';
 const ZOOM_USER = process.env.ZOOM_USER || 'me';
 const ZOOM_AKTIF = !!(ZOOM_ACCOUNT && ZOOM_CLIENT && ZOOM_SECRET);
+/* Opsional: Secret Token dari Event Subscription aplikasi Zoom, agar rekaman cloud masuk otomatis. */
+const ZOOM_WEBHOOK = process.env.ZOOM_WEBHOOK_SECRET || '';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 /* Email tiket — SMTP biasa (Gmail sandi aplikasi, email hosting Rumahweb, Brevo, dll.). */
 const SMTP = {
@@ -145,7 +147,7 @@ const UPLOAD_DIR = path.join(PUBLIC_DIR, 'unggahan');
 const EMPTY = { sessions: [], activeSessionId: null, participants: [], groups: [], admins: [], responses: {} };
 /* Satu platform memuat banyak workshop. Tiap workshop punya datanya sendiri. */
 const WS_BARU = () => ({
-  id: '', jenis: 'workshop', title: 'Workshop baru', subtitle: '', partnerName: '', partnerLogo: '', host: 'Islamidotco',
+  id: '', jenis: 'workshop', title: 'Workshop baru', subtitle: '', partnerName: '', partnerLogo: '', host: 'Islamidotco', zoomHost: '',
   place: '', dateLabel: '', published: false, registration: 'panitia', price: 0, quota: 0, note: '',
   /* Untuk etalase publik */
   format: 'online', kategori: '', ringkasan: '', deskripsi: '', capaian: [],
@@ -437,6 +439,137 @@ function serveStatic(req, res, urlPath) {
   });
 }
 
+function simpanRekaman(obj) {
+  const id = String((obj && obj.id) || '').replace(/\D/g, '');
+  if (!id || !obj.share_url) return 0;
+  let n = 0;
+  Object.keys(store.data).forEach(w => {
+    ((store.data[w] && store.data[w].sessions) || []).forEach(s => (s.blocks || []).forEach(b => {
+      if (b.type === 'zoom' && String(b.zoomId || '').replace(/\D/g, '') === id) {
+        b.recUrl = obj.share_url;
+        b.recPass = obj.password || obj.recording_play_passcode || '';
+        b.recAt = new Date().toISOString();
+        b.recDur = Number(obj.duration) || 0;
+        n++;
+      }
+    }));
+  });
+  if (n) touch();
+  return n;
+}
+
+/* Host Zoom per event: email akun Zoom berlisensi di akun yang sama. Kosong = akun utama. */
+function hostZoomWs(wid) {
+  const m = (store.meta || []).filter(x => x.id === wid)[0];
+  const e = String((m && m.zoomHost) || '').trim().toLowerCase();
+  return e || String(ZOOM_USER || 'me').toLowerCase();
+}
+/* Rapat lain di host yang sama yang waktunya beririsan dengan [mulai, selesai). */
+function rapatBentrok(host, mulai, selesai, kecualiBlok) {
+  const hasil = [];
+  (store.meta || []).forEach(m => {
+    const d = store.data[m.id];
+    ((d && d.sessions) || []).forEach(s => (s.blocks || []).forEach(b => {
+      if (b.type !== 'zoom' || !b.zoomId || b.id === kecualiBlok || !b.zoomStartAt) return;
+      if (String(b.zoomHost || ZOOM_USER || 'me').toLowerCase() !== host) return;
+      const a = new Date(b.zoomStartAt).getTime();
+      const z = a + (Number(b.zoomDur) || 60) * 60000;
+      if (a < selesai && mulai < z) hasil.push({
+        event: m.title || 'Event', sesi: s.title || 'Sesi', materi: b.title || 'Ruang Zoom',
+        mulai: b.zoomStartAt, durasi: Number(b.zoomDur) || 60
+      });
+    }));
+  });
+  return hasil;
+}
+
+/* ── Pratinjau tautan (WhatsApp, Telegram, Facebook, X) ──
+   Perayap tidak menjalankan JavaScript dan tidak mengirim bagian #… dari alamat,
+   jadi kartu pratinjau disisipkan server ke index.html. Tautan event dibagikan
+   sebagai /workshop/<slug> (tanpa #) agar server tahu event mana yang diminta. */
+function slugify(t) {
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'workshop';
+}
+function slugWs(m) { return (m && String(m.slug || '').trim()) || slugify(m && m.title); }
+function asalUrl(req) {
+  if (process.env.PUBLIC_URL) return String(process.env.PUBLIC_URL).replace(/\/+$/, '');
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+  const lokal = /^(localhost|127\.|\d+\.\d+\.\d+\.\d+)/.test(host);
+  const proto = req.headers['x-forwarded-proto'] || (lokal ? 'http' : 'https');
+  return proto + '://' + host;
+}
+function wsUnggulan() {
+  const terbit = (store.meta || []).filter(m => m.published);
+  return terbit.filter(m => m.unggulan)[0] || terbit[0] || null;
+}
+/* Sumber gambar pratinjau: flyer event → ilustrasi beranda → logo platform. */
+function gambarOg(kunci) {
+  if (kunci === 'home') {
+    const u = wsUnggulan();
+    return (u && u.flyer) || store.hero || 'assets/ruang-logo.png';
+  }
+  const m = (store.meta || []).filter(x => x.id === kunci)[0];
+  return (m && m.flyer) || (m && m.partnerLogo) || store.hero || 'assets/ruang-logo.png';
+}
+function kirimGambarOg(req, res, kunci) {
+  const src = String(gambarOg(kunci) || '');
+  const data = src.match(/^data:([^;,]+)(;base64)?,(.*)$/);
+  if (data) {
+    const buf = data[2] ? Buffer.from(data[3], 'base64') : Buffer.from(decodeURIComponent(data[3]));
+    res.writeHead(200, { 'Content-Type': data[1], 'Content-Length': buf.length, 'Cache-Control': 'public, max-age=600' });
+    return res.end(buf);
+  }
+  if (/^https?:\/\//i.test(src)) { res.writeHead(302, { Location: src }); return res.end(); }
+  const file = path.join(PUBLIC_DIR, path.normalize('/' + src.replace(/^\/+/, '')).replace(/^(\.\.[/\\])+/, ''));
+  if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(404); return res.end(); }
+  fs.readFile(file, (err, buf) => {
+    if (err) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'image/png', 'Cache-Control': 'public, max-age=600' });
+    res.end(buf);
+  });
+}
+let indexCache = { mtime: 0, html: '' };
+function bacaIndex() {
+  const file = path.join(PUBLIC_DIR, 'index.html');
+  const st = fs.statSync(file);
+  if (st.mtimeMs !== indexCache.mtime) indexCache = { mtime: st.mtimeMs, html: fs.readFileSync(file, 'utf8') };
+  return indexCache.html;
+}
+const OG_DESK = 'Workshop, seminar, webinar, dan diskusi dari berbagai lembaga — daftar, ikuti sesi, dan unduh sertifikat di satu tempat.';
+function kirimIndexOg(req, res, slug) {
+  const asal = asalUrl(req);
+  const m = slug ? (store.meta || []).filter(x => x.published && slugWs(x) === slug)[0] : null;
+  const judul = m ? m.title + ' — Ruang Islami.co' : 'Ruang Islami.co';
+  const desk = m
+    ? (String(m.ringkasan || m.subtitle || '').trim() || [m.dateLabel, m.place, m.partnerName].filter(Boolean).join(' · ') || OG_DESK)
+    : OG_DESK;
+  const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + version;
+  const alamat = asal + (m ? '/workshop/' + slug : '/');
+  const meta = [
+    '<base href="/">',
+    '<meta name="description" content="' + esc(desk) + '">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:site_name" content="Ruang Islami.co">',
+    '<meta property="og:title" content="' + esc(judul) + '">',
+    '<meta property="og:description" content="' + esc(desk) + '">',
+    '<meta property="og:image" content="' + esc(gambar) + '">',
+    '<meta property="og:url" content="' + esc(alamat) + '">',
+    '<meta name="twitter:card" content="summary_large_image">',
+    '<meta name="twitter:title" content="' + esc(judul) + '">',
+    '<meta name="twitter:description" content="' + esc(desk) + '">',
+    '<meta name="twitter:image" content="' + esc(gambar) + '">',
+    /* Alamat /workshop/<slug> diubah ke rute halaman sebelum aplikasi membacanya. */
+    m ? '<script>if(!location.hash)history.replaceState(null,"","/#/workshop/' + slug + '");</script>' : ''
+  ].join('\n');
+  let html;
+  try { html = bacaIndex(); } catch (e) { res.writeHead(500); return res.end('index.html tidak ditemukan'); }
+  html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(judul) + '</title>');
+  html = html.replace(/<head([^>]*)>/i, '<head$1>\n' + meta);
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(html);
+}
+
 /* ── API ── */
 function peranDari(pass, user, wsMinta) {
   if (!pass) return null;
@@ -463,7 +596,7 @@ function handleAction(p) {
   /* Akun panitia terikat pada workshop tempat ia dibuat; super admin bebas. */
   const salahWs = !!siapa && !siapa.superadmin && siapa.wsId && siapa.wsId !== wid;
   const namaWs = id => { const m = store.meta.filter(x => x.id === id)[0]; return m ? m.title : id; };
-  if (salahWs && /^(putDb|putLive|putWorkshops|reset|markPaid|setAdminPass|zoomCreate|zoomStart)$/.test(String(p.action || ''))) {
+  if (salahWs && /^(putDb|putLive|putWorkshops|reset|markPaid|setAdminPass|zoomCreate|zoomStart|zoomPasscode|zoomRecording)$/.test(String(p.action || ''))) {
     return { ok: false, error: 'Akun ini hanya untuk workshop “' + namaWs(siapa.wsId) + '”.' };
   }
 
@@ -495,7 +628,7 @@ function handleAction(p) {
     case 'checkin': {
       const b = blockOf(p.sessionId, p.blockId);
       if (!b) return { ok: false, error: 'Materi check in tidak ditemukan.' };
-      if (!b.open) return { ok: false, error: 'Check in belum dibuka fasilitator.' };
+      if (!b.open && !db.allOpen) return { ok: false, error: 'Check in belum dibuka fasilitator.' };
       const want = String(b.token || '').toUpperCase();
       const got = String(p.token || '').toUpperCase().trim();
       const cocok = got === want || got === 'WS-CHECKIN:' + String(p.sessionId).toUpperCase() + ':' + want;
@@ -736,13 +869,66 @@ function handleAction(p) {
         settings: { waiting_room: true, join_before_host: false, mute_upon_entry: true, participant_video: false, host_video: true, auto_recording: p.record ? 'cloud' : 'none' }
       };
       if (mulai && !isNaN(mulai)) badan.start_time = mulai.toISOString().replace(/\.\d{3}Z$/, 'Z');
-      return zoomApi('POST', '/users/' + encodeURIComponent(ZOOM_USER) + '/meetings', badan).then(z => {
+      /* Satu host Zoom hanya bisa memimpin satu rapat dalam satu waktu. */
+      const host = hostZoomWs(wid);
+      const tMulai = mulai && !isNaN(mulai) ? mulai.getTime() : Date.now();
+      const tSelesai = tMulai + badan.duration * 60000;
+      const bentrok = rapatBentrok(host, tMulai, tSelesai, b.id);
+      if (bentrok.length && !p.force) {
+        return { ok: false, clash: bentrok, host, error: 'Jadwal bentrok dengan ' + bentrok.length + ' rapat lain di host Zoom yang sama (' + host + ').' };
+      }
+      const sandiMau = String(p.passcode || '').trim();
+      if (sandiMau) {
+        if (!/^[A-Za-z0-9@_*-]{1,10}$/.test(sandiMau)) return { ok: false, error: 'Passcode maksimal 10 karakter: huruf, angka, atau @ - _ *.' };
+        badan.password = sandiMau;
+      }
+      return zoomApi('POST', '/users/' + encodeURIComponent(host) + '/meetings', badan).then(z => {
         const idTampil = String(z.id || '').replace(/(\d{3})(\d{3,4})(\d{4})$/, '$1 $2 $3');
         b.url = z.join_url || ''; b.meetingId = idTampil; b.passcode = z.password || '';
         b.zoomId = String(z.id || ''); b.zoomCreatedAt = new Date().toISOString();
+        b.zoomHost = host; b.zoomStartAt = new Date(tMulai).toISOString(); b.zoomDur = badan.duration;
         touch();
         return { ok: true, data: { url: b.url, meetingId: b.meetingId, passcode: b.passcode, zoomId: b.zoomId, startUrl: z.start_url || '' } };
-      }).catch(e => ({ ok: false, error: 'Zoom menolak: ' + e.message }));
+      }).catch(e => ({ ok: false, error: /1001|does not exist|not found/i.test(e.message)
+        ? 'Akun host Zoom “' + host + '” tidak ditemukan di akun Zoom ini. Periksa email Host Zoom di pengaturan event.'
+        : 'Zoom menolak: ' + e.message }));
+    }
+
+    /* Ganti passcode rapat yang sudah dibuat. Tautan gabung ikut berubah karena memuat passcode tersandi. */
+    case 'zoomPasscode': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Peran ini tidak boleh mengubah rapat.' };
+      if (!ZOOM_AKTIF) return { ok: false, error: 'Zoom belum dipasang di server.' };
+      const b = blockOf(p.sessionId, p.blockId);
+      if (!b || b.type !== 'zoom') return { ok: false, error: 'Materi Zoom tidak ditemukan.' };
+      const id = String(b.zoomId || '').replace(/\D/g, '');
+      if (!id) return { ok: false, error: 'Rapat belum dibuat lewat platform. Isi passcode secara manual saja.' };
+      const sandi = String(p.passcode || '').trim();
+      if (!/^[A-Za-z0-9@_*-]{1,10}$/.test(sandi)) return { ok: false, error: 'Passcode maksimal 10 karakter: huruf, angka, atau @ - _ *.' };
+      return zoomApi('PATCH', '/meetings/' + id, { password: sandi })
+        .then(() => zoomApi('GET', '/meetings/' + id))
+        .then(z => {
+          b.passcode = z.password || sandi; b.url = z.join_url || b.url;
+          touch();
+          return { ok: true, data: { passcode: b.passcode, url: b.url } };
+        })
+        .catch(e => ({ ok: false, error: 'Zoom menolak: ' + e.message + ' — akun Zoom Anda mungkin mewajibkan passcode lebih rumit (Settings → Security).' }));
+    }
+
+    /* Ambil rekaman cloud secara manual (bila webhook belum dipasang atau terlewat). */
+    case 'zoomRecording': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Peran ini tidak boleh mengambil rekaman.' };
+      if (!ZOOM_AKTIF) return { ok: false, error: 'Zoom belum dipasang di server.' };
+      const b = blockOf(p.sessionId, p.blockId);
+      if (!b || b.type !== 'zoom') return { ok: false, error: 'Materi Zoom tidak ditemukan.' };
+      const id = String(b.zoomId || '').replace(/\D/g, '');
+      if (!id) return { ok: false, error: 'Rapat belum dibuat lewat platform. Tempel tautan rekamannya secara manual.' };
+      return zoomApi('GET', '/meetings/' + id + '/recordings')
+        .then(z => {
+          if (!z || !z.share_url) return { ok: false, error: 'Rekaman belum tersedia. Zoom memproses rekaman kira-kira selama durasi rapat.' };
+          simpanRekaman(Object.assign({}, z, { id }));
+          return { ok: true, data: { recUrl: b.recUrl, recPass: b.recPass, recAt: b.recAt } };
+        })
+        .catch(e => ({ ok: false, error: /404|3301/.test(e.message) ? 'Rekaman belum tersedia di cloud Zoom.' : 'Zoom menolak: ' + e.message }));
     }
 
     /* Tautan host Zoom kedaluwarsa ±2 jam, jadi selalu diambil baru. */
@@ -1043,6 +1229,7 @@ function handleAction(p) {
       const map = {};
       (p.open || []).forEach(o => { map[o.id] = !!o.open; });
       db.activeSessionId = p.activeSessionId || db.activeSessionId;
+      if (typeof p.allOpen === 'boolean') db.allOpen = p.allOpen;
       db.sessions.forEach(s => {
         (s.blocks || []).forEach(b => { if (Object.prototype.hasOwnProperty.call(map, b.id)) b.open = map[b.id]; });
         if (s.id === p.sessionId) {
@@ -1115,6 +1302,29 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { return json(res, { ok: false, error: e.message }, 400); }
   }
 
+  /* Zoom memberi tahu rekaman cloud selesai diproses. */
+  if (url.startsWith('/api/zoom-webhook')) {
+    if (req.method !== 'POST') return json(res, { ok: false, error: 'Metode tidak didukung.' }, 405);
+    try {
+      const body = await readBody(req, 1024 * 1024);
+      const ev = JSON.parse(body || '{}');
+      const cr = require('crypto');
+      if (!ZOOM_WEBHOOK) return json(res, { ok: false, error: 'ZOOM_WEBHOOK_SECRET belum dipasang.' }, 400);
+      if (ev.event === 'endpoint.url_validation') {
+        const plain = String((ev.payload && ev.payload.plainToken) || '');
+        return json(res, { plainToken: plain, encryptedToken: cr.createHmac('sha256', ZOOM_WEBHOOK).update(plain).digest('hex') });
+      }
+      const ts = String(req.headers['x-zm-request-timestamp'] || '');
+      const harus = 'v0=' + cr.createHmac('sha256', ZOOM_WEBHOOK).update('v0:' + ts + ':' + body).digest('hex');
+      if (req.headers['x-zm-signature'] !== harus) return json(res, { ok: false, error: 'Tanda tangan Zoom tidak cocok.' }, 401);
+      if (ev.event === 'recording.completed') {
+        const n = simpanRekaman(ev.payload && ev.payload.object);
+        console.log('[zoom] rekaman masuk untuk rapat ' + ((ev.payload && ev.payload.object && ev.payload.object.id) || '?') + ' → ' + n + ' materi');
+      }
+      return json(res, { ok: true });
+    } catch (e) { return json(res, { ok: false, error: String(e.message || e) }, 400); }
+  }
+
   /* Xendit memberi tahu pembayaran masuk ke sini. */
   if (url.startsWith('/api/xendit-callback')) {
     if (req.method !== 'POST') return json(res, { ok: false, error: 'Metode tidak didukung.' }, 405);
@@ -1158,6 +1368,14 @@ const server = http.createServer(async (req, res) => {
     return json(res, { ok: false, error: 'Metode tidak didukung.' }, 405);
   }
 
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    const jalur = decodeURIComponent(url.split('?')[0]);
+    const og = jalur.match(/^\/og\/(home|ws\/([^/.]+))\.img$/);
+    if (og) return kirimGambarOg(req, res, og[1] === 'home' ? 'home' : og[2]);
+    if (jalur === '/' || jalur === '/index.html') return kirimIndexOg(req, res, '');
+    const ws = jalur.match(/^\/workshop\/([a-z0-9-]+)\/?$/);
+    if (ws) return kirimIndexOg(req, res, ws[1]);
+  }
   serveStatic(req, res, url);
 });
 
@@ -1168,7 +1386,7 @@ server.listen(PORT, () => {
   console.log('│ Data          : ' + DATA_FILE + '  (' + store.meta.length + ' workshop)');
   console.log('│ Midtrans      : ' + (MIDTRANS_KEY ? 'aktif (' + (MIDTRANS_PROD ? 'produksi' : 'sandbox') + ')' : 'nonaktif'));
   console.log('│ Pembayaran    : ' + penyedia());
-  console.log('│ Zoom          : ' + (ZOOM_AKTIF ? 'aktif (host: ' + ZOOM_USER + ')' : 'nonaktif'));
+  console.log('│ Zoom          : ' + (ZOOM_AKTIF ? 'aktif (host: ' + ZOOM_USER + ')' + (ZOOM_WEBHOOK ? ' · rekaman otomatis' : '') : 'nonaktif'));
   console.log('│ Xendit        : ' + (XENDIT_SECRET ? 'aktif' + (XENDIT_TOKEN ? ' (callback terlindungi)' : ' (TANPA token callback!)') : 'nonaktif — pembayaran manual'));
   console.log('│ Email tiket   : ' + (MAIL_AKTIF ? 'aktif (' + SMTP.host + ':' + SMTP.port + ')' : 'nonaktif — isi SMTP_HOST/USER/PASS'));
   console.log('│ Super admin   : ' + SUPER_USER);
