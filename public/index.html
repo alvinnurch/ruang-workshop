@@ -1720,6 +1720,7 @@
                 </button>
                 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
                   <button onClick="{{ s.activate }}" style="{{ s.activateStyle }}">{{ s.activateLabel }}</button>
+                  <button onClick="{{ s.toScreen }}" style="{{ s.screenStyle }}">{{ s.screenLabel }}</button>
                   <button onClick="{{ s.remove }}" style="background:none;border:1px solid #E9DCDC;color:#A5121C;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600" style-hover="background:#FCEDEE">Hapus</button>
                   <span style="flex:1"></span>
                   <span style="font-size:11px;font-weight:700;color:#B5A99D;letter-spacing:.04em">{{ s.order }}</span>
@@ -3110,10 +3111,21 @@ class Component extends DCLogic {
     if (t === 'ppt' || t === 'video') return true;
     return typeof x === 'object' && t === 'zoom' && !!x.recUrl;
   }
+  /* Sesi yang sedang aktif bagi peserta — bisa lebih dari satu. activeSessionId = yang tampil di proyektor. */
+  aktifIds(db) {
+    db = db || this.state.db || {};
+    const ids = (Array.isArray(db.activeIds) ? db.activeIds : []).filter(id => (db.sessions || []).some(x => x.id === id));
+    if (ids.length) return ids;
+    return db.activeSessionId ? [db.activeSessionId] : [];
+  }
   /* Mode belajar mandiri: peserta memilih sesi sendiri, semua materi yang dipakai terbuka. */
   sesiPeserta() {
     const st = this.state, db = st.db || {};
-    if (!db.allOpen) return this.activeSess();
+    if (!db.allOpen) {
+      const ids = this.aktifIds(db);
+      if (ids.length < 2) return this.activeSess();
+      return this.sess(ids.indexOf(st.pSesi) >= 0 ? st.pSesi : ids[0]);
+    }
     const s = this.sess(st.pSesi) || this.activeSess() || (db.sessions || [])[0];
     if (!s) return null;
     return Object.assign({}, s, { blocks: (s.blocks || []).map(b => b.enabled ? Object.assign({}, b, { open: true }) : b) });
@@ -4074,7 +4086,7 @@ class Component extends DCLogic {
         const s = d.sessions.find(x => x.id === d.activeSessionId) || null;
         this.apiPost({
           action: 'putLive', password: this._pw || '',
-          activeSessionId: d.activeSessionId, allOpen: !!d.allOpen,
+          activeSessionId: d.activeSessionId, activeIds: this.aktifIds(d), allOpen: !!d.allOpen,
           sessionId: s ? s.id : '',
           multiOpen: s ? s.multiOpen !== false : true,
           active: s ? s.active : null,
@@ -4610,8 +4622,11 @@ class Component extends DCLogic {
       : [{ label: 'Status', value: live ? 'Detail sesi belum diisi panitia' : 'Menunggu jadwal' }];
     v.hasSessionDesc = !!(live && String(live.desc || '').trim());
     if (mandiri && live) v.liveBadge = 'Belajar mandiri · semua sesi terbuka';
-    v.pSesiShow = mandiri && (db.sessions || []).length > 1;
-    v.pSesiChips = (db.sessions || []).map((s0, i) => {
+    const idsAktif = this.aktifIds(db);
+    const multiAktif = !mandiri && idsAktif.length > 1;
+    if (multiAktif && live) v.liveBadge = idsAktif.length + ' sesi berlangsung bersamaan';
+    v.pSesiShow = (mandiri && (db.sessions || []).length > 1) || multiAktif;
+    v.pSesiChips = (db.sessions || []).map((s0, i) => ({ s0, i })).filter(x => !multiAktif || idsAktif.indexOf(x.s0.id) >= 0).map(({ s0, i }) => {
       const on = live && s0.id === live.id;
       return {
         title: (i + 1) + '. ' + (s0.title || 'Sesi'),
@@ -6839,7 +6854,9 @@ class Component extends DCLogic {
     });
     const navS = on => ({ width: '28px', height: '28px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF', border: '1px solid #E0D8CE', color: on ? '#5C534B' : '#CFC5B8', borderRadius: '7px', padding: 0, fontSize: '12px', fontWeight: 700, cursor: on ? 'pointer' : 'default' });
     v.sessionList = db.sessions.filter(s => !izin || izin.indexOf(s.id) >= 0).map((s, si, arr) => {
-      const isActive = db.activeSessionId === s.id;
+      const idsNow = this.aktifIds(db);
+      const isActive = idsNow.indexOf(s.id) >= 0;
+      const onScreen = db.activeSessionId === s.id && isActive;
       const isSel = cur && cur.id === s.id;
       return {
         order: String(si + 1).padStart(2, '0'),
@@ -6860,9 +6877,21 @@ class Component extends DCLogic {
             if (el) this._track.scrollTo({ left: el.offsetLeft - this._track.offsetLeft - 4, behavior: 'smooth' });
           }
         },
-        activateLabel: isActive ? 'Sedang aktif' : 'Jadikan aktif',
-        activateStyle: { background: isActive ? '#F6F1EA' : '#3E6B22', border: isActive ? '1px solid #E0D8CE' : 'none', color: isActive ? '#8C8078' : '#FFF', borderRadius: '7px', padding: '7px 11px', fontSize: '12px', fontWeight: 700 },
-        activate: () => this.save(d => { d.activeSessionId = s.id; }, null, true),
+        activateLabel: isActive ? '✓ Aktif' : 'Aktifkan',
+        activateStyle: { background: isActive ? '#EEF5E9' : '#3E6B22', border: isActive ? '1px solid #CFE2C2' : 'none', color: isActive ? '#2C4D18' : '#FFF', borderRadius: '7px', padding: '7px 11px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' },
+        activate: () => this.save(d => {
+          const ids = this.aktifIds(d).slice();
+          const i = ids.indexOf(s.id);
+          if (i >= 0) ids.splice(i, 1); else ids.push(s.id);
+          d.activeIds = ids;
+          /* Proyektor pindah hanya bila sesinya dinonaktifkan; selebihnya admin yang memilih. */
+          if (ids.indexOf(d.activeSessionId) < 0) d.activeSessionId = ids[0] || null;
+        }, null, true),
+        screenLabel: onScreen ? '▣ Di proyektor' : 'Tampilkan di proyektor',
+        screenStyle: isActive
+          ? { background: onScreen ? '#1B1714' : '#FFF', border: '1px solid ' + (onScreen ? '#1B1714' : '#D8CFC4'), color: onScreen ? '#FFF' : '#3B342E', borderRadius: '7px', padding: '7px 11px', fontSize: '12px', fontWeight: 700, cursor: onScreen ? 'default' : 'pointer' }
+          : { display: 'none' },
+        toScreen: () => { if (!onScreen) this.save(d => { d.activeSessionId = s.id; }, null, true); },
         remove: () => this.save(d => {
           if (d.sessions.length <= 1) return;
           d.sessions = d.sessions.filter(x => x.id !== s.id);
