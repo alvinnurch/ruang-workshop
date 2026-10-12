@@ -663,6 +663,17 @@
             </sc-if>
           </div>
 
+          <sc-if value="{{ pSesiShow }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:16px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A6F66;margin-bottom:9px">Pilih sesi</div>
+              <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
+                <sc-for list="{{ pSesiChips }}" as="c" hint-placeholder-count="4">
+                  <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.title }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
           <sc-if value="{{ hasLiveCall }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:18px;background:#A5121C;color:#FFF;border-radius:14px;padding:20px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;animation:wsRise .3s ease">
               <span style="width:9px;height:9px;border-radius:50%;background:#FFF;flex:none;animation:wsPulse 1.4s infinite"></span>
@@ -1771,6 +1782,7 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                   <button onClick="{{ goProjector }}" style="background:#1B1714;color:#FFF;border:none;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:700" style-hover="background:#332C25">Layar proyektor</button>
                   <button onClick="{{ toggleMulti }}" style="{{ multiStyle }}">{{ multiLabel }}</button>
+                  <button onClick="{{ toggleAllOpen }}" title="{{ allOpenTitle }}" style="{{ allOpenStyle }}">{{ allOpenLabel }}</button>
                   <button onClick="{{ closeAll }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup semua</button>
                 </div>
               </div>
@@ -1823,32 +1835,36 @@
                             <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Deskripsi materi</span>
                             <textarea value="{{ b.desc }}" onChange="{{ b.onDesc }}" rows="3" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;resize:vertical;line-height:1.55"></textarea>
                           </label>
-                          <label style="display:grid;gap:5px">
+                          <label style="display:grid;gap:5px;align-content:start">
                             <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Pengisi materi</span>
                             <input value="{{ b.presenter }}" onChange="{{ b.onPresenter }}" placeholder="Nama narasumber / fasilitator" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                           </label>
                           <sc-if value="{{ b.hasUrl }}" hint-placeholder-val="{{ false }}">
-                            <label style="display:grid;gap:5px">
+                            <label style="display:grid;gap:5px;align-content:start">
                               <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">{{ b.urlLabel }}</span>
                               <input value="{{ b.url }}" onChange="{{ b.onUrl }}" placeholder="{{ b.urlHint }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                             </label>
                           </sc-if>
                           <sc-if value="{{ b.isPpt }}" hint-placeholder-val="{{ false }}">
-                            <label style="display:grid;gap:5px">
+                            <label style="display:grid;gap:5px;align-content:start">
                               <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nama berkas</span>
                               <input value="{{ b.fileName }}" onChange="{{ b.onFileName }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                             </label>
                           </sc-if>
                           <sc-if value="{{ b.isZoom }}" hint-placeholder-val="{{ false }}">
-                            <label style="display:grid;gap:5px">
+                            <label style="display:grid;gap:5px;align-content:start">
                               <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Meeting ID</span>
                               <input value="{{ b.meetingId }}" onChange="{{ b.onMeetingId }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                             </label>
                           </sc-if>
                           <sc-if value="{{ b.isZoom }}" hint-placeholder-val="{{ false }}">
-                            <label style="display:grid;gap:5px">
+                            <label style="display:grid;gap:5px;align-content:start">
                               <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Passcode</span>
-                              <input value="{{ b.passcode }}" onChange="{{ b.onPasscode }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                              <div style="display:flex;gap:7px">
+                                <input value="{{ b.passcode }}" onChange="{{ b.onPasscode }}" maxlength="10" placeholder="mis. ruang26" style="flex:1;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                                <button onClick="{{ b.passApply }}" title="Ganti passcode di Zoom" style="{{ b.passApplyStyle }}">{{ b.passApplyLabel }}</button>
+                              </div>
+                              <span style="font-size:11.5px;color:#8C8078;line-height:1.5">{{ b.passHint }}</span>
                             </label>
                           </sc-if>
                           <sc-if value="{{ b.isZoom }}" hint-placeholder-val="{{ false }}">
@@ -1857,29 +1873,61 @@
                                 <span style="font-size:13px;font-weight:700;color:#1F3B5C">Rapat Zoom otomatis</span>
                                 <span style="font-size:12px;color:#5B6B80">{{ b.zoomStatus }}</span>
                               </div>
+                              <div style="font-size:12px;color:#5B6B80;margin-top:-6px">Host: <b style="color:#1F3B5C">{{ b.zoomHostLabel }}</b></div>
                               <sc-if value="{{ zoomReady }}" hint-placeholder-val="{{ false }}">
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
-                                  <label style="display:grid;gap:5px">
+                                  <label style="display:grid;gap:5px;align-content:start">
                                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Mulai (opsional)</span>
                                     <input type="datetime-local" value="{{ b.zoomStart }}" onChange="{{ b.onZoomStart }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;background:#FFF" />
                                   </label>
-                                  <label style="display:grid;gap:5px">
+                                  <label style="display:grid;gap:5px;align-content:start">
                                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Durasi (menit)</span>
                                     <input type="number" min="15" max="1440" value="{{ b.zoomDur }}" onChange="{{ b.onZoomDur }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;background:#FFF" />
                                   </label>
                                 </div>
+                                <label style="display:flex;gap:9px;align-items:center;font-size:13px;color:#1F3B5C;cursor:pointer">
+                                  <input type="checkbox" checked="{{ b.zoomRec }}" onChange="{{ b.onZoomRec }}" style="width:17px;height:17px;accent-color:#2D6CDF" />
+                                  Rekam otomatis ke cloud Zoom — rekaman muncul sendiri untuk peserta setelah rapat selesai
+                                </label>
                                 <div style="display:flex;gap:9px;flex-wrap:wrap">
                                   <button onClick="{{ b.zoomCreate }}" style="background:#2D6CDF;color:#FFF;border:none;border-radius:8px;padding:10px 15px;font-size:13px;font-weight:700" style-hover="background:#1F57BD">{{ b.zoomCreateLabel }}</button>
                                   <button onClick="{{ b.zoomHost }}" style="{{ b.zoomHostStyle }}">Mulai sebagai host ↗</button>
+                                  <button onClick="{{ b.recFetch }}" style="{{ b.recFetchStyle }}">{{ b.recFetchLabel }}</button>
                                 </div>
+                                <sc-if value="{{ b.hasClash }}" hint-placeholder-val="{{ false }}">
+                                  <div style="background:#FFF6E5;border:1px solid #F0D9A8;border-radius:10px;padding:13px 15px;display:grid;gap:10px">
+                                    <div style="font-size:13px;font-weight:700;color:#7A4E00">Jadwal bentrok di host {{ b.clashHost }}</div>
+                                    <div style="display:grid;gap:5px">
+                                      <sc-for list="{{ b.clashList }}" as="c" hint-placeholder-count="1">
+                                        <div style="font-size:12.5px;color:#5C4A2A;line-height:1.5">• {{ c.text }}</div>
+                                      </sc-for>
+                                    </div>
+                                    <div style="font-size:12px;color:#7A6040;line-height:1.55;text-wrap:pretty">Satu host Zoom hanya bisa memimpin satu rapat dalam satu waktu. Geser jam, isi Host Zoom lain untuk event ini (dasbor super admin → Event), atau tetap buat bila rapat yang lain tidak dimulai bersamaan.</div>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                                      <button onClick="{{ b.clashForce }}" style="background:#7A4E00;color:#FFF;border:none;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700">Tetap buat</button>
+                                      <button onClick="{{ b.clashCancel }}" style="background:#FFF;border:1px solid #E0CFA8;color:#5C4A2A;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600">Batal</button>
+                                    </div>
+                                  </div>
+                                </sc-if>
                               </sc-if>
+                              <div style="border-top:1px solid #D6E0EE;padding-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                                <label style="display:grid;gap:5px;align-content:start">
+                                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tautan rekaman</span>
+                                  <input value="{{ b.recUrl }}" onChange="{{ b.onRecUrl }}" placeholder="terisi otomatis, atau tempel dari Zoom" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
+                                </label>
+                                <label style="display:grid;gap:5px;align-content:start">
+                                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Passcode rekaman</span>
+                                  <input value="{{ b.recPass }}" onChange="{{ b.onRecPass }}" placeholder="kosongkan bila tanpa passcode" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
+                                </label>
+                                <span style="grid-column:1/-1;font-size:12px;color:#5B6B80;line-height:1.55">{{ b.recNote }}</span>
+                              </div>
                               <sc-if value="{{ zoomOff }}" hint-placeholder-val="{{ true }}">
                                 <div style="font-size:12.5px;color:#5B6B80;line-height:1.6;text-wrap:pretty">Belum tersambung. Pasang <code style="background:#E5ECF6;padding:1px 5px;border-radius:4px">ZOOM_ACCOUNT_ID</code>, <code style="background:#E5ECF6;padding:1px 5px;border-radius:4px">ZOOM_CLIENT_ID</code>, dan <code style="background:#E5ECF6;padding:1px 5px;border-radius:4px">ZOOM_CLIENT_SECRET</code> di server agar rapat bisa dibuat dari sini. Sementara itu, isi tautan dan Meeting ID secara manual.</div>
                               </sc-if>
                             </div>
                           </sc-if>
                           <sc-if value="{{ b.isIce }}" hint-placeholder-val="{{ false }}">
-                            <label style="display:grid;gap:5px">
+                            <label style="display:grid;gap:5px;align-content:start">
                               <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Isi roda</span>
                               <select value="{{ b.pool }}" onChange="{{ b.onPool }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none">
                                 <sc-for list="{{ b.poolOpts }}" as="o" hint-placeholder-count="3">
@@ -2332,7 +2380,7 @@
                 </div>
                 <sc-if value="{{ w.expanded }}" hint-placeholder-val="{{ false }}">
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px">
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Jenis event</span>
                     <select value="{{ w.jenis }}" onChange="{{ w.onJenis }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;background:#FCFAF7;outline:none">
                       <sc-for list="{{ jenisOptions }}" as="o" hint-placeholder-count="3">
@@ -2340,34 +2388,34 @@
                       </sc-for>
                     </select>
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nama event</span>
                     <input value="{{ w.title }}" onChange="{{ w.onTitle }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Keterangan singkat</span>
                     <input value="{{ w.subtitle }}" onChange="{{ w.onSubtitle }}" placeholder="mis. Angkatan 3" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Lembaga mitra</span>
                     <input value="{{ w.partnerName }}" onChange="{{ w.onPartner }}" placeholder="mis. Wahid Foundation" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Logo mitra</span>
                     <div style="display:flex;gap:8px">
                       <input value="{{ w.partnerLogo }}" onChange="{{ w.onLogo }}" placeholder="assets/logo.png atau URL" style="flex:1;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                       <label style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Unggah<input type="file" accept="image/*" onChange="{{ w.onLogoFile }}" style="display:none" /></label>
                     </div>
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tanggal</span>
                     <input value="{{ w.dateLabel }}" onChange="{{ w.onDate }}" placeholder="mis. 12–13 Oktober 2026" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tempat</span>
                     <input value="{{ w.place }}" onChange="{{ w.onPlace }}" placeholder="mis. Hotel Santika Jakarta" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Cara peserta masuk</span>
                     <select value="{{ w.registration }}" onChange="{{ w.onReg }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;background:#FCFAF7;outline:none">
                       <sc-for list="{{ regOptions }}" as="o" hint-placeholder-count="3">
@@ -2375,21 +2423,26 @@
                       </sc-for>
                     </select>
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya (Rp, 0 = gratis)</span>
                     <input value="{{ w.price }}" onChange="{{ w.onPrice }}" type="number" min="0" step="1000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota (0 = tanpa batas)</span>
                     <input value="{{ w.quota }}" onChange="{{ w.onQuota }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                  </label>
+                  <label style="display:grid;gap:5px;align-content:start">
+                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Host Zoom (email)</span>
+                    <input value="{{ w.zoomHost }}" onChange="{{ w.onZoomHost }}" type="email" placeholder="kosong = akun Zoom utama" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                    <span style="font-size:11.5px;color:#8C8078;line-height:1.5">Akun berlisensi di akun Zoom yang sama. Event dengan host berbeda bisa berjalan di jam yang sama.</span>
                   </label>
                   <sc-if value="{{ w.showFee }}" hint-placeholder-val="{{ false }}">
                     <div style="grid-column:1 / -1;background:#FBF6EE;border:1px solid #EAD9C6;border-radius:12px;padding:14px 16px;display:grid;gap:12px">
                       <div style="font-size:12.5px;font-weight:700;color:#3B342E">Kesepakatan biaya platform <span style="font-weight:500;color:#7A6F66">— event gratis tidak memotong pembayaran peserta, jadi lembaga membayar biaya per event</span></div>
                       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">
-                        <label style="display:grid;gap:5px"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya per event (Rp)</span>
+                        <label style="display:grid;gap:5px;align-content:start"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya per event (Rp)</span>
                           <input value="{{ w.platformFee }}" onChange="{{ w.onPlatformFee }}" type="number" min="0" step="50000" placeholder="mis. 500000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" /></label>
-                        <label style="display:grid;gap:5px"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Status</span>
+                        <label style="display:grid;gap:5px;align-content:start"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Status</span>
                           <select value="{{ w.platformFeeStatus }}" onChange="{{ w.onPlatformFeeStatus }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none">
                             <sc-for list="{{ feeStatusOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
                           </select></label>
@@ -3052,7 +3105,19 @@ class Component extends DCLogic {
     const png = await this.susunTiket(ws, p);
     return this.apiPost(Object.assign({ action: 'sendTicket', id: p.id, png, origin: location.origin }, pakaiSandi ? { password: this._pw || '' } : {}));
   }
-  selalu(t) { return t === 'ppt' || t === 'video'; }
+  selalu(x) {
+    const t = typeof x === 'string' ? x : x && x.type;
+    if (t === 'ppt' || t === 'video') return true;
+    return typeof x === 'object' && t === 'zoom' && !!x.recUrl;
+  }
+  /* Mode belajar mandiri: peserta memilih sesi sendiri, semua materi yang dipakai terbuka. */
+  sesiPeserta() {
+    const st = this.state, db = st.db || {};
+    if (!db.allOpen) return this.activeSess();
+    const s = this.sess(st.pSesi) || this.activeSess() || (db.sessions || [])[0];
+    if (!s) return null;
+    return Object.assign({}, s, { blocks: (s.blocks || []).map(b => b.enabled ? Object.assign({}, b, { open: true }) : b) });
+  }
   ytId(url) {
     const u = String(url || '').trim();
     const m = u.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/);
@@ -3254,7 +3319,9 @@ class Component extends DCLogic {
 
   api() { return (typeof window !== 'undefined' && window.WORKSHOP_API) || ''; }
   WSKEY = 'ws_pilihan_v1';
-  _hashAwal = (typeof location !== 'undefined' && location.hash) ? location.hash : '';
+  _hashAwal = (typeof location === 'undefined') ? ''
+    : location.hash ? location.hash
+    : (/^\/workshop\/[a-z0-9-]+\/?$/.test(location.pathname) ? '#' + location.pathname.replace(/\/+$/, '') : '');
   VERIF_RE = /^#\/workshop\/[^/]+\/sertifikat\//;
   wsNow() { return (this.state.wsMeta || []).filter(m => m.id === this.state.wsId)[0] || null; }
   pilihWs(id, tujuan) {
@@ -3281,6 +3348,7 @@ class Component extends DCLogic {
     if (st.role === 'peserta') return '#/peserta';
     if (st.role === 'admin') return '#/admin';
     if (st.role === 'super') return '#/super';
+    if (st.role === 'projector') return '#/proyektor';
     return '';
   }
   pasangRute() {
@@ -3288,7 +3356,19 @@ class Component extends DCLogic {
     const r = this.rute();
     if (!r || typeof location === 'undefined') return;
     /* Beranda = alamat bersih, tanpa #/ di belakang domain. */
-    if (r === 'ROOT') { this._rute = ''; if (typeof history !== 'undefined' && location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
+    if (typeof history === 'undefined') return;
+    /* Di server sendiri: beranda "/" dan profil "/workshop/<slug>" memakai alamat bersih
+       (tanpa #) agar pratinjau tautan saat dibagikan menampilkan gambar yang tepat. */
+    if (this.api()) {
+      const st = this.state, m = this.wsNow();
+      let tujuan;
+      if (r === 'ROOT') { this._rute = ''; tujuan = '/'; }
+      else if (st.role === 'profil' && m) { this._rute = ''; tujuan = '/workshop/' + this.slugWs(m); }
+      else { this._rute = r; tujuan = '/' + r; }
+      if (location.pathname + location.hash !== tujuan) history.replaceState(null, '', tujuan);
+      return;
+    }
+    if (r === 'ROOT') { this._rute = ''; if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
     if (location.hash !== r) { this._rute = r; history.replaceState(null, '', r); }
   }
   bacaRute(hash) {
@@ -3312,6 +3392,13 @@ class Component extends DCLogic {
       return;
     }
     if (h === 'masuk') return this.setState({ wsId: '', loginGlobal: true, role: 'login', loginError: '' });
+    if (h === 'proyektor') {
+      if (this.state.role === 'projector') return;
+      let sesi = null;
+      try { sesi = JSON.parse(localStorage.getItem(this.SESSKEY) || 'null'); } catch (e) {}
+      if (!(sesi && sesi.role === 'admin' && sesi.pw)) return this.setState({ role: 'adminLogin' });
+      return this.setState({ role: 'projector', projFrom: 'admin', projTab: true, projPick: null });
+    }
     /* Alamat dasbor hanya berlaku bila sesi masih tersimpan; selain itu ke halaman masuk. */
     if (h === 'peserta' || h === 'admin' || h === 'super') {
       if (this.state.role === h) return;
@@ -3389,7 +3476,7 @@ class Component extends DCLogic {
   /* Teks yang dipindai dari sertifikat: alamat verifikasi berisi kode peserta. */
   certVerifUrl(ws, p) {
     let dasar = '';
-    try { dasar = location.origin + location.pathname; } catch (e) {}
+    try { dasar = this.api() ? location.origin + '/' : location.origin + location.pathname; } catch (e) {}
     return dasar + '#/workshop/' + this.slugWs(ws) + '/sertifikat/' + encodeURIComponent(p.code || p.id);
   }
   cetakSertifikat(ws, p) {
@@ -3713,14 +3800,16 @@ class Component extends DCLogic {
     }
     /* Sesi login dipulihkan hanya bila alamatnya alamat dasbor (#/admin, #/super, #/peserta).
        Membuka domain saja selalu menampilkan beranda. */
-    const ruteDasbor = /^#\/(admin|super|peserta)\/?$/.test(this._hashAwal || '');
+    const ruteDasbor = /^#\/(admin|super|peserta|proyektor)\/?$/.test(this._hashAwal || '');
+    const ruteProyektor = /^#\/proyektor\/?$/.test(this._hashAwal || '');
     try {
       const sesi = ruteDasbor ? JSON.parse(localStorage.getItem(this.SESSKEY) || 'null') : null;
       if (sesi && sesi.role === 'peserta' && sesi.userId) this.setState({ role: 'peserta', userId: sesi.userId });
       else if (sesi && sesi.role === 'admin' && sesi.pw) {
         this._pw = sesi.pw; this._user = sesi.user || '';
         this.setState({
-          role: sesi.superadmin ? 'super' : 'admin', adminRole: sesi.adminRole || 'penuh',
+          role: ruteProyektor ? 'projector' : sesi.superadmin ? 'super' : 'admin', adminRole: sesi.adminRole || 'penuh',
+          projFrom: 'admin', projTab: ruteProyektor, projPick: null,
           adminName: sesi.adminName || '', adminId: sesi.adminId || null, isSuper: !!sesi.superadmin,
           adminUser: sesi.user || '', adminWsIds: sesi.adminWsIds || [], tab: sesi.adminRole === 'pemantau' ? 'results' : 'control'
         }, () => { if (sesi.superadmin) this.muatPlatform(); });
@@ -3985,7 +4074,7 @@ class Component extends DCLogic {
         const s = d.sessions.find(x => x.id === d.activeSessionId) || null;
         this.apiPost({
           action: 'putLive', password: this._pw || '',
-          activeSessionId: d.activeSessionId,
+          activeSessionId: d.activeSessionId, allOpen: !!d.allOpen,
           sessionId: s ? s.id : '',
           multiOpen: s ? s.multiOpen !== false : true,
           active: s ? s.active : null,
@@ -4424,9 +4513,17 @@ class Component extends DCLogic {
       adminUser: st.adminUser || '',
       onAdminUser: e => this.setState({ adminUser: e.target.value, adminError: '' }),
       goAdmin: () => this.setState({ role: 'adminLogin', adminError: '' }),
-      goProjector: () => this.setState({ role: 'projector', projFrom: st.role, projPick: null }),
-      projBack: () => this.setState({ role: st.projFrom === 'admin' ? 'admin' : 'login', projPick: null }),
-      projBackLabel: st.projFrom === 'admin' ? 'Kembali ke panel admin' : 'Kembali ke halaman depan',
+      goProjector: () => {
+        /* Tab baru, agar dasbor admin tetap terbuka di tab ini. */
+        const dasar = this.api() ? location.origin + '/' : location.href.split('#')[0];
+        const w = window.open(dasar + '#/proyektor', '_blank');
+        if (!w) this.setState({ role: 'projector', projFrom: st.role, projPick: null });
+      },
+      projBack: () => {
+        if (st.projTab) { try { window.close(); } catch (e) {} }
+        this.setState({ role: st.projFrom === 'admin' ? 'admin' : 'login', projPick: null, projTab: false });
+      },
+      projBackLabel: st.projTab ? 'Tutup proyektor' : st.projFrom === 'admin' ? 'Kembali ke panel admin' : 'Kembali ke halaman depan',
       logout: () => {
         this.forget();
         this._pw = '';
@@ -4496,7 +4593,8 @@ class Component extends DCLogic {
       groupsAvailable: this.groupList()
     };
 
-    const live = this.activeSess();
+    const live = st.role === 'peserta' ? this.sesiPeserta() : this.activeSess();
+    const mandiri = !!db.allOpen && st.role === 'peserta';
     v.hasActiveSession = !!live; v.noActiveSession = !live;
     v.liveBadge = live ? (live.mode === 'Daring' ? 'Sesi daring berlangsung' : 'Sesi berlangsung') : 'Belum ada sesi aktif';
     v.sessionTitle = live ? live.title : 'ruang islami.co';
@@ -4511,7 +4609,17 @@ class Component extends DCLogic {
     v.sessionMeta = metaRows.length ? metaRows
       : [{ label: 'Status', value: live ? 'Detail sesi belum diisi panitia' : 'Menunggu jadwal' }];
     v.hasSessionDesc = !!(live && String(live.desc || '').trim());
-    if (!started) {
+    if (mandiri && live) v.liveBadge = 'Belajar mandiri · semua sesi terbuka';
+    v.pSesiShow = mandiri && (db.sessions || []).length > 1;
+    v.pSesiChips = (db.sessions || []).map((s0, i) => {
+      const on = live && s0.id === live.id;
+      return {
+        title: (i + 1) + '. ' + (s0.title || 'Sesi'),
+        style: { background: on ? '#A5121C' : '#FFF', border: '1px solid ' + (on ? '#A5121C' : '#E0D8CE'), color: on ? '#FFF' : '#3B342E', borderRadius: '100px', padding: '9px 15px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none' },
+        pick: () => this.setState({ pSesi: s0.id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' })
+      };
+    });
+    if (!started && !mandiri) {
       v.liveBadge = 'Belum dimulai';
       v.sessionTitle = 'Menunggu Sesi Dimulai';
       v.sessionDesc = '';
@@ -5287,8 +5395,24 @@ class Component extends DCLogic {
       let jml = 0;
       if (me && st.role === 'peserta') {
         (db.sessions || []).forEach(ss => {
-          const items = (ss.blocks || []).filter(b => b.enabled && this.selalu(b.type)).map(b => {
+          const items = (ss.blocks || []).filter(b => b.enabled && this.selalu(b)).map(b => {
             const buka = st.libOpen === b.id;
+            if (b.type === 'zoom') {
+              const tgl = b.recAt ? new Date(b.recAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
+              return {
+                kind: 'Rekaman Zoom', title: b.title || 'Rekaman Zoom',
+                meta: [tgl, b.recDur ? b.recDur + ' menit' : '', b.recPass ? 'Passcode: ' + b.recPass : ''].filter(Boolean).join(' · '),
+                icon: '●',
+                iconStyle: { width: '40px', height: '40px', flex: 'none', borderRadius: '11px', display: 'grid', placeItems: 'center', fontSize: '13px', background: '#E8EFFB', color: '#2D6CDF' },
+                chevStyle: { fontSize: '22px', color: '#B5A99D', flex: 'none', transition: 'transform .2s', transform: buka ? 'rotate(90deg)' : 'none' },
+                cardStyle: { background: '#FFF', border: '1px solid ' + (buka ? '#A5121C' : '#E6DFD6'), borderRadius: '13px', padding: '14px 16px', gridColumn: 'auto' },
+                open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: b.desc || '',
+                hasVideo: false, video: null, kosong: false,
+                url: b.recUrl, linkLabel: 'Tonton rekaman ↗',
+                linkStyle: { justifySelf: 'start', display: 'inline-flex', background: '#2D6CDF', border: 'none', color: '#FFF', borderRadius: '9px', padding: '10px 16px', fontSize: '13.5px', fontWeight: 700, textDecoration: 'none' },
+                toggle: () => this.setState({ libOpen: buka ? null : b.id })
+              };
+            }
             const vid = b.type === 'video';
             const ytOk = vid && !!this.ytId(b.url);
             const adaUrl = !!(b.url && b.url !== '#');
@@ -5397,27 +5521,27 @@ class Component extends DCLogic {
         : b.type === 'form' ? !!(R.forms[b.id] && R.forms[b.id][me.id])
         : b.type === 'wordcloud' ? R.words.some(w => w.blockId === b.id && w.by === me.id)
         : false;
-      const terbuka = (live.blocks || []).filter(b => b.open && b.enabled && !this.selalu(b.type));
-      const perlu = terbuka.filter(b => !sudah(b) && !this.selalu(b.type) && b.type !== 'zoom');
+      const terbuka = (live.blocks || []).filter(b => b.open && b.enabled && !this.selalu(b));
+      const perlu = terbuka.filter(b => !sudah(b) && !this.selalu(b) && b.type !== 'zoom');
       const utama = terbuka.filter(b => b.id === live.active)[0] || perlu[0] || terbuka[0];
       const tujuan = perlu.filter(b => b.id !== st.panel)[0] || (utama && utama.id !== st.panel ? utama : null);
-      v.hasLiveCall = !!tujuan;
+      v.hasLiveCall = !!tujuan && !db.allOpen;
       v.liveTitle = tujuan
         ? (perlu.length > 1 ? perlu.length + ' materi dibuka · mulai dari “' + tujuan.title + '”' : tujuan.title)
         : '';
       v.openLive = () => { if (tujuan) this.setState({ panel: tujuan.id, fbSent: false, formSent: false, formError: '' }); };
 
-      const bacaanDulu = (a, b) => (this.selalu(a.type) ? 0 : 1) - (this.selalu(b.type) ? 0 : 1);
+      const bacaanDulu = (a, b) => (this.selalu(a) ? 0 : 1) - (this.selalu(b) ? 0 : 1);
       v.blockCards = (live.blocks || []).filter(b => b.enabled).slice().sort(bacaanDulu).map(b0 => {
-        const b = this.selalu(b0.type) ? Object.assign({}, b0, { open: true }) : b0;
+        const b = this.selalu(b0) ? Object.assign({}, b0, { open: true }) : b0;
         const done = b.type === 'checkin' ? !!R.checkins[me.id]
           : b.type === 'quiz' ? !!(R.quiz[b.id] && R.quiz[b.id][me.id])
           : b.type === 'feedback' ? !!(R.feedback[b.id] && R.feedback[b.id][me.id])
           : b.type === 'form' ? !!(R.forms[b.id] && R.forms[b.id][me.id])
           : b.type === 'wordcloud' ? R.words.some(w => w.blockId === b.id && w.by === me.id)
           : false;
-        const passive = this.selalu(b.type) || b.type === 'zoom';
-        const badge = this.selalu(b.type) ? 'Selalu tersedia' : passive ? (b.open ? 'Tersedia' : 'Terkunci') : done ? 'Selesai' : b.open ? 'Dibuka' : 'Terkunci';
+        const passive = this.selalu(b) || b.type === 'zoom';
+        const badge = this.selalu(b) ? 'Selalu tersedia' : passive ? (b.open ? 'Tersedia' : 'Terkunci') : done ? 'Selesai' : b.open ? 'Dibuka' : 'Terkunci';
         return {
           kind: this.KINDS[b.type], title: b.title, desc: b.desc, presenter: b.presenter ? 'Pengisi: ' + b.presenter : '',
           badge, open: () => this.setState({ panel: b.id, fbSent: false, formSent: false, formError: '' }),
@@ -5428,11 +5552,11 @@ class Component extends DCLogic {
       });
 
       const pb = st.panel ? (live.blocks || []).find(b => b.id === st.panel) : null;
-      const locked = !!pb && !pb.open && !this.selalu(pb.type);
+      const locked = !!pb && !pb.open && !this.selalu(pb);
       v.quizPreview = false;
       v.inLocked = locked;
       v.closePanel = () => this.setState({ panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
-      v.inDoc = !!pb && !locked && (this.selalu(pb.type) || pb.type === 'zoom');
+      v.inDoc = !!pb && !locked && (this.selalu(pb) || pb.type === 'zoom');
       v.docVideo = null; v.docHasVideo = false; v.docNoVideo = false;
       v.inCountdown = !!pb && !locked && pb.type === 'countdown';
       v.inIce = !!pb && !locked && pb.type === 'icebreak';
@@ -5511,7 +5635,14 @@ class Component extends DCLogic {
         v.panelKind = this.KINDS[pb.type]; v.panelTitle = pb.title; v.panelDesc = pb.desc;
         v.panelPresenter = pb.presenter ? 'Pengisi: ' + pb.presenter : '';
         v.cloudPrompt = pb.prompt || 'Tulis satu kata…';
-        if (pb.type === 'zoom') {
+        if (pb.type === 'zoom' && pb.recUrl) {
+          v.docMeta = [
+            { label: 'Passcode rekaman', value: pb.recPass || 'tidak ada' },
+            { label: 'Direkam', value: pb.recAt ? new Date(pb.recAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }) : '—' }
+          ];
+          v.docHasMeta = true; v.docUrl = pb.recUrl; v.docBtnLabel = 'Tonton rekaman Zoom';
+          v.docBtnStyle = { display: 'inline-flex', gap: '9px', alignItems: 'center', background: '#2D6CDF', color: '#FFF', borderRadius: '9px', padding: '13px 20px', fontSize: '14.5px', fontWeight: 700, textDecoration: 'none' };
+        } else if (pb.type === 'zoom') {
           v.docMeta = [{ label: 'Meeting ID', value: pb.meetingId || '—' }, { label: 'Passcode', value: pb.passcode || '—' }];
           v.docHasMeta = true; v.docUrl = pb.url || '#'; v.docBtnLabel = 'Gabung ruang Zoom';
           v.docBtnStyle = { display: 'inline-flex', gap: '9px', alignItems: 'center', background: '#3E6B22', color: '#FFF', borderRadius: '9px', padding: '13px 20px', fontSize: '14.5px', fontWeight: 700, textDecoration: 'none' };
@@ -6240,6 +6371,8 @@ class Component extends DCLogic {
         onPlatformFeeStatus: e => ubah('platformFeeStatus', e.target.value),
         onPlatformFeeNote: e => ubah('platformFeeNote', e.target.value),
         onQuota: e => ubah('quota', Math.max(0, parseInt(e.target.value, 10) || 0)),
+        zoomHost: m.zoomHost || '',
+        onZoomHost: e => ubah('zoomHost', e.target.value.trim().toLowerCase()),
         onReg: e => ubah('registration', e.target.value),
         format: m.format || 'online',
         onFormat: e => ubah('format', e.target.value),
@@ -6765,6 +6898,12 @@ class Component extends DCLogic {
         add: () => { const b = this.newBlock(t); this.save(d => { d.sessions.find(s => s.id === cur.id).blocks.push(b); }); this.setState({ editBlock: b.id }); }
       }));
       v.closeAll = () => this.save(d => { const s = d.sessions.find(x => x.id === cur.id); s.blocks.forEach(b => { b.open = false; }); s.active = null; }, null, true);
+      v.allOpenLabel = db.allOpen ? 'Semua sesi terbuka' : 'Sesi dibuka admin';
+      v.allOpenTitle = db.allOpen
+        ? 'Peserta bebas memilih sesi dan semua materinya. Proyektor tetap menampilkan sesi aktif yang Anda pilih.'
+        : 'Peserta hanya melihat sesi aktif dan materi yang Anda buka.';
+      v.allOpenStyle = { background: db.allOpen ? '#FFF6E5' : '#FFF', border: '1px solid ' + (db.allOpen ? '#F0D9A8' : '#E0D8CE'), color: db.allOpen ? '#7A4E00' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
+      v.toggleAllOpen = () => this.save(d => { d.allOpen = !d.allOpen; }, null, true);
       v.multiLabel = cur.multiOpen === false ? 'Satu materi sekaligus' : 'Boleh dibuka bersamaan';
       v.multiStyle = { background: cur.multiOpen === false ? '#FFF' : '#EEF5E9', border: '1px solid ' + (cur.multiOpen === false ? '#E0D8CE' : '#CFE2C2'), color: cur.multiOpen === false ? '#5C534B' : '#2C4D18', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
       v.toggleMulti = () => this.save(d => {
@@ -6816,10 +6955,10 @@ class Component extends DCLogic {
           showOnScreen: () => { if (!shown) this.save(d => { d.sessions.find(x => x.id === cur.id).active = b.id; }, null, true); },
           enabledLabel: b.enabled ? 'Keluarkan' : 'Pakai',
           toggleEnabled: () => mut(b.id, (x, s) => { x.enabled = !x.enabled; if (!x.enabled) { x.open = false; if (s.active === x.id) s.active = null; } }),
-          openLabel: this.selalu(b.type) ? 'Selalu tampil' : b.open ? 'Tutup' : (cur.multiOpen === false ? 'Buka & tampilkan' : 'Buka'),
-          openBtnStyle: this.selalu(b.type) ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: 'default' } : { background: b.open ? '#F6F1EA' : '#A5121C', border: b.open ? '1px solid #E0D8CE' : 'none', color: b.open ? '#5C534B' : '#FFF', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, opacity: b.enabled ? 1 : 0.4 },
+          openLabel: this.selalu(b) ? 'Selalu tampil' : b.open ? 'Tutup' : (cur.multiOpen === false ? 'Buka & tampilkan' : 'Buka'),
+          openBtnStyle: this.selalu(b) ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: 'default' } : { background: b.open ? '#F6F1EA' : '#A5121C', border: b.open ? '1px solid #E0D8CE' : 'none', color: b.open ? '#5C534B' : '#FFF', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, opacity: b.enabled ? 1 : 0.4 },
           toggleOpen: () => {
-            if (!b.enabled || this.selalu(b.type)) return;
+            if (!b.enabled || this.selalu(b)) return;
             this.save(d => {
               const s = d.sessions.find(x => x.id === cur.id);
               const x = s.blocks.find(y => y.id === b.id);
@@ -6846,22 +6985,89 @@ class Component extends DCLogic {
           onUrl: e => { const val = e.target.value; this.markDraft(); mut(b.id, x => { x.url = val; }); },
           onFileName: e => { const val = e.target.value; this.markDraft(); mut(b.id, x => { x.fileName = val; }); },
           onMeetingId: e => { const val = e.target.value; this.markDraft(); mut(b.id, x => { x.meetingId = val; }); },
-          onPasscode: e => { const val = e.target.value; this.markDraft(); mut(b.id, x => { x.passcode = val; }); },
+          onPasscode: e => {
+            const val = e.target.value.replace(/[^A-Za-z0-9@_*-]/g, '').slice(0, 10);
+            /* Rapat buatan platform: ketikan ditahan sampai "Terapkan", agar tidak berbeda dari Zoom. */
+            if (b.zoomId) return this.setState(x => ({ passEdit: Object.assign({}, x.passEdit, { [b.id]: val }) }));
+            this.markDraft(); mut(b.id, x => { x.passcode = val; });
+          },
+          passHint: b.zoomId
+            ? 'Ketik passcode baru lalu tekan Terapkan — Zoom ikut diperbarui. Maks. 10 karakter.'
+            : 'Kosongkan agar Zoom membuatkan passcode, atau isi sendiri sebelum menekan Buat rapat. Maks. 10 karakter.',
+          passApplyLabel: st.passBusy === b.id ? 'Menyimpan…' : 'Terapkan',
+          passApplyStyle: b.zoomId && st.passEdit && st.passEdit[b.id] != null && st.passEdit[b.id] !== (b.passcode || '')
+            ? { background: '#2D6CDF', color: '#FFF', border: 'none', borderRadius: '8px', padding: '0 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
+            : { display: 'none' },
+          passApply: async () => {
+            const val = String(((st.passEdit || {})[b.id]) || '').trim();
+            if (!val) return this.setState({ zoomMsg: { id: b.id, text: 'Passcode tidak boleh kosong.' } });
+            this.setState({ passBusy: b.id, zoomMsg: { id: b.id, text: 'Mengganti passcode di Zoom…' } });
+            const out = await this.apiPost({ action: 'zoomPasscode', password: this._pw || '', sessionId: cur.id, blockId: b.id, passcode: val });
+            if (!out || !out.ok) return this.setState({ passBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal mengganti passcode.' } });
+            this.setState(prev => {
+              const d = JSON.parse(JSON.stringify(prev.db));
+              const ss = d.sessions.find(x => x.id === cur.id);
+              const x = ss && ss.blocks.find(y => y.id === b.id);
+              if (x) { x.passcode = out.data.passcode; x.url = out.data.url; }
+              const pe = Object.assign({}, prev.passEdit); delete pe[b.id];
+              return { db: d, passEdit: pe, passBusy: null, zoomMsg: { id: b.id, text: 'Passcode diganti. Tautan gabung juga sudah diperbarui.' } };
+            });
+          },
           zoomStatus: (st.zoomMsg && st.zoomMsg.id === b.id) ? st.zoomMsg.text : b.zoomId ? 'Rapat terhubung · ID ' + (b.meetingId || b.zoomId) : 'Belum ada rapat',
           zoomStart: (st.zoomForm && st.zoomForm[b.id] && st.zoomForm[b.id].start) || '',
           zoomDur: (st.zoomForm && st.zoomForm[b.id] && st.zoomForm[b.id].dur) || 120,
+          zoomRec: !((st.zoomForm || {})[b.id] && (st.zoomForm || {})[b.id].rec === false),
+          onZoomRec: e => { const val = !!e.target.checked; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { rec: val }) }) })); },
+          recUrl: b.recUrl || '', recPass: b.recPass || '',
+          zoomHostLabel: b.zoomHost || ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama',
+          hasClash: !!(st.zoomClash && st.zoomClash.id === b.id),
+          clashHost: (st.zoomClash && st.zoomClash.host) || '',
+          clashList: ((st.zoomClash && st.zoomClash.id === b.id && st.zoomClash.list) || []).map(c => {
+            const a = new Date(c.mulai);
+            const z = new Date(a.getTime() + c.durasi * 60000);
+            const jam = d => d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+            const tgl = a.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
+            return { text: c.event + ' · ' + c.sesi + ' — ' + tgl + ', ' + jam(a) + '–' + jam(z) + ' WIB' };
+          }),
+          clashCancel: () => this.setState({ zoomClash: null, zoomMsg: { id: b.id, text: 'Dibatalkan. Ubah jam mulai atau host, lalu coba lagi.' } }),
+          onRecUrl: e => { const val = e.target.value.trim(); this.markDraft(); mut(b.id, x => { x.recUrl = val; if (val && !x.recAt) x.recAt = new Date().toISOString(); if (!val) { x.recAt = null; x.recPass = ''; } }); },
+          onRecPass: e => { const val = e.target.value.trim(); this.markDraft(); mut(b.id, x => { x.recPass = val; }); },
+          recNote: b.recUrl
+            ? 'Rekaman tampil untuk peserta sebagai bahan yang selalu tersedia, termasuk di Perpustakaan. Kosongkan tautan untuk menyembunyikannya.'
+            : 'Setelah rapat selesai dan Zoom memproses rekaman cloud, tautannya terisi sendiri. Bisa juga ditempel manual.',
+          recFetchLabel: st.recBusy === b.id ? 'Mengambil…' : b.recUrl ? 'Perbarui rekaman' : 'Ambil rekaman',
+          recFetchStyle: b.zoomId
+            ? { background: '#FFF', border: '1px solid #B9C8DE', color: '#1F3B5C', borderRadius: '8px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
+            : { display: 'none' },
+          recFetch: async () => {
+            if (st.recBusy) return;
+            this.setState({ recBusy: b.id, zoomMsg: { id: b.id, text: 'Mencari rekaman di cloud Zoom…' } });
+            const out = await this.apiPost({ action: 'zoomRecording', password: this._pw || '', sessionId: cur.id, blockId: b.id });
+            if (!out || !out.ok) return this.setState({ recBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal mengambil rekaman.' } });
+            this.setState(prev => {
+              const d = JSON.parse(JSON.stringify(prev.db));
+              const ss = d.sessions.find(x => x.id === cur.id);
+              const x = ss && ss.blocks.find(y => y.id === b.id);
+              if (x) Object.assign(x, { recUrl: out.data.recUrl, recPass: out.data.recPass, recAt: out.data.recAt });
+              return { db: d, recBusy: null, zoomMsg: { id: b.id, text: 'Rekaman ditemukan dan sudah tampil untuk peserta.' } };
+            });
+          },
           onZoomStart: e => { const val = e.target.value; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { start: val }) }) })); },
           onZoomDur: e => { const val = e.target.value; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { dur: val }) }) })); },
           zoomCreateLabel: st.zoomBusy === b.id ? 'Membuat rapat…' : b.zoomId ? 'Buat rapat baru' : 'Buat rapat Zoom otomatis',
           zoomHostStyle: b.zoomId
             ? { background: '#FFF', border: '1px solid #B9C8DE', color: '#1F3B5C', borderRadius: '8px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
             : { display: 'none' },
-          zoomCreate: async () => {
+          clashForce: () => { this.setState({ zoomClash: null }); const fn = this._zoomFn && this._zoomFn[b.id]; if (fn) fn(true); },
+          zoomCreate: (this._zoomFn = this._zoomFn || {})[b.id] = async (paksa) => {
             if (st.zoomBusy) return;
+            paksa = paksa === true;
             const f = (st.zoomForm || {})[b.id] || {};
             this.setState({ zoomBusy: b.id, zoomMsg: { id: b.id, text: 'Menghubungi Zoom…' } });
-            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
+            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
+            if (out && !out.ok && Array.isArray(out.clash)) return this.setState({ zoomBusy: null, zoomClash: { id: b.id, host: out.host, list: out.clash }, zoomMsg: { id: b.id, text: out.error } });
             if (!out || !out.ok) return this.setState({ zoomBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal membuat rapat.' } });
+            this.setState({ zoomClash: null });
             /* Server sudah menyimpan; salinan lokal diperbarui tanpa menandai draf. */
             this.setState(prev => {
               const d = JSON.parse(JSON.stringify(prev.db));
@@ -6914,7 +7120,7 @@ class Component extends DCLogic {
           hasUrl: b.type === 'ppt' || b.type === 'zoom' || b.type === 'video',
           urlLabel: b.type === 'zoom' ? 'Tautan Zoom' : b.type === 'video' ? 'Tautan YouTube' : 'Tautan bahan bacaan',
           urlHint: b.type === 'zoom' ? 'https://zoom.us/j/…' : b.type === 'video' ? 'https://youtu.be/… atau https://www.youtube.com/watch?v=…' : 'Tautan Google Drive',
-          url: b.url || '', fileName: b.fileName || '', meetingId: b.meetingId || '', passcode: b.passcode || '', prompt: b.prompt || '',
+          url: b.url || '', fileName: b.fileName || '', meetingId: b.meetingId || '', passcode: (st.passEdit && st.passEdit[b.id] != null) ? st.passEdit[b.id] : (b.passcode || ''), prompt: b.prompt || '',
           quizKind: b.quizKind || 'pre',
           quizKindStyle: (() => {
             const dup = (cur.blocks || []).filter(x => x.type === 'quiz' && x.enabled && (x.quizKind || 'pre') === (b.quizKind || 'pre')).length > 1;
