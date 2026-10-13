@@ -814,6 +814,20 @@ function handleAction(p) {
       return { ok: true };
     }
 
+    /* Kode klaim host (Host Key) akun Zoom utama — hanya untuk admin, tidak pernah ke peserta. */
+    case 'putHostKey': {
+      if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin.' };
+      const k = String(p.key || '').trim();
+      if (k && !/^\d{6,10}$/.test(k)) return { ok: false, error: 'Kode klaim host berupa 6–10 angka.' };
+      store.zoomHostKey = k;
+      touch();
+      return { ok: true, data: { set: !!k } };
+    }
+    case 'getHostKey': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya admin event.' };
+      return { ok: true, data: { key: store.zoomHostKey || '' } };
+    }
+
     case 'putFooter': {
       if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin yang boleh mengubah tautan footer.' };
       store.footer = (Array.isArray(p.links) ? p.links : []).slice(0, 12).map(x => ({
@@ -866,9 +880,23 @@ function handleAction(p) {
         agenda: String(s.desc || '').slice(0, 1900),
         settings: { waiting_room: true, join_before_host: false, mute_upon_entry: true, participant_video: false, host_video: true, auto_recording: p.record ? 'cloud' : 'none' }
       };
+      /* Mode rekam: none | cloud | local (di komputer host). */
+      const modeRek = ['none', 'cloud', 'local'].indexOf(p.recordMode) >= 0 ? p.recordMode : (p.record ? 'cloud' : 'none');
+      badan.settings.auto_recording = modeRek;
+      badan.settings.local_recording = true;
+      /* Klaim host: admin masuk dengan akunnya sendiri lalu mengklaim host dengan kode.
+         Perlu bisa masuk sebelum host & tanpa ruang tunggu, agar tombol Claim Host tersedia. */
+      if (p.hostMode === 'klaim') {
+        badan.settings.join_before_host = true;
+        badan.settings.jbh_time = 0;
+        badan.settings.waiting_room = false;
+      }
       if (mulai && !isNaN(mulai)) badan.start_time = mulai.toISOString().replace(/\.\d{3}Z$/, 'Z');
       /* Satu host Zoom hanya bisa memimpin satu rapat dalam satu waktu. */
-      const host = hostZoomWs(wid);
+      /* Host per sesi (opsional) mengalahkan host event, lalu akun utama. */
+      const hostSesi = String(p.host || '').trim().toLowerCase();
+      if (hostSesi && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(hostSesi)) return { ok: false, error: 'Email host Zoom tidak valid.' };
+      const host = hostSesi || hostZoomWs(wid);
       const tMulai = mulai && !isNaN(mulai) ? mulai.getTime() : Date.now();
       const tSelesai = tMulai + badan.duration * 60000;
       const bentrok = rapatBentrok(host, tMulai, tSelesai, b.id);
@@ -884,7 +912,7 @@ function handleAction(p) {
         const idTampil = String(z.id || '').replace(/(\d{3})(\d{3,4})(\d{4})$/, '$1 $2 $3');
         b.url = z.join_url || ''; b.meetingId = idTampil; b.passcode = z.password || '';
         b.zoomId = String(z.id || ''); b.zoomCreatedAt = new Date().toISOString();
-        b.zoomHost = host; b.zoomStartAt = new Date(tMulai).toISOString(); b.zoomDur = badan.duration;
+        b.zoomHost = host; b.zoomHostMode = p.hostMode === 'klaim' ? 'klaim' : 'utama'; b.zoomRecMode = modeRek; b.zoomStartAt = new Date(tMulai).toISOString(); b.zoomDur = badan.duration;
         touch();
         return { ok: true, data: { url: b.url, meetingId: b.meetingId, passcode: b.passcode, zoomId: b.zoomId, startUrl: z.start_url || '' } };
       }).catch(e => ({ ok: false, error: /1001|does not exist|not found/i.test(e.message)
@@ -1357,7 +1385,7 @@ const server = http.createServer(async (req, res) => {
       const wid = pakai(decodeURIComponent(wsParam || ''));
       if (url.indexOf('action=health') >= 0) return json(res, { ok: true, data: { version, workshops: store.meta.length } });
       if (url.indexOf('action=list') >= 0) return json(res, { ok: true, data: { meta: metaPublik() }, version });
-      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0, footer: Array.isArray(store.footer) ? store.footer : null, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
+      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0, footer: Array.isArray(store.footer) ? store.footer : null, hostKeySet: !!store.zoomHostKey, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
     }
     if (req.method === 'POST') {
       try {

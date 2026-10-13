@@ -451,3 +451,28 @@ Saat admin menekan **Buat rapat Zoom otomatis**, platform memeriksa semua rapat 
 Bila jamnya beririsan, muncul peringatan berisi event, sesi, dan jamnya, dengan pilihan **Tetap buat**
 atau **Batal**. Rapat instan (tanpa jam mulai) dihitung mulai saat itu juga.
 Pemeriksaan hanya mencakup rapat yang dibuat lewat platform.
+
+
+## Rekaman tanpa akun Zoom Pro — rekam di komputer
+
+Di kartu materi **Tautan Zoom**, bagian **Sumber rekaman**, pilih **Rekam di komputer → Google Drive**.
+
+1. Host memakai aplikasi Zoom desktop, lalu saat rapat menekan **Record → Record on this Computer** (tersedia di akun gratis).
+2. Setelah rapat berakhir, Zoom menyimpan berkas `.mp4` di folder **Dokumen/Zoom**.
+3. Unggah berkas ke Google Drive host.
+4. **Bagikan → Akses umum: Siapa saja yang memiliki link → Pelihat**, lalu **Salin link**.
+5. Tempel tautan itu di **Tautan rekaman**, lalu **Simpan perubahan**.
+
+Rekaman tampil untuk peserta sebagai bahan yang selalu tersedia, sama seperti rekaman cloud. Pilihan ini juga cadangan bila rekaman cloud gagal atau kuota cloud penuh.
+
+
+## Klaim host dengan kode — admin memandu dengan akun Zoom sendiri
+
+1. **Super admin, sekali saja:** ambil Host Key akun Zoom utama di zoom.us → Profile → Host Key (6–10 angka). Isi di dasbor super admin → **Kode klaim host Zoom** → Simpan.
+2. **Admin event, di kartu Tautan Zoom:** pilih **Admin klaim host dengan kode**, atur **Rekaman: Di komputer host**, lalu **Buat rapat**.
+3. Saat rapat, admin membuka tautan dengan akun Zoom sendiri (boleh gratis) → **Participants → Claim Host** → masukkan kode (tombol **Tampilkan** di kartu).
+4. Sebagai host, admin bisa **Record → Record on this Computer**.
+
+Rapat mode ini dibuka tanpa ruang tunggu dan boleh dimasuki sebelum host, karena itu syarat agar Claim Host bisa dipakai. Kode hanya dikirim ke admin, tidak pernah ke peserta.
+
+**Mengapa merekam di komputer lebih aman:** rekaman cloud Zoom terhapus otomatis sesuai masa simpan akun (umumnya 30 hari) dan kuota penyimpanannya terbatas. Berkas di komputer host tetap ada sampai Anda menghapusnya. Unggah ke Google Drive lalu tempel tautannya di **Tautan rekaman**.
