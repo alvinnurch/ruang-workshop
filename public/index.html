@@ -1523,10 +1523,26 @@
                     </div>
                     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
                       <span style="{{ a.statusStyle }}">{{ a.status }}</span>
-                      <button onClick="{{ a.setuju }}" style="background:#3E6B22;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700" style-hover="background:#2C4D18">Setujui</button>
-                      <button onClick="{{ a.tolak }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tolak</button>
+                      <button onClick="{{ a.review }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700" style-hover="background:#F6F1EA">{{ a.reviewLabel }}</button>
+                      <sc-if value="{{ a.bisaPutus }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ a.setuju }}" style="background:#3E6B22;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700" style-hover="background:#2C4D18">Setujui &amp; buat event</button>
+                        <button onClick="{{ a.tolak }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tolak</button>
+                      </sc-if>
+                      <sc-if value="{{ a.punyaEvent }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ a.bukaEvent }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">Kelola event</button>
+                      </sc-if>
                     </div>
                   </div>
+                  <sc-if value="{{ a.terbuka }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:#FFF;border:1px solid #E0D8CE;border-radius:10px;padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px 22px">
+                      <sc-for list="{{ a.isian }}" as="x" hint-placeholder-count="8">
+                        <div style="{{ x.style }}">
+                          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8C8078">{{ x.label }}</div>
+                          <div style="font-size:13.5px;color:#1B1714;line-height:1.55;margin-top:3px;white-space:pre-wrap;word-break:break-word">{{ x.value }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
                   <div style="background:#FAF6F0;border:1px solid #EDE6DD;border-radius:10px;padding:13px 15px;display:grid;gap:6px">
                     <div style="font-size:13.5px;font-weight:700;color:#1B1714;line-height:1.35">{{ a.judul }}</div>
                     <div style="font-size:12px;color:#7A6F66;line-height:1.5">{{ a.rincian }}</div>
@@ -4825,7 +4841,7 @@ class Component extends DCLogic {
     v.platLembaga = platTabId === 'lembaga';
     const ajuan = (P.lembaga || []);
     v.lembagaKosong = !ajuan.length;
-    v.lembagaMeta = ajuan.length + ' pengajuan · ' + ajuan.filter(x => x.status === 'baru').length + ' belum ditinjau';
+    v.lembagaMeta = ajuan.length + ' pengajuan · ' + ajuan.filter(x => x.status === 'baru').length + ' belum ditinjau' + (st.ajuanMsg ? ' — ' + st.ajuanMsg : '');
     v.ajuanRows = ajuan.map(a => ({
       lembaga: a.lembaga, pic: a.pic,
       kontak: [a.email, a.phone, a.kota].filter(Boolean).join(' · ') || '—',
@@ -4845,7 +4861,32 @@ class Component extends DCLogic {
       waktu: a.createdAt ? new Date(a.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }) : '—',
       status: a.status === 'disetujui' ? 'Disetujui' : a.status === 'ditolak' ? 'Ditolak' : 'Baru',
       statusStyle: { fontSize: '11px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '100px', background: a.status === 'disetujui' ? '#EEF5E9' : a.status === 'ditolak' ? '#F1EBE3' : '#FBEFEF', color: a.status === 'disetujui' ? '#2C4D18' : a.status === 'ditolak' ? '#8C8078' : '#8E1018', border: '1px solid ' + (a.status === 'disetujui' ? '#CFE2C2' : a.status === 'ditolak' ? '#E0D8CE' : '#F0C9CC') },
-      setuju: () => this.apiPost({ action: 'statusLembaga', password: this._pw || '', id: a.id, status: 'disetujui' }).then(() => this.muatPlatform()),
+      terbuka: !!(st.ajuanBuka && st.ajuanBuka[a.id]),
+      reviewLabel: st.ajuanBuka && st.ajuanBuka[a.id] ? 'Tutup tinjauan' : 'Tinjau isian',
+      review: () => this.setState(x => ({ ajuanBuka: Object.assign({}, x.ajuanBuka, { [a.id]: !(x.ajuanBuka && x.ajuanBuka[a.id]) }) })),
+      bisaPutus: a.status !== 'disetujui' || !a.wsId,
+      punyaEvent: a.status === 'disetujui' && !!a.wsId,
+      bukaEvent: () => { this.setState({ platTab: 'workshops' }); this.pilihWs(a.wsId, 'admin'); },
+      isian: [
+        ['Lembaga', a.lembaga], ['Penanggung jawab', a.pic], ['Email', a.email], ['No HP', a.phone],
+        ['Kota', a.kota], ['Situs / media sosial', a.situs],
+        ['Judul event', a.judul], ['Jenis', this.JENIS[a.jenis || 'workshop'] || a.jenis],
+        ['Format', a.format ? (this.FORMATS[a.format] || a.format) : ''], ['Kategori', a.kategori],
+        ['Waktu', a.waktu], ['Lokasi', a.lokasi], ['Jumlah sesi', a.sesi ? String(a.sesi) : ''],
+        ['Kuota', a.kuota ? String(a.kuota) : ''], ['Biaya', Number(a.biaya) > 0 ? this.hargaLabel(a.biaya) : 'Gratis'],
+        ['Narasumber', a.narasumber],
+        ['Ringkasan', a.ringkasan, true], ['Rencana / keterangan', a.rencana, true],
+        ['Capaian belajar', (Array.isArray(a.capaian) ? a.capaian : []).filter(Boolean).map(c => '• ' + c).join('\n'), true]
+      ].map(([label, val, lebar]) => ({
+        label, value: String(val == null ? '' : val).trim() || '—',
+        style: lebar ? { gridColumn: '1 / -1' } : {}
+      })),
+      setuju: () => this.apiPost({ action: 'statusLembaga', password: this._pw || '', id: a.id, status: 'disetujui' }).then(out => {
+        this.setState({ ajuanMsg: out && out.ok
+          ? (out.data && out.data.baru ? 'Event draf “' + (a.judul || a.lembaga) + '” dibuat di tab Event. Lengkapi, lalu terbitkan.' : 'Ajuan disetujui.')
+          : ((out && out.error) || 'Gagal menyetujui.') });
+        this.muatPlatform();
+      }),
       tolak: () => this.apiPost({ action: 'statusLembaga', password: this._pw || '', id: a.id, status: 'ditolak' }).then(() => this.muatPlatform())
     }));
     v.platTabs = [['workshops', 'Event'], ['payments', 'Pembayaran'], ['lembaga', 'Ajuan lembaga'], ['settings', 'Pengaturan platform']].map(([id, label]) => ({
