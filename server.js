@@ -341,11 +341,44 @@ function statusMidtrans(t) {
   if (/deny|cancel|expire|failure/.test(s)) return 'gagal';
   return 'menunggu';
 }
-function tandaiLunas(d, bayar) {
+function tandaiLunas(d, bayar, sumber) {
+  const sudah = bayar.status === 'lunas';
   bayar.status = 'lunas';
   bayar.paidAt = bayar.paidAt || new Date().toISOString();
   const ps = (d.participants || []).filter(x => x.id === bayar.participantId)[0];
-  if (ps) { ps.status = 'aktif'; ps.paidAt = bayar.paidAt; }
+  if (ps) { ps.status = 'aktif'; ps.paidAt = ps.paidAt || bayar.paidAt; }
+  if (sudah) return;
+  console.log('[bayar] lunas via ' + (sumber || '?') + ' · ' + (bayar.ref || bayar.xenditId || '') + ' · ' + (ps ? ps.name + ' <' + (ps.email || 'tanpa email') + '>' : 'peserta tidak ditemukan'));
+  /* Halaman peserta biasanya mengirim tiket bergambar sendiri. Bila dalam 90 detik
+     belum terkirim (halaman ditutup, dsb.), server mengirim versi cadangan. */
+  if (ps) setTimeout(() => emailTiketCadangan(d, ps), 90 * 1000);
+}
+function emailTiketCadangan(d, ps) {
+  if (ps.ticketSentAt) return;
+  const email = String(ps.email || '').trim();
+  if (!MAIL_AKTIF) return console.log('[email] tiket ' + ps.code + ' tidak dikirim: SMTP belum diatur');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return console.log('[email] tiket ' + ps.code + ' tidak dikirim: email peserta kosong/tidak sah');
+  let wid = null;
+  Object.keys(store.data).forEach(k => { if (store.data[k] === d) wid = k; });
+  const meta = store.meta.filter(x => x.id === wid)[0] || {};
+  const asal = process.env.PUBLIC_URL ? String(process.env.PUBLIC_URL).replace(/\/+$/, '') : 'https://ruang.islami.co';
+  const qr = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=10&data=' + encodeURIComponent(ps.code);
+  const html = '<div style="font-family:Arial,Helvetica,sans-serif;color:#3B3238;max-width:560px;margin:0 auto;padding:8px">' +
+    '<p style="font-size:15px">Assalamu\'alaikum <b>' + esc(ps.name) + '</b>,</p>' +
+    '<p style="font-size:15px;line-height:1.6">Pembayaran Anda untuk <b>' + esc(meta.title || 'event') + '</b>' +
+    (meta.dateLabel ? ' (' + esc(meta.dateLabel) + (meta.place ? ', ' + esc(meta.place) : '') + ')' : '') + ' sudah kami terima. Berikut tiket Anda:</p>' +
+    '<div style="border:1px solid #EAD9C6;border-radius:12px;padding:22px;text-align:center;margin:18px 0">' +
+    '<img src="' + qr + '" alt="QR tiket" width="200" height="200" style="display:block;margin:0 auto 14px" />' +
+    '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8C8078">Kode peserta</div>' +
+    '<div style="font-size:28px;font-weight:700;letter-spacing:4px;margin-top:4px">' + esc(ps.code) + '</div></div>' +
+    '<p style="font-size:14px;line-height:1.6;color:#6B6168">Tunjukkan QR ini saat heregistrasi. Kode yang sama dipakai untuk masuk ke ruang peserta di ' +
+    '<a href="' + asal + '/" style="color:#B31F24">' + asal.replace(/^https?:\/\//, '') + '</a>. Tiket bergambar bisa diunduh setelah masuk.</p>' +
+    '<p style="font-size:12px;color:#8C8078;margin-top:26px">Email ini dikirim otomatis oleh Ruang islami.co.</p></div>';
+  kirimEmail({ to: email, subject: 'Tiket ' + (meta.title || 'event') + ' — ' + ps.code, html }).then(() => {
+    ps.ticketSentAt = new Date().toISOString(); ps.ticketSentBy = 'Server (cadangan)';
+    console.log('[email] tiket ' + ps.code + ' terkirim ke ' + email);
+    touch();
+  }, e => console.error('[email] tiket ' + ps.code + ' GAGAL ke ' + email + ': ' + e.message));
 }
 
 /* ── Xendit: QRIS dinamis ── */
@@ -1168,9 +1201,10 @@ function handleAction(p) {
       }).then(() => {
         ps.ticketSentAt = new Date().toISOString();
         ps.ticketSentBy = siapa ? (siapa.name || 'Panitia') : 'Otomatis';
+        console.log('[email] tiket ' + ps.code + ' terkirim ke ' + email + ' (dari halaman)');
         touch();
         return { ok: true, data: { sentAt: ps.ticketSentAt } };
-      }, e => ({ ok: false, error: 'Email gagal terkirim: ' + e.message }));
+      }, e => { console.error('[email] tiket ' + ps.code + ' GAGAL ke ' + email + ': ' + e.message); return { ok: false, error: 'Email gagal terkirim: ' + e.message }; });
     }
 
     case 'register': {
@@ -1267,7 +1301,7 @@ function handleAction(p) {
         const dPakai = db;
         return xendit('/qr_codes/' + encodeURIComponent(bayar.xenditId) + '/payments', null, 'GET').then(j => {
           const daftar = Array.isArray(j.data) ? j.data : [];
-          if (daftar.some(x => /SUCCEEDED|COMPLETED/i.test(String(x.status || '')))) { tandaiLunas(dPakai, bayar); touch(); }
+          if (daftar.some(x => /SUCCEEDED|COMPLETED/i.test(String(x.status || '')))) { tandaiLunas(dPakai, bayar, 'cek status'); touch(); }
           return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
         }).catch(() => ({ ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } }));
       }
@@ -1485,6 +1519,7 @@ const server = http.createServer(async (req, res) => {
       const ref = String(data.reference_id || data.external_id || '');
       const lunas = /SUCCEEDED|PAID|SETTLED|COMPLETED/i.test(String(data.status || ev.status || ''));
       const hit = cariByRef(ref);
+      console.log('[xendit] callback · ref=' + (ref || '-') + ' · status=' + String(data.status || ev.status || '-') + ' · ' + (hit ? 'milik Ruang' : 'bukan milik Ruang'));
       if (!hit) {
         if (!XENDIT_FORWARD || /^ws-/.test(ref)) return json(res, { ok: true, data: { ignored: true } });
         /* Bukan transaksi Ruang: teruskan apa adanya ke aplikasi lain. */
@@ -1495,7 +1530,7 @@ const server = http.createServer(async (req, res) => {
           ['x-callback-token', 'webhook-id', 'x-xendit-signature'].forEach(k => { if (req.headers[k]) hdr[k] = req.headers[k]; });
           const status = await new Promise(ok => {
             const r = lib.request({ hostname: u.hostname, port: u.port || undefined, path: u.pathname + u.search, method: 'POST', headers: hdr, timeout: 8000 }, rr => { rr.resume(); ok(rr.statusCode); });
-            r.on('error', e => { console.error('[xendit] gagal meneruskan:', e.message); ok(0); });
+            r.on('error', e => { console.error('[xendit] gagal meneruskan ke ' + XENDIT_FORWARD + ':', e.message); ok(0); });
             r.on('timeout', () => { r.destroy(); ok(0); });
             r.end(body);
           });
@@ -1505,12 +1540,8 @@ const server = http.createServer(async (req, res) => {
           return json(res, { ok: true, data: { ignored: true } });
         }
       }
-      hit.bayar.status = lunas ? 'lunas' : String(data.status || 'menunggu').toLowerCase();
-      hit.bayar.paidAt = new Date().toISOString();
-      if (lunas) {
-        const peserta = hit.d.participants.filter(x => x.id === hit.bayar.participantId)[0];
-        if (peserta) { peserta.status = 'aktif'; peserta.paidAt = hit.bayar.paidAt; }
-      }
+      if (lunas) tandaiLunas(hit.d, hit.bayar, 'callback');
+      else hit.bayar.status = String(data.status || 'menunggu').toLowerCase();
       touch();
       return json(res, { ok: true });
     } catch (e) { return json(res, { ok: false, error: e.message }, 400); }
