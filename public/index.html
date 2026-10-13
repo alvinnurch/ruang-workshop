@@ -3125,6 +3125,7 @@
                       </td>
                       <td style="padding:12px 22px;text-align:right;white-space:nowrap">
                         <button onClick="{{ p.approve }}" style="{{ p.approveStyle }}">Setujui</button>
+                        <button onClick="{{ p.ticketSend }}" title="{{ p.ticketTitle }}" style="{{ p.ticketStyle }}">{{ p.ticketLabel }}</button>
                         <span style="{{ p.dupStyle }}">{{ p.dupNote }}</span>
                         <button onClick="{{ p.remove }}" style="background:none;border:1px solid #E9DCDC;color:#A5121C;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600" style-hover="background:#FCEDEE">Hapus</button>
                       </td>
@@ -6417,7 +6418,8 @@ class Component extends DCLogic {
 
     /* ── ADMIN ── */
     const peran = this.peranNorm(st.adminRole || 'penuh');
-    const bolehPlatform = peran === 'penuh';
+    /* Kewenangan tingkat platform hanya milik super admin, bukan admin penuh sebuah event. */
+    const bolehPlatform = !!st.isSuper;
     const bolehSusun = peran === 'penuh' || peran === 'wsadmin';
     const bolehJalan = peran !== 'pemantau';
     const izin = this.sesiIzin();
@@ -6602,7 +6604,7 @@ class Component extends DCLogic {
     const cur = this.sess(st.adminSessionId) || db.sessions[0] || null;
     v.adminSessionId = cur ? cur.id : '';
     v.demoNote = 'Belum ada data. Tambahkan sesi, materi, dan peserta dari tab di atas.';
-    const metaAdmin = st.wsMeta || [];
+    const metaAdmin = st.isSuper ? (st.wsMeta || []) : (st.wsMeta || []).filter(m => ((st.adminWsIds || []).length ? st.adminWsIds : [st.wsId]).indexOf(m.id) >= 0);
     v.wsMsg = st.wsMsg || 'Perubahan di sini langsung tersimpan ke server.';
     v.formatOptions = Object.keys(this.FORMATS).map(id => ({ id, label: this.FORMATS[id] }));
     v.regOptions = [
@@ -6644,7 +6646,7 @@ class Component extends DCLogic {
       list.push({ id: idBaru, jenis: 'seminar', title: 'Seminar baru', subtitle: '', partnerName: '', partnerLogo: '', place: '', dateLabel: '', published: false, registration: 'mandiri', price: 0, quota: 0, format: 'hybrid' });
     });
     v.jenisOptions = Object.keys(this.JENIS).map(id => ({ id, label: this.JENIS[id] }));
-    const wsMilik = !st.isSuper && !bolehPlatform && ((st.adminWsIds || []).length > 1 || ['wsadmin', 'fasilitator'].indexOf(st.adminRole) >= 0) ? ((st.adminWsIds || []).length ? st.adminWsIds : [st.wsId]) : null;
+    const wsMilik = !st.isSuper ? ((st.adminWsIds || []).length ? st.adminWsIds : [st.wsId]) : null;
     v.canCreateEvent = !wsMilik;
     v.feeStatusOptions = Object.keys(this.FEE_STATUS).map(id => ({ id, label: this.FEE_STATUS[id] }));
     const fokus = st.wsFokus && metaAdmin.some(m => m.id === st.wsFokus) ? st.wsFokus : null;
@@ -7828,6 +7830,19 @@ class Component extends DCLogic {
       approveStyle: p.status === 'menunggu'
         ? { background: '#3E6B22', border: 'none', color: '#FFF', borderRadius: '7px', padding: '6px 11px', fontSize: '12px', fontWeight: 700, marginRight: '8px' }
         : { display: 'none' },
+      ticketLabel: (st.tiketKirim || {})[p.id] ? 'Mengirim…' : p.ticketSentAt ? 'Kirim ulang tiket' : 'Kirim tiket',
+      ticketTitle: !st.mailOn ? 'Email server belum aktif' : !p.email ? 'Peserta belum punya email' : p.status === 'menunggu' ? 'Setujui peserta dulu' : 'Kirim tiket ke ' + p.email,
+      ticketStyle: (!p.email || p.status === 'menunggu' || !st.mailOn)
+        ? { display: 'none' }
+        : { background: p.ticketSentAt ? '#EEF5E9' : '#FFF', border: '1px solid ' + (p.ticketSentAt ? '#CFE2C2' : '#E0D8CE'), color: p.ticketSentAt ? '#2C4D18' : '#3B342E', borderRadius: '7px', padding: '6px 11px', fontSize: '12px', fontWeight: 600, marginRight: '8px', cursor: 'pointer' },
+      ticketSend: () => {
+        if ((st.tiketKirim || {})[p.id]) return;
+        this.setState(x => ({ tiketKirim: Object.assign({}, x.tiketKirim, { [p.id]: true }) }));
+        this.kirimTiket(this.wsNow(), p, true).then(r => {
+          this.setState(x => ({ tiketKirim: Object.assign({}, x.tiketKirim, { [p.id]: false }), importNote: r && r.ok ? 'Tiket terkirim ke ' + p.email + '.' : ((r && r.error) || 'Gagal mengirim tiket.'), importBad: !(r && r.ok) }));
+          this.apiGet(true).catch(() => {});
+        }).catch(e => this.setState(x => ({ tiketKirim: Object.assign({}, x.tiketKirim, { [p.id]: false }), importNote: 'Gagal menyusun tiket: ' + e.message, importBad: true })));
+      },
       approve: () => {
         ubahPeserta(p.id, x => { x.status = 'aktif'; });
         const wsA = this.wsNow();
