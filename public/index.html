@@ -1597,6 +1597,15 @@
               </div>
             </div>
             <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:22px">
+              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Kode klaim host Zoom</h3>
+              <p style="font-size:13px;color:#7A6F66;margin:0 0 14px;line-height:1.6;text-wrap:pretty">Host Key akun Zoom utama, 6–10 angka. Ambil di zoom.us → <b>Profile</b> → <b>Host Key</b>. Admin event memakainya untuk mengklaim host dengan akun Zoom mereka sendiri, lalu merekam di komputer. Hanya admin yang bisa melihatnya.</p>
+              <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+                <input value="{{ hostKeyInput }}" onChange="{{ onHostKeyInput }}" inputmode="numeric" maxlength="10" placeholder="{{ hostKeyPh }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:15px;letter-spacing:.14em;background:#FCFAF7;outline:none;width:min(100%,200px)" style-focus="border-color:#A5121C;background:#FFF" />
+                <button onClick="{{ saveHostKey }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:10px 16px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">Simpan</button>
+                <span style="font-size:12.5px;color:#7A6F66">{{ hostKeyMsg }}</span>
+              </div>
+            </div>
+            <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:22px">
               <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Tautan footer</h3>
               <p style="font-size:13px;color:#7A6F66;margin:0 0 14px;line-height:1.6;text-wrap:pretty">Tampil di strip putih paling bawah beranda. Isi alamat dengan URL (https://…), email (mailto:nama@domain), atau tautan dalam: <b>#katalog</b>, <b>#cara</b>, <b>#lembaga</b>.</p>
               <div style="display:grid;gap:8px">
@@ -1880,9 +1889,14 @@
                                 <span style="font-size:13px;font-weight:700;color:#1F3B5C">Rapat Zoom otomatis</span>
                                 <span style="font-size:12px;color:#5B6B80">{{ b.zoomStatus }}</span>
                               </div>
-                              <div style="font-size:12px;color:#5B6B80;margin-top:-6px">Host: <b style="color:#1F3B5C">{{ b.zoomHostLabel }}</b></div>
+                              <div style="font-size:12px;color:#5B6B80;margin-top:-6px">Host rapat ini: <b style="color:#1F3B5C">{{ b.zoomHostLabel }}</b></div>
                               <sc-if value="{{ zoomReady }}" hint-placeholder-val="{{ false }}">
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
+                                  <label style="grid-column:1/-1;display:grid;gap:5px">
+                                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Akun host Zoom (email)</span>
+                                    <input type="email" value="{{ b.zoomHostInput }}" onChange="{{ b.onZoomHostInput }}" placeholder="{{ b.zoomHostPh }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
+                                    <span style="font-size:11.5px;color:#5B6B80;line-height:1.5;text-wrap:pretty">{{ b.zoomHostHint }}</span>
+                                  </label>
                                   <label style="display:grid;gap:5px;align-content:start">
                                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Mulai (opsional)</span>
                                     <input type="datetime-local" value="{{ b.zoomStart }}" onChange="{{ b.onZoomStart }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;background:#FFF" />
@@ -1892,10 +1906,38 @@
                                     <input type="number" min="15" max="1440" value="{{ b.zoomDur }}" onChange="{{ b.onZoomDur }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;background:#FFF" />
                                   </label>
                                 </div>
-                                <label style="display:flex;gap:9px;align-items:center;font-size:13px;color:#1F3B5C;cursor:pointer">
-                                  <input type="checkbox" checked="{{ b.zoomRec }}" onChange="{{ b.onZoomRec }}" style="width:17px;height:17px;accent-color:#2D6CDF" />
-                                  Rekam otomatis ke cloud Zoom — rekaman muncul sendiri untuk peserta setelah rapat selesai
-                                </label>
+                                <div style="display:grid;gap:7px">
+                                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Siapa yang memandu</span>
+                                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <sc-for list="{{ b.hostModeOpts }}" as="o" hint-placeholder-count="2">
+                                      <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+                                    </sc-for>
+                                  </div>
+                                </div>
+                                <sc-if value="{{ b.hostKlaim }}" hint-placeholder-val="{{ false }}">
+                                  <div style="background:#FFF;border:1px solid #D6E0EE;border-radius:9px;padding:13px 15px;display:grid;gap:9px">
+                                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                      <span style="font-size:12.5px;font-weight:700;color:#1F3B5C">Kode klaim host</span>
+                                      <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;font-weight:800;letter-spacing:.18em;color:#1B1714;background:#F3F6FB;border-radius:7px;padding:4px 10px">{{ b.hostKeyShow }}</span>
+                                      <button onClick="{{ b.hostKeyToggle }}" style="background:none;border:none;color:#2D6CDF;font-size:12.5px;font-weight:700;cursor:pointer;padding:0">{{ b.hostKeyBtn }}</button>
+                                    </div>
+                                    <ol style="margin:0;padding-left:19px;font-size:12.5px;color:#3B4A5E;line-height:1.7">
+                                      <li>Buka tautan rapat dengan akun Zoom Anda sendiri — boleh akun gratis.</li>
+                                      <li>Tekan <b>Participants → Claim Host</b>, lalu masukkan kode di atas.</li>
+                                      <li>Anda kini host: bisa <b>Record → Record on this Computer</b>, mengatur peserta, dan berbagi layar.</li>
+                                    </ol>
+                                    <div style="font-size:11.5px;color:#7A6040;line-height:1.55;text-wrap:pretty">Kode ini hanya terlihat oleh admin, tidak pernah tampil ke peserta. Jangan diucapkan saat rapat berlangsung. Rapat mode ini dibuka tanpa ruang tunggu agar kode bisa dipakai sebelum host utama masuk.</div>
+                                  </div>
+                                </sc-if>
+                                <div style="display:grid;gap:7px">
+                                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Rekaman</span>
+                                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <sc-for list="{{ b.recModeOpts }}" as="o" hint-placeholder-count="3">
+                                      <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+                                    </sc-for>
+                                  </div>
+                                  <span style="font-size:12px;color:#5B6B80;line-height:1.55;text-wrap:pretty">{{ b.recModeNote }}</span>
+                                </div>
                                 <div style="display:flex;gap:9px;flex-wrap:wrap">
                                   <button onClick="{{ b.zoomCreate }}" style="background:#2D6CDF;color:#FFF;border:none;border-radius:8px;padding:10px 15px;font-size:13px;font-weight:700" style-hover="background:#1F57BD">{{ b.zoomCreateLabel }}</button>
                                   <button onClick="{{ b.zoomHost }}" style="{{ b.zoomHostStyle }}">Mulai sebagai host ↗</button>
@@ -3763,6 +3805,7 @@ class Component extends DCLogic {
     if (out && typeof out.mail === 'boolean' && out.mail !== this.state.mailOn) this.setState({ mailOn: out.mail });
     if (out && typeof out.fee !== 'undefined') this.setState({ fee: Number(out.fee) || 0 });
     if (out && Array.isArray(out.footer) && !this.state.footerEdit) this.setState({ footer: out.footer });
+    if (out && typeof out.hostKeySet === 'boolean' && out.hostKeySet !== this.state.hostKeySet) this.setState({ hostKeySet: out.hostKeySet });
     if (out && out.ok && out.data && out.data.sessions && !out.meta && !this.state.soloMode) this.setState({ soloMode: true, role: this.state.role === 'pickWs' ? 'login' : this.state.role });
     if (out && out.meta) {
       /* Pilihan workshop hanya boleh datang dari pengguna (pilihWs) atau localStorage —
@@ -4957,6 +5000,18 @@ class Component extends DCLogic {
         down: () => { if (i < daftar.length - 1) ganti(x => { const [a] = x.splice(i, 1); x.splice(i + 1, 0, a); }); },
         remove: () => ganti(x => { x.splice(i, 1); })
       }));
+      v.hostKeyInput = st.hostKeyInput || '';
+      v.hostKeyPh = st.hostKeySet ? 'tersimpan — ketik untuk ganti' : 'mis. 482913';
+      v.hostKeyMsg = st.hostKeyMsg || (st.hostKeySet ? 'Sudah diatur.' : 'Belum diatur.');
+      v.onHostKeyInput = e => this.setState({ hostKeyInput: e.target.value.replace(/\D/g, '').slice(0, 10), hostKeyMsg: '' });
+      v.saveHostKey = async () => {
+        const k = String(st.hostKeyInput || '');
+        if (k && k.length < 6) return this.setState({ hostKeyMsg: 'Minimal 6 angka.' });
+        if (!this.api()) return this.setState({ hostKeySet: !!k, hostKey: k, hostKeyInput: '', hostKeyMsg: 'Tersimpan di pratinjau.' });
+        const out = await this.apiPost({ action: 'putHostKey', password: this._pw || '', user: this._user || '', key: k });
+        if (out && out.ok) this.setState({ hostKeySet: out.data.set, hostKey: k, hostKeyInput: '', hostKeyMsg: out.data.set ? 'Tersimpan.' : 'Dihapus.' });
+        else this.setState({ hostKeyMsg: (out && out.error) || 'Gagal menyimpan.' });
+      };
       v.footerAdd = () => ganti(x => { x.push({ label: 'Tautan baru', url: '' }); });
       v.footerSave = async () => {
         this.setState({ footerMsg: 'Menyimpan…' });
@@ -7107,6 +7162,41 @@ class Component extends DCLogic {
           zoomStart: (st.zoomForm && st.zoomForm[b.id] && st.zoomForm[b.id].start) || '',
           zoomDur: (st.zoomForm && st.zoomForm[b.id] && st.zoomForm[b.id].dur) || 120,
           zoomRec: !((st.zoomForm || {})[b.id] && (st.zoomForm || {})[b.id].rec === false),
+          ...(() => {
+            const f0 = (st.zoomForm || {})[b.id] || {};
+            const setF = (k, val) => this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { [k]: val }) }) }));
+            const mode = f0.hostMode || b.zoomHostMode || 'utama';
+            const rek = f0.recMode || b.zoomRecMode || (f0.rec === false ? 'none' : 'local');
+            const kunci = st.hostKey;
+            const terlihat = st.hostKeyVis === b.id;
+            return {
+              hostKlaim: mode === 'klaim',
+              hostModeOpts: [['utama', 'Akun host utama'], ['klaim', 'Admin klaim host dengan kode']].map(([id, label]) => ({
+                label, style: { background: mode === id ? '#1F3B5C' : '#FFF', border: '1px solid ' + (mode === id ? '#1F3B5C' : '#B9C8DE'), color: mode === id ? '#FFF' : '#1F3B5C', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }, pick: () => setF('hostMode', id)
+              })),
+              hostKeyShow: !st.hostKeySet && !kunci ? 'belum diatur' : terlihat && kunci ? kunci : '••••••',
+              hostKeyBtn: !st.hostKeySet && !kunci ? 'Atur di dasbor super admin' : terlihat ? 'Sembunyikan' : 'Tampilkan',
+              hostKeyToggle: async () => {
+                if (!st.hostKeySet && !kunci) return this.setState({ zoomMsg: { id: b.id, text: 'Minta super admin mengisi Kode klaim host di Pengaturan platform.' } });
+                if (terlihat) return this.setState({ hostKeyVis: null });
+                if (!kunci && this.api()) {
+                  const out = await this.apiPost({ action: 'getHostKey', password: this._pw || '' });
+                  if (!out || !out.ok) return this.setState({ zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal mengambil kode.' } });
+                  return this.setState({ hostKey: out.data.key, hostKeyVis: b.id });
+                }
+                this.setState({ hostKeyVis: b.id });
+              },
+              recModeOpts: [['local', 'Di komputer host (disarankan)'], ['cloud', 'Cloud Zoom'], ['none', 'Tidak direkam']].map(([id, label]) => ({
+                label, style: { background: rek === id ? '#1F3B5C' : '#FFF', border: '1px solid ' + (rek === id ? '#1F3B5C' : '#B9C8DE'), color: rek === id ? '#FFF' : '#1F3B5C', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }, pick: () => setF('recMode', id)
+              })),
+              recModeNote: rek === 'local'
+                ? 'Lebih aman: berkas .mp4 tersimpan di komputer host dan tidak ikut terhapus. Rekaman cloud Zoom terhapus otomatis sesuai masa simpan akun (umumnya 30 hari) dan kuotanya terbatas. Setelah rapat, unggah ke Google Drive lalu tempel tautannya di bawah.'
+                : rek === 'cloud'
+                  ? 'Butuh akun Pro. Tautan rekaman masuk sendiri, tapi terhapus otomatis sesuai masa simpan cloud Zoom (umumnya 30 hari). Simpan salinannya bila perlu disimpan lama.'
+                  : 'Rapat tidak direkam otomatis. Host tetap bisa menekan Record saat rapat.',
+              recModeVal: rek, hostModeVal: mode
+            };
+          })(),
           onZoomRec: e => { const val = !!e.target.checked; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { rec: val }) }) })); },
           recUrl: b.recUrl || '', recPass: b.recPass || '',
           recLokal: b.recSource === 'lokal',
@@ -7123,7 +7213,16 @@ class Component extends DCLogic {
             ? 'Ini bukan tautan Google Drive. Pastikan peserta bisa membukanya tanpa izin khusus.' : '',
           recWarnStyle: { fontSize: '11.5px', color: '#8A5A00', lineHeight: 1.5, display: b.recSource === 'lokal' && b.recUrl && !/drive\.google\.com|docs\.google\.com|youtu/i.test(b.recUrl) ? 'block' : 'none' },
           recPassStyle: b.recSource === 'lokal' ? { display: 'none' } : { display: 'grid', gap: '5px', alignContent: 'start' },
-          zoomHostLabel: b.zoomHost || ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama',
+          zoomHostLabel: (() => {
+            const ketik = ((st.zoomForm || {})[b.id] || {}).host;
+            return (ketik != null && ketik.trim()) || b.zoomHost || ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama';
+          })(),
+          zoomHostInput: (() => { const k = ((st.zoomForm || {})[b.id] || {}).host; return k != null ? k : (b.zoomHost && b.zoomHost !== 'me' ? b.zoomHost : ''); })(),
+          zoomHostPh: ((this.wsNow() || {}).zoomHost) ? 'kosong = host event (' + this.wsNow().zoomHost + ')' : 'kosong = akun Zoom utama',
+          zoomHostHint: b.zoomId
+            ? 'Mengganti host berlaku untuk rapat baru. Tekan "Buat rapat baru" agar rapat dipindah ke akun ini.'
+            : 'Isi bila sesi ini dipandu akun Zoom lain (harus akun berlisensi di akun Zoom organisasi yang sama). Dua host berbeda boleh berjalan bersamaan.',
+          onZoomHostInput: e => { const val = e.target.value.trim().toLowerCase(); this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { host: val }) }) })); },
           hasClash: !!(st.zoomClash && st.zoomClash.id === b.id),
           clashHost: (st.zoomClash && st.zoomClash.host) || '',
           clashList: ((st.zoomClash && st.zoomClash.id === b.id && st.zoomClash.list) || []).map(c => {
@@ -7170,7 +7269,7 @@ class Component extends DCLogic {
             paksa = paksa === true;
             const f = (st.zoomForm || {})[b.id] || {};
             this.setState({ zoomBusy: b.id, zoomMsg: { id: b.id, text: 'Menghubungi Zoom…' } });
-            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
+            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', hostMode: f.hostMode || b.zoomHostMode || 'utama', recordMode: f.recMode || b.zoomRecMode || (f.rec === false ? 'none' : 'local'), host: (f.host != null ? f.host : (b.zoomHost && b.zoomHost !== 'me' ? b.zoomHost : '')) || '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
             if (out && !out.ok && Array.isArray(out.clash)) return this.setState({ zoomBusy: null, zoomClash: { id: b.id, host: out.host, list: out.clash }, zoomMsg: { id: b.id, text: out.error } });
             if (!out || !out.ok) return this.setState({ zoomBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal membuat rapat.' } });
             this.setState({ zoomClash: null });
