@@ -571,6 +571,66 @@ function kirimIndexOg(req, res, slug) {
   res.end(html);
 }
 
+/* ── Akun admin otomatis untuk ajuan yang disetujui ── */
+function sandiAcak() {
+  const huruf = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = ''; const b = crypto.randomBytes(10);
+  for (let i = 0; i < 10; i++) s += huruf[b[i] % huruf.length];
+  return s;
+}
+function asalUrlP(p) { return process.env.PUBLIC_URL ? String(process.env.PUBLIC_URL).replace(/\/+$/, '') : (p.__origin || ''); }
+function semuaAdmin() { const o = []; Object.keys(store.data).forEach(w => (store.data[w].admins || []).forEach(x => o.push({ w, x }))); return o; }
+function siapkanAkunAjuan(a, asal) {
+  const d = store.data[a.wsId];
+  d.admins = Array.isArray(d.admins) ? d.admins : [];
+  const email = String(a.email || '').trim().toLowerCase();
+  /* Pengaju yang sudah punya akun (ajuan dari dasbornya, atau email sama): pakai akun itu. */
+  const lama = semuaAdmin().filter(({ x }) =>
+    (a.dariAdmin && a.dariAdmin.user && String(x.user || '').toLowerCase() === String(a.dariAdmin.user).toLowerCase()) ||
+    (email && String(x.email || '').toLowerCase() === email))[0];
+  if (lama) {
+    if (!d.admins.some(x => x.user === lama.x.user)) {
+      d.admins.push({ id: 'a' + Date.now().toString(36), name: lama.x.name || a.pic, user: lama.x.user, pass: lama.x.pass, email: lama.x.email || email, role: 'wsadmin', sessionIds: [], mustChange: !!lama.x.mustChange });
+    }
+    kirimInfoAkun(a, { user: lama.x.user, pass: null }, asal);
+    return { user: lama.x.user, pass: null, lama: true, emailed: MAIL_AKTIF && !!email };
+  }
+  if (d.admins.some(x => x.fromAjuan === a.id)) {
+    const x = d.admins.filter(y => y.fromAjuan === a.id)[0];
+    return { user: x.user, pass: null, lama: true, emailed: false };
+  }
+  let dasar = (email.split('@')[0] || String(a.pic || 'admin')).toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 14) || 'admin';
+  let user = dasar, i = 1;
+  const terpakai = u => u === String(SUPER_USER).toLowerCase() || semuaAdmin().some(({ x }) => String(x.user || '').toLowerCase() === u);
+  while (terpakai(user)) user = dasar + (++i);
+  const pass = sandiAcak();
+  d.admins.push({ id: 'a' + Date.now().toString(36), name: a.pic || a.lembaga, user, pass, email, role: 'wsadmin', sessionIds: [], mustChange: true, fromAjuan: a.id, createdAt: new Date().toISOString() });
+  kirimInfoAkun(a, { user, pass }, asal);
+  return { user, pass, lama: false, emailed: MAIL_AKTIF && !!email };
+}
+function kirimInfoAkun(a, akun, asal) {
+  const ke = String(a.email || '').trim();
+  if (!MAIL_AKTIF || !ke) return;
+  const m = store.meta.filter(x => x.id === a.wsId)[0] || {};
+  const alamat = (asal || 'https://ruang.islami.co') + '/#/admin';
+  const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const baris = akun.pass
+    ? '<p>Masuk dengan akun sementara berikut. Saat pertama masuk Anda akan diminta mengganti nama pengguna dan sandi.</p>' +
+      '<table style="border-collapse:collapse;font-size:15px"><tr><td style="padding:6px 14px 6px 0;color:#7A6F66">Nama pengguna</td><td style="padding:6px 0;font-weight:700">' + esc(akun.user) + '</td></tr>' +
+      '<tr><td style="padding:6px 14px 6px 0;color:#7A6F66">Sandi sementara</td><td style="padding:6px 0;font-weight:700;font-family:monospace;font-size:16px">' + esc(akun.pass) + '</td></tr></table>'
+    : '<p>Event ini sudah ditambahkan ke akun admin Anda (<b>' + esc(akun.user) + '</b>). Masuk dengan sandi yang biasa Anda pakai.</p>';
+  kirimEmail({
+    to: ke,
+    subject: 'Ajuan disetujui — ' + (m.title || a.judul || a.lembaga),
+    html: '<div style="font-family:Arial,sans-serif;color:#1B1714;line-height:1.6;max-width:560px">' +
+      '<p>Assalamu’alaikum ' + esc(a.pic || '') + ',</p>' +
+      '<p>Ajuan <b>' + esc(m.title || a.judul || '') + '</b> dari ' + esc(a.lembaga || '') + ' telah disetujui. Event-nya sudah dibuat sebagai draf; lengkapi detailnya lalu ajukan terbit.</p>' +
+      baris +
+      '<p style="margin-top:22px"><a href="' + esc(alamat) + '" style="background:#B31F24;color:#FFF;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700">Masuk ke dasbor admin</a></p>' +
+      '<p style="color:#7A6F66;font-size:13px">Jangan bagikan sandi ini kepada siapa pun.</p></div>'
+  }).catch(e => console.error('[ruang] email akun gagal:', e.message));
+}
+
 /* ── API ── */
 function peranDari(pass, user, wsMinta) {
   if (!pass) return null;
@@ -581,7 +641,7 @@ function peranDari(pass, user, wsMinta) {
   if (!semua.length) return null;
   const wid = wsMinta && semua.indexOf(wsMinta) >= 0 ? wsMinta : semua[0];
   const a = store.data[wid].admins.find(cocok);
-  return { role: a.role || 'pemantau', name: a.name || 'Admin', id: a.id, user: a.user || '', sessionIds: a.sessionIds || [], wsId: wid, wsIds: semua, superadmin: false };
+  return { role: a.role || 'pemantau', name: a.name || 'Admin', id: a.id, user: a.user || '', email: a.email || '', sessionIds: a.sessionIds || [], wsId: wid, wsIds: semua, superadmin: false, mustChange: !!a.mustChange };
 }
 /* Salinan untuk dikirim ke halaman: sandi admin tidak pernah ikut keluar. */
 function dbPublik() {
@@ -801,10 +861,34 @@ function handleAction(p) {
         narasumber: String(p.narasumber || '').trim(),
         ringkasan: String(p.ringkasan || '').trim(),
         capaian: Array.isArray(p.capaian) ? p.capaian : [],
+        dariAdmin: siapa && !siapa.superadmin ? { user: siapa.user, id: siapa.id, wsId: siapa.wsId } : null,
         status: 'baru', createdAt: new Date().toISOString()
       });
       touch();
       return { ok: true };
+    }
+
+    case 'gantiAkunAwal': {
+      if (!siapa || siapa.superadmin) return { ok: false, error: 'Masuk sebagai admin event terlebih dahulu.' };
+      const userBaru = String(p.newUser || '').trim().toLowerCase();
+      const passBaru = String(p.newPass || '');
+      if (!/^[a-z0-9._-]{4,30}$/.test(userBaru)) return { ok: false, error: 'Nama pengguna 4–30 karakter: huruf kecil, angka, titik, strip, atau garis bawah.' };
+      if (passBaru.length < 8) return { ok: false, error: 'Sandi baru minimal 8 karakter.' };
+      if (passBaru === String(p.password || '')) return { ok: false, error: 'Sandi baru harus berbeda dari sandi sementara.' };
+      if (userBaru === String(SUPER_USER).toLowerCase()) return { ok: false, error: 'Nama pengguna itu sudah dipakai.' };
+      const lamaUser = String(siapa.user || '').toLowerCase();
+      /* Nama pengguna harus unik di seluruh platform, kecuali milik akun ini sendiri. */
+      const bentrok = Object.keys(store.data).some(w => (store.data[w].admins || []).some(x => String(x.user || '').toLowerCase() === userBaru && String(x.user || '').toLowerCase() !== lamaUser));
+      if (bentrok) return { ok: false, error: 'Nama pengguna itu sudah dipakai. Pilih yang lain.' };
+      let n = 0;
+      Object.keys(store.data).forEach(w => (store.data[w].admins || []).forEach(x => {
+        if (x.pass === String(p.password || '') && String(x.user || '').toLowerCase() === lamaUser) {
+          x.user = userBaru; x.pass = passBaru; x.mustChange = false; x.changedAt = new Date().toISOString(); n++;
+        }
+      }));
+      if (!n) return { ok: false, error: 'Akun tidak ditemukan.' };
+      touch();
+      return { ok: true, data: { user: userBaru } };
     }
 
     case 'statusLembaga': {
@@ -833,8 +917,10 @@ function handleAction(p) {
         a.wsId = id;
         wsBaru = id;
       }
+      let akun = null;
+      if (a.status === 'disetujui' && a.wsId && store.data[a.wsId]) akun = siapkanAkunAjuan(a, asalUrlP(p));
       touch();
-      return { ok: true, data: { wsId: a.wsId || null, baru: !!wsBaru } };
+      return { ok: true, data: { wsId: a.wsId || null, baru: !!wsBaru, akun } };
     }
 
     /* Kode klaim host (Host Key) akun Zoom utama — hanya untuk admin, tidak pernah ke peserta. */
