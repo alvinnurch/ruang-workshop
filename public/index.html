@@ -1893,7 +1893,7 @@
                               <sc-if value="{{ zoomReady }}" hint-placeholder-val="{{ false }}">
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
                                   <label style="grid-column:1/-1;display:grid;gap:5px">
-                                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Akun host Zoom (email)</span>
+                                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Akun Zoom pemandu (email)</span>
                                     <input type="email" value="{{ b.zoomHostInput }}" onChange="{{ b.onZoomHostInput }}" placeholder="{{ b.zoomHostPh }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
                                     <span style="font-size:11.5px;color:#5B6B80;line-height:1.5;text-wrap:pretty">{{ b.zoomHostHint }}</span>
                                   </label>
@@ -7165,15 +7165,23 @@ class Component extends DCLogic {
           ...(() => {
             const f0 = (st.zoomForm || {})[b.id] || {};
             const setF = (k, val) => this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { [k]: val }) }) }));
-            const mode = f0.hostMode || b.zoomHostMode || 'utama';
+            const emailK = f0.host != null ? f0.host : (b.zoomClaimer || '');
+            const terkunci = !!String(emailK || '').trim();
+            const mode = terkunci ? 'klaim' : (f0.hostMode || b.zoomHostMode || 'utama');
             const rek = f0.recMode || b.zoomRecMode || (f0.rec === false ? 'none' : 'local');
             const kunci = st.hostKey;
             const terlihat = st.hostKeyVis === b.id;
             return {
               hostKlaim: mode === 'klaim',
-              hostModeOpts: [['utama', 'Akun host utama'], ['klaim', 'Admin klaim host dengan kode']].map(([id, label]) => ({
-                label, style: { background: mode === id ? '#1F3B5C' : '#FFF', border: '1px solid ' + (mode === id ? '#1F3B5C' : '#B9C8DE'), color: mode === id ? '#FFF' : '#1F3B5C', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }, pick: () => setF('hostMode', id)
-              })),
+              hostModeOpts: [['utama', 'Akun host utama'], ['klaim', 'Admin klaim host dengan kode']].map(([id, label]) => {
+                const mati = terkunci && id === 'utama';
+                return {
+                  label: mati ? label + ' · terkunci' : label,
+                  style: { background: mode === id ? '#1F3B5C' : '#FFF', border: '1px solid ' + (mode === id ? '#1F3B5C' : '#B9C8DE'), color: mode === id ? '#FFF' : '#1F3B5C', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: mati ? 'not-allowed' : 'pointer', opacity: mati ? .45 : 1 },
+                  pick: () => { if (!mati) setF('hostMode', id); }
+                };
+              }),
+              klaimEmail: String(emailK || '').trim(),
               hostKeyShow: !st.hostKeySet && !kunci ? 'belum diatur' : terlihat && kunci ? kunci : '••••••',
               hostKeyBtn: !st.hostKeySet && !kunci ? 'Atur di dasbor super admin' : terlihat ? 'Sembunyikan' : 'Tampilkan',
               hostKeyToggle: async () => {
@@ -7215,13 +7223,13 @@ class Component extends DCLogic {
           recPassStyle: b.recSource === 'lokal' ? { display: 'none' } : { display: 'grid', gap: '5px', alignContent: 'start' },
           zoomHostLabel: (() => {
             const ketik = ((st.zoomForm || {})[b.id] || {}).host;
-            return (ketik != null && ketik.trim()) || b.zoomHost || ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama';
+            const utama = ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama';
+            const pemandu = (ketik != null ? ketik.trim() : '') || b.zoomClaimer || '';
+            return pemandu ? utama + ' · dipandu ' + pemandu + ' (klaim host)' : utama;
           })(),
-          zoomHostInput: (() => { const k = ((st.zoomForm || {})[b.id] || {}).host; return k != null ? k : (b.zoomHost && b.zoomHost !== 'me' ? b.zoomHost : ''); })(),
+          zoomHostInput: (() => { const k = ((st.zoomForm || {})[b.id] || {}).host; return k != null ? k : (b.zoomClaimer || ''); })(),
           zoomHostPh: ((this.wsNow() || {}).zoomHost) ? 'kosong = host event (' + this.wsNow().zoomHost + ')' : 'kosong = akun Zoom utama',
-          zoomHostHint: b.zoomId
-            ? 'Mengganti host berlaku untuk rapat baru. Tekan "Buat rapat baru" agar rapat dipindah ke akun ini.'
-            : 'Isi bila sesi ini dipandu akun Zoom lain (harus akun berlisensi di akun Zoom organisasi yang sama). Dua host berbeda boleh berjalan bersamaan.',
+          zoomHostHint: 'Isi email akun Zoom yang akan memandu — boleh akun gratis. Rapat tetap dibuat di akun utama, lalu akun ini mengklaim host dengan kode. Kosongkan bila akun utama sendiri yang memandu.' + (b.zoomId ? ' Perubahan berlaku setelah "Buat rapat baru".' : ''),
           onZoomHostInput: e => { const val = e.target.value.trim().toLowerCase(); this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { host: val }) }) })); },
           hasClash: !!(st.zoomClash && st.zoomClash.id === b.id),
           clashHost: (st.zoomClash && st.zoomClash.host) || '',
@@ -7260,7 +7268,7 @@ class Component extends DCLogic {
           onZoomStart: e => { const val = e.target.value; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { start: val }) }) })); },
           onZoomDur: e => { const val = e.target.value; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { dur: val }) }) })); },
           zoomCreateLabel: st.zoomBusy === b.id ? 'Membuat rapat…' : b.zoomId ? 'Buat rapat baru' : 'Buat rapat Zoom otomatis',
-          zoomHostStyle: b.zoomId
+          zoomHostStyle: b.zoomId && (b.zoomHostMode !== 'klaim') && !String((((st.zoomForm || {})[b.id] || {}).host) || '').trim()
             ? { background: '#FFF', border: '1px solid #B9C8DE', color: '#1F3B5C', borderRadius: '8px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
             : { display: 'none' },
           clashForce: () => { this.setState({ zoomClash: null }); const fn = this._zoomFn && this._zoomFn[b.id]; if (fn) fn(true); },
@@ -7269,7 +7277,7 @@ class Component extends DCLogic {
             paksa = paksa === true;
             const f = (st.zoomForm || {})[b.id] || {};
             this.setState({ zoomBusy: b.id, zoomMsg: { id: b.id, text: 'Menghubungi Zoom…' } });
-            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', hostMode: f.hostMode || b.zoomHostMode || 'utama', recordMode: f.recMode || b.zoomRecMode || (f.rec === false ? 'none' : 'local'), host: (f.host != null ? f.host : (b.zoomHost && b.zoomHost !== 'me' ? b.zoomHost : '')) || '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
+            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', hostMode: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim() ? 'klaim' : (f.hostMode || b.zoomHostMode || 'utama'), claimer: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim(), recordMode: f.recMode || b.zoomRecMode || (f.rec === false ? 'none' : 'local'), host: '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
             if (out && !out.ok && Array.isArray(out.clash)) return this.setState({ zoomBusy: null, zoomClash: { id: b.id, host: out.host, list: out.clash }, zoomMsg: { id: b.id, text: out.error } });
             if (!out || !out.ok) return this.setState({ zoomBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal membuat rapat.' } });
             this.setState({ zoomClash: null });
