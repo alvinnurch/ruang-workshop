@@ -2429,7 +2429,16 @@
       <!-- ── TAB: WORKSHOP ── -->
       <sc-if value="{{ tabWorkshops }}" hint-placeholder-val="{{ false }}">
         <div>
-          <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px">
+          <sc-if value="{{ wsFokusOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+              <div>
+                <button onClick="{{ wsFokusKeluar }}" style="background:none;border:none;padding:0;color:#A5121C;font-size:13px;font-weight:700;cursor:pointer" style-hover="text-decoration:underline">← Semua event</button>
+                <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:6px 0 0;font-weight:700">Edit detail {{ wsFokusJenis }}</h2>
+              </div>
+              <span style="font-size:12.5px;color:#7A6F66">{{ wsMsg }}</span>
+            </div>
+          </sc-if>
+          <div style="{{ wsListHeadStyle }}">
             <div>
               <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 5px;font-weight:700">Event pada platform ini</h2>
               <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:72ch;text-wrap:pretty">Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. {{ wsMsg }}</p>
@@ -2440,7 +2449,24 @@
             </sc-if>
           </div>
 
-          <div style="display:grid;gap:14px">
+          <sc-if value="{{ wsCompact }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px">
+              <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="2">
+                <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+                    <span style="{{ w.badgeStyle }}">{{ w.badge }}</span>
+                    <span style="font-size:12px;color:#8C8078">{{ w.stats }}</span>
+                  </div>
+                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16.5px;font-weight:700;line-height:1.35;text-wrap:balance">{{ w.title }}</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
+                    <button onClick="{{ w.editFokus }}" style="flex:1 1 110px;background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700" style-hover="background:#F6F1EA">Edit detail</button>
+                    <button onClick="{{ w.kelola }}" style="flex:1 1 130px;background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700" style-hover="background:#8A0F17">Kelola</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="{{ wsFullStyle }}">
             <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="2">
               <div style="{{ w.cardStyle }}">
                 <div style="{{ w.headStyle }}">
@@ -4930,7 +4956,8 @@ class Component extends DCLogic {
         manage: () => { this.pilihWs(m.id); this.setState({ role: 'admin', tab: 'control' }); },
         edit: () => {
           this.pilihWs(m.id);
-          this.setState(x => ({ role: 'admin', tab: 'workshops', wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) }));
+          this.setState(x => ({ role: 'admin', tab: 'workshops', wsFokus: m.id, wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) }));
+          window.scrollTo({ top: 0 });
         }
       };
     });
@@ -6464,13 +6491,13 @@ class Component extends DCLogic {
         peserta.map(p => [p.name, p.code, p.group || '', p.org || '', H[p.id] ? 'Hadir' : 'Belum hadir', H[p.id] ? H[p.id].at : '', H[p.id] ? H[p.id].by || '' : ''])));
     }
     v.adminTabs = daftarTab.map(([id, label]) => ({
-      label: id === 'workshops' && st.isSuper ? '← Semua event' : label,
+      label: id === 'workshops' && (st.isSuper || (st.adminWsIds || []).length > 1) ? '← Semua event' : label,
       go: () => {
         if (id === 'workshops' && st.isSuper) {
-          this.setState({ role: 'super', platTab: 'workshops', editBlock: null });
+          this.setState({ role: 'super', platTab: 'workshops', editBlock: null, wsFokus: null });
           return this.muatPlatform();
         }
-        this.setState({ tab: id });
+        this.setState({ tab: id, wsFokus: null });
       },
       style: { background: 'none', border: 'none', borderBottom: '2px solid ' + (tabAktif === id ? '#A5121C' : 'transparent'), color: tabAktif === id ? '#A5121C' : '#7A6F66', padding: '11px 4px', marginBottom: '-1px', fontSize: '14px', fontWeight: 600 }
     }));
@@ -6553,7 +6580,19 @@ class Component extends DCLogic {
     const wsMilik = !st.isSuper && !bolehPlatform && (st.adminWsIds || []).length > 1 ? st.adminWsIds : null;
     v.canCreateEvent = !wsMilik;
     v.feeStatusOptions = Object.keys(this.FEE_STATUS).map(id => ({ id, label: this.FEE_STATUS[id] }));
-    v.wsRows = metaAdmin.filter(m => !wsMilik || wsMilik.indexOf(m.id) >= 0).map(m => {
+    const fokus = st.wsFokus && metaAdmin.some(m => m.id === st.wsFokus) ? st.wsFokus : null;
+    const mFokus = fokus ? metaAdmin.filter(m => m.id === fokus)[0] : null;
+    v.wsFokusOn = !!fokus;
+    v.wsFokusJenis = mFokus ? this.jenisOf(mFokus).toLowerCase() : '';
+    v.wsFokusKeluar = () => {
+      /* Super admin kembali ke dasbor platform; admin lain ke daftar eventnya. */
+      if (st.isSuper) { this.setState({ wsFokus: null, role: 'super', platTab: 'workshops' }); return this.muatPlatform(); }
+      this.setState({ wsFokus: null });
+    };
+    v.wsListHeadStyle = fokus ? { display: 'none' } : { display: 'flex', justifyContent: 'space-between', gap: '18px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '22px' };
+    v.wsCompact = !!wsMilik && !fokus;
+    v.wsFullStyle = v.wsCompact ? { display: 'none' } : { display: 'grid', gap: '14px' };
+    v.wsRows = metaAdmin.filter(m => (!wsMilik || wsMilik.indexOf(m.id) >= 0) && (!fokus || m.id === fokus)).map(m => {
       const ubah = (k, val) => simpanMeta(list => { const x = list.find(y => y.id === m.id); if (x) x[k] = val; });
       const dipilih = m.id === st.wsId;
       return {
@@ -6610,6 +6649,9 @@ class Component extends DCLogic {
         pubLabel: m.published ? 'Tarik dari daftar' : 'Terbitkan',
         togglePub: () => ubah('published', !m.published),
         manage: () => this.pilihWs(m.id),
+        /* Dari daftar ringkas: buka isian event ini saja, atau langsung ke panel sesinya. */
+        editFokus: () => { this.setState(x => ({ wsFokus: m.id, wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) })); window.scrollTo({ top: 0 }); },
+        kelola: () => { this.pilihWs(m.id, 'admin'); this.setState({ tab: 'control', wsFokus: null }); },
         manageLabel: dipilih ? 'Sedang dikelola' : 'Kelola workshop ini',
         manageStyle: { background: dipilih ? '#F6F1EA' : '#3E6B22', border: dipilih ? '1px solid #E0D8CE' : 'none', color: dipilih ? '#8C8078' : '#FFF', borderRadius: '8px', padding: '9px 14px', fontSize: '12.5px', fontWeight: 700, cursor: dipilih ? 'default' : 'pointer' },
         flyerPreviewStyle: m.flyer
