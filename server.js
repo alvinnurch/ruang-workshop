@@ -42,6 +42,9 @@ const DATA_FILE = path.resolve(process.env.DATA_FILE || path.join(__dirname, 'da
 /* Xendit — opsional. Tanpa kunci ini, workshop berbiaya memakai persetujuan panitia. */
 const XENDIT_SECRET = process.env.XENDIT_SECRET || '';
 const XENDIT_TOKEN = process.env.XENDIT_CALLBACK_TOKEN || '';
+/* Opsional: bila webhook QR Codes di akun Xendit sudah dipakai aplikasi lain, isi alamat lamanya di sini.
+   Callback yang bukan milik Ruang diteruskan ke sana, jadi kedua aplikasi tetap menerima pembayaran. */
+const XENDIT_FORWARD = process.env.XENDIT_FORWARD_URL || '';
 /* Midtrans — opsional. MIDTRANS_PRODUCTION=1 untuk transaksi sungguhan; tanpa itu memakai sandbox. */
 const MIDTRANS_KEY = process.env.MIDTRANS_SERVER_KEY || '';
 const MIDTRANS_PROD = /^(1|true|ya|yes)$/i.test(process.env.MIDTRANS_PRODUCTION || '');
@@ -912,7 +915,8 @@ function handleAction(p) {
         const idTampil = String(z.id || '').replace(/(\d{3})(\d{3,4})(\d{4})$/, '$1 $2 $3');
         b.url = z.join_url || ''; b.meetingId = idTampil; b.passcode = z.password || '';
         b.zoomId = String(z.id || ''); b.zoomCreatedAt = new Date().toISOString();
-        b.zoomHost = host; b.zoomHostMode = p.hostMode === 'klaim' ? 'klaim' : 'utama'; b.zoomRecMode = modeRek; b.zoomStartAt = new Date(tMulai).toISOString(); b.zoomDur = badan.duration;
+        b.zoomHost = host; b.zoomHostMode = p.hostMode === 'klaim' ? 'klaim' : 'utama'; b.zoomRecMode = modeRek;
+        b.zoomClaimer = p.hostMode === 'klaim' ? String(p.claimer || '').trim().toLowerCase().slice(0, 120) : ''; b.zoomStartAt = new Date(tMulai).toISOString(); b.zoomDur = badan.duration;
         touch();
         return { ok: true, data: { url: b.url, meetingId: b.meetingId, passcode: b.passcode, zoomId: b.zoomId, startUrl: z.start_url || '' } };
       }).catch(e => ({ ok: false, error: /1001|does not exist|not found/i.test(e.message)
@@ -1366,7 +1370,26 @@ const server = http.createServer(async (req, res) => {
       const ref = String(data.reference_id || data.external_id || '');
       const lunas = /SUCCEEDED|PAID|SETTLED|COMPLETED/i.test(String(data.status || ev.status || ''));
       const hit = cariByRef(ref);
-      if (!hit) return json(res, { ok: true, data: { ignored: true } });
+      if (!hit) {
+        if (!XENDIT_FORWARD || /^ws-/.test(ref)) return json(res, { ok: true, data: { ignored: true } });
+        /* Bukan transaksi Ruang: teruskan apa adanya ke aplikasi lain. */
+        try {
+          const u = new URL(XENDIT_FORWARD);
+          const lib = u.protocol === 'http:' ? require('http') : require('https');
+          const hdr = { 'Content-Type': req.headers['content-type'] || 'application/json', 'Content-Length': Buffer.byteLength(body) };
+          ['x-callback-token', 'webhook-id', 'x-xendit-signature'].forEach(k => { if (req.headers[k]) hdr[k] = req.headers[k]; });
+          const status = await new Promise(ok => {
+            const r = lib.request({ hostname: u.hostname, port: u.port || undefined, path: u.pathname + u.search, method: 'POST', headers: hdr, timeout: 8000 }, rr => { rr.resume(); ok(rr.statusCode); });
+            r.on('error', e => { console.error('[xendit] gagal meneruskan:', e.message); ok(0); });
+            r.on('timeout', () => { r.destroy(); ok(0); });
+            r.end(body);
+          });
+          return json(res, { ok: true, data: { forwarded: true, status } });
+        } catch (e) {
+          console.error('[xendit] XENDIT_FORWARD_URL tidak sah:', e.message);
+          return json(res, { ok: true, data: { ignored: true } });
+        }
+      }
       hit.bayar.status = lunas ? 'lunas' : String(data.status || 'menunggu').toLowerCase();
       hit.bayar.paidAt = new Date().toISOString();
       if (lunas) {
@@ -1417,7 +1440,7 @@ server.listen(PORT, () => {
   console.log('│ Midtrans      : ' + (MIDTRANS_KEY ? 'aktif (' + (MIDTRANS_PROD ? 'produksi' : 'sandbox') + ')' : 'nonaktif'));
   console.log('│ Pembayaran    : ' + penyedia());
   console.log('│ Zoom          : ' + (ZOOM_AKTIF ? 'aktif (host: ' + ZOOM_USER + ')' + (ZOOM_WEBHOOK ? ' · rekaman otomatis' : '') : 'nonaktif'));
-  console.log('│ Xendit        : ' + (XENDIT_SECRET ? 'aktif' + (XENDIT_TOKEN ? ' (callback terlindungi)' : ' (TANPA token callback!)') : 'nonaktif — pembayaran manual'));
+  console.log('│ Xendit        : ' + (XENDIT_SECRET ? 'aktif' + (XENDIT_TOKEN ? ' (callback terlindungi)' : ' (TANPA token callback!)') + (XENDIT_FORWARD ? ' · teruskan ke ' + XENDIT_FORWARD : '') : 'nonaktif — pembayaran manual'));
   console.log('│ Email tiket   : ' + (MAIL_AKTIF ? 'aktif (' + SMTP.host + ':' + SMTP.port + ')' : 'nonaktif — isi SMTP_HOST/USER/PASS'));
   console.log('│ Super admin   : ' + SUPER_USER);
   console.log('│ Sandi admin   : ' + ADMIN + (process.env.ADMIN_PASSWORD ? '  (dari ADMIN_PASSWORD)' : '  (bawaan server.js)'));
