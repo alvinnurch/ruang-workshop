@@ -3122,6 +3122,21 @@ class Component extends DCLogic {
   }
   KINDS = { checkin: 'Check in', ppt: 'Bahan bacaan', video: 'Video', zoom: 'Tautan Zoom', countdown: 'Hitung mundur', icebreak: 'Ice breaking', quiz: 'Kuis', wordcloud: 'Word cloud', feedback: 'Umpan balik', form: 'Formulir' };
   SESSKEY = 'ws_sesi_v1';
+  /* Selama tagihan terbuka, tanya status tiap 4 detik (maks. 1 jam). Berhenti sendiri saat lunas. */
+  pantauBayar() {
+    clearInterval(this._bayarT);
+    const mulai = Date.now();
+    this._bayarT = setInterval(async () => {
+      const st = this.state;
+      if (!st.payRef || st.payRef === 'demo' || st.payStatus === 'lunas' || Date.now() - mulai > 3600000 || !this.api()) {
+        if (st.payStatus === 'lunas' || Date.now() - mulai > 3600000) clearInterval(this._bayarT);
+        return;
+      }
+      if (this._bayarSibuk) return;
+      this._bayarSibuk = true;
+      try { await this.cekBayar(true); } finally { this._bayarSibuk = false; }
+    }, 4000);
+  }
   FOOTER_BAWAAN = [
     { label: 'Jelajahi', url: '#katalog' }, { label: 'Cara Kerja', url: '#cara' },
     { label: 'Kebijakan Privasi', url: '' }, { label: 'Kontak', url: 'mailto:' }
@@ -3827,7 +3842,8 @@ class Component extends DCLogic {
       /* Pilihan workshop hanya boleh datang dari pengguna (pilihWs) atau localStorage —
          jangan pernah ditetapkan oleh jawaban server, agar laman platform tidak terlewat. */
       const sah = this.state.wsId && out.meta.some(m => m.id === this.state.wsId);
-      this.setState({ wsMeta: out.meta, wsId: sah ? this.state.wsId : '' }, () => {
+      const sedangMengetik = this._metaDraft || (this._metaEditAt && Date.now() - this._metaEditAt < 4000);
+      this.setState({ wsMeta: sedangMengetik ? this.state.wsMeta : out.meta, wsId: sah ? this.state.wsId : '' }, () => {
         if (this._rutePending) { const b = this._rutePending; this._rutePending = null; location.hash = '#/' + b.join('/'); this.bacaRute(); }
       });
     }
@@ -5459,7 +5475,7 @@ class Component extends DCLogic {
     v.payTitle = viaLink ? 'Pembayaran via Midtrans' : 'Pembayaran QRIS';
     v.payRetryLabel = viaLink ? 'Buat tautan baru' : 'Muat ulang kode QR';
     v.payNote = viaLink
-      ? (st.payUrl ? 'Selesaikan pembayaran di halaman Midtrans, lalu kembali ke sini dan tekan “Saya sudah bayar”.' : 'Menyiapkan tautan pembayaran…')
+      ? (st.payUrl ? 'Selesaikan pembayaran di halaman Midtrans. Status di sini berubah sendiri begitu pembayaran diterima.' : 'Menyiapkan tautan pembayaran…')
       : st.payQr
         ? 'Pindai kode ini dengan aplikasi bank atau e-wallet apa pun yang mendukung QRIS. Status akan berubah sendiri setelah pembayaran diterima.'
         : 'Menyiapkan kode QR…';
@@ -5489,18 +5505,21 @@ class Component extends DCLogic {
         this.setState({ payProvider: 'midtrans', payUrl: out.data.redirectUrl, payRef: out.data.ref, payQr: '', payErr: '' });
         /* Coba buka langsung; bila diblokir peramban, tombol "Bayar sekarang" tetap ada. */
         try { window.open(out.data.redirectUrl, '_blank', 'noopener'); } catch (e) {}
+        this.pantauBayar();
         return;
       }
       this.setState({ payProvider: 'xendit', payQr: out.data.qr, payRef: out.data.ref, payErr: '' });
       this.loadQrGen().then(() => this.forceUpdate());
+      this.pantauBayar();
     };
-    v.payCheck = async () => {
-      if (!this.state.payRef) return;
-      if (!this.api()) return this.setState({ payErr: 'Mode demo: status pembayaran hanya bisa diperiksa saat tersambung ke server.' });
-      this.setState({ payChecking: true });
-      const out = await this.apiPost({ action: 'payStatus', ref: this.state.payRef });
-      this.setState({ payChecking: false });
-      if (!out || !out.ok) return this.setState({ payErr: (out && out.error) || 'Gagal memeriksa status.' });
+    this.cekBayar = async (diam) => {
+      const st = this.state;
+      if (!st.payRef) return;
+      if (!this.api()) return diam ? null : this.setState({ payErr: 'Mode demo: status pembayaran hanya bisa diperiksa saat tersambung ke server.' });
+      if (!diam) this.setState({ payChecking: true });
+      const out = await this.apiPost({ action: 'payStatus', ref: st.payRef });
+      if (!diam) this.setState({ payChecking: false });
+      if (!out || !out.ok) return diam ? null : this.setState({ payErr: (out && out.error) || 'Gagal memeriksa status.' });
       if (out.data.pesertaStatus === 'aktif' || out.data.status === 'lunas') {
         this.setState({ payStatus: 'lunas', payErr: '' });
         const wsB = this.wsNow();
@@ -5509,8 +5528,9 @@ class Component extends DCLogic {
           this.kirimTiket(wsB, { id: st.regPid, name: st.regName, code: st.regCode, email: st.regEmail }, false).then(r => { if (r && r.ok) this.setState({ regMailed: true }); }).catch(() => {});
         }
       }
-      else this.setState({ payErr: 'Pembayaran belum terbaca. Bila Anda baru saja membayar, tunggu sebentar lalu periksa lagi.' });
+      else if (!diam) this.setState({ payErr: 'Pembayaran belum terbaca. Bila Anda baru saja membayar, tunggu sebentar lalu periksa lagi.' });
     };
+    v.payCheck = () => this.cekBayar(false);
     v.regStatusNote = st.regStatus === 'menunggu'
       ? 'Simpan kode ini. Anda bisa masuk setelah panitia menyetujui pendaftaran.'
       : 'Simpan kode ini — dipakai setiap kali masuk ke workshop.';
@@ -6496,15 +6516,29 @@ class Component extends DCLogic {
       { id: 'mandiri', label: 'Peserta mendaftar sendiri, kode langsung terbit' },
       { id: 'mandiri-setuju', label: 'Peserta mendaftar sendiri, panitia menyetujui' }
     ];
-    const simpanMeta = (ubah) => {
-      const baru = JSON.parse(JSON.stringify(metaAdmin)).map(m => { delete m.sessionCount; delete m.participantCount; return m; });
+    const simpanMeta = (ubah, segera) => {
+      /* Selalu bekerja dari salinan terbaru, bukan dari render yang mungkin sudah usang. */
+      const sumber = this._metaDraft || this.state.wsMeta || [];
+      const baru = JSON.parse(JSON.stringify(sumber)).map(m => { delete m.sessionCount; delete m.participantCount; return m; });
       ubah(baru);
-      this.setState({ wsMeta: baru.map(m => Object.assign({}, m)) });
-      this.apiPost({ action: 'putWorkshops', password: this._pw || '', meta: baru }).then(out => {
-        if (out && out.ok && out.data && out.data.meta) this.setState({ wsMeta: out.data.meta, wsMsg: 'Tersimpan.' });
-      });
+      this._metaDraft = baru;
+      this._metaEditAt = Date.now();
+      this.setState({ wsMeta: baru.map(m => Object.assign({}, m)), wsMsg: 'Menyimpan…' });
+      clearTimeout(this._metaT);
+      const kirim = () => {
+        const muatan = this._metaDraft;
+        const versi = this._metaEditAt;
+        this.apiPost({ action: 'putWorkshops', password: this._pw || '', meta: muatan }).then(out => {
+          if (!(out && out.ok && out.data && out.data.meta)) return this.setState({ wsMsg: (out && out.error) || 'Gagal menyimpan.' });
+          /* Ada ketikan baru sejak kiriman ini: jangan timpa layar dengan jawaban lama. */
+          if (this._metaEditAt !== versi) return;
+          this._metaDraft = null;
+          this.setState({ wsMeta: out.data.meta, wsMsg: 'Tersimpan.' });
+        });
+      };
+      if (segera) kirim(); else this._metaT = setTimeout(kirim, 900);
     };
-    v.addWorkshop = () => simpanMeta(list => {
+    v.addWorkshop = () => simpanMeta((list) => {
       const idBaru = 'ws' + Date.now().toString(36);
       this.setState(x => ({ wsOpen: Object.assign({}, x.wsOpen, { [idBaru]: true }) }));
       list.push({ id: idBaru, jenis: 'workshop', title: 'Workshop baru', subtitle: '', partnerName: '', partnerLogo: '', place: '', dateLabel: '', published: false, registration: 'panitia', price: 0, quota: 0 });
