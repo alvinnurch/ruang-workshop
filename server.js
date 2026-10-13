@@ -66,6 +66,9 @@ const SMTP = {
 const MAIL_AKTIF = !!(SMTP.host && SMTP.user && SMTP.pass);
 
 /* Klien SMTP mini: 465 = TLS langsung, 587/25 = STARTTLS. Tanpa dependensi. */
+/* Nama yang dipakai saat menyapa server email. Harus nama domain nyata yang ada di DNS,
+   kalau tidak, banyak server menolak dengan "Helo command rejected: Host not found". */
+const SMTP_HELO = String(process.env.SMTP_HELO || (process.env.PUBLIC_URL || '').replace(/^https?:\/\//, '').replace(/[\/:].*$/, '') || 'ruang.islami.co').trim();
 function kirimEmail({ to, subject, html, text, attachments }) {
   const tls = require('tls');
   const net = require('net');
@@ -121,12 +124,12 @@ function kirimEmail({ to, subject, html, text, attachments }) {
     const jalan = async () => {
       try {
         await balas().then(r => { if (r.c !== 220) throw new Error('SMTP: ' + r.t); });
-        let r = await kirim('EHLO ruang.local', [250]);
+        let r = await kirim('EHLO ' + SMTP_HELO, [250]);
         if (SMTP.port !== 465 && /STARTTLS/i.test(r.t)) {
           await kirim('STARTTLS', [220]);
           const lama = sock; lama.removeAllListeners('data');
           await new Promise((ok, no) => { const t = tls.connect({ socket: lama, servername: SMTP.host }, ok); t.on('error', no); pasang(t); });
-          await kirim('EHLO ruang.local', [250]);
+          await kirim('EHLO ' + SMTP_HELO, [250]);
         }
         await kirim('AUTH LOGIN', [334]);
         await kirim(b64(SMTP.user), [334]);
