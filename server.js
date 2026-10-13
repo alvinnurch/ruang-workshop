@@ -813,8 +813,28 @@ function handleAction(p) {
       if (!a) return { ok: false, error: 'Ajuan tidak ditemukan.' };
       a.status = String(p.status || 'baru');
       a.updatedAt = new Date().toISOString();
+      /* Disetujui: buat event draf berisi rincian ajuan. Tidak dobel bila ditekan lagi. */
+      let wsBaru = null;
+      if (a.status === 'disetujui' && !(a.wsId && store.data[a.wsId])) {
+        const id = 'ws' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        const jml = Math.max(0, Math.min(20, Number(a.sesi) || 0));
+        const data = JSON.parse(JSON.stringify(EMPTY));
+        for (let i = 0; i < jml; i++) data.sessions.push({ id: 's' + Date.now().toString(36) + i, title: 'Sesi ' + (i + 1), desc: '', speaker: '', time: '', venue: '', mode: '', active: null, blocks: [] });
+        store.meta.push(Object.assign(WS_BARU(), {
+          id, title: a.judul || ('Event ' + a.lembaga), jenis: a.jenis || 'workshop', format: a.format || 'online',
+          partnerName: a.lembaga || '', kategori: a.kategori || '', dateLabel: a.waktu || '', place: a.lokasi || '',
+          quota: Number(a.kuota) || 0, price: Number(a.biaya) || 0,
+          registration: Number(a.biaya) > 0 ? 'mandiri-setuju' : 'mandiri',
+          ringkasan: a.ringkasan || a.rencana || '', deskripsi: a.rencana || '',
+          capaian: Array.isArray(a.capaian) ? a.capaian : [],
+          narasumber: a.narasumber || '', published: false, fromAjuan: a.id
+        }));
+        store.data[id] = data;
+        a.wsId = id;
+        wsBaru = id;
+      }
       touch();
-      return { ok: true };
+      return { ok: true, data: { wsId: a.wsId || null, baru: !!wsBaru } };
     }
 
     /* Kode klaim host (Host Key) akun Zoom utama — hanya untuk admin, tidak pernah ke peserta. */
