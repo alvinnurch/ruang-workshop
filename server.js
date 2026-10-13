@@ -688,14 +688,16 @@ function dbPublik() {
 
 function handleAction(p) {
   const wid = pakai(p.ws);
-  const siapa = peranDari(p.password, p.user, wid);
-  const admin = !!siapa && BOLEH_SUSUN[siapa.role];
+  let siapa = peranDari(p.password, p.user, wid);
   /* Akun panitia terikat pada workshop tempat ia dibuat; super admin bebas. */
   const salahWs = !!siapa && !siapa.superadmin && siapa.wsId && siapa.wsId !== wid;
   const namaWs = id => { const m = store.meta.filter(x => x.id === id)[0]; return m ? m.title : id; };
   if (salahWs && /^(putDb|putLive|putWorkshops|reset|markPaid|setAdminPass|zoomCreate|zoomStart|zoomPasscode|zoomRecording)$/.test(String(p.action || ''))) {
     return { ok: false, error: 'Akun ini hanya untuk workshop “' + namaWs(siapa.wsId) + '”.' };
   }
+  /* Di event yang bukan miliknya, akun panitia diperlakukan seperti pengunjung biasa. */
+  if (salahWs && p.action !== 'adminLogin') siapa = null;
+  const admin = !!siapa && BOLEH_SUSUN[siapa.role];
 
   switch (p.action) {
     case 'findCode': {
@@ -1135,8 +1137,8 @@ function handleAction(p) {
       return { ok: true, data: { meta: metaPublik() } };
 
     case 'putWorkshops': {
-      const wsadmin = !!siapa && BOLEH_SUSUN_WS[siapa.role] && !BOLEH_SUSUN[siapa.role];
-      if (!siapa || (!BOLEH_SUSUN[siapa.role] && !wsadmin)) return { ok: false, error: 'Hanya admin penuh atau admin workshop yang boleh mengubah data workshop.' };
+      const wsadmin = !!siapa && !siapa.superadmin && (BOLEH_SUSUN_WS[siapa.role] || BOLEH_SUSUN[siapa.role]);
+      if (!siapa || (!siapa.superadmin && !wsadmin)) return { ok: false, error: 'Hanya super admin atau admin event yang boleh mengubah data event.' };
       /* Admin workshop hanya boleh menyunting profil workshopnya sendiri — tidak menambah/menghapus. */
       if (wsadmin) {
         const punya = (Array.isArray(p.meta) ? p.meta : []).filter(x => x.id === siapa.wsId)[0];
