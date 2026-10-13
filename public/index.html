@@ -2467,8 +2467,8 @@
           </sc-if>
           <div style="{{ wsListHeadStyle }}">
             <div>
-              <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 5px;font-weight:700">Event pada platform ini</h2>
-              <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:72ch;text-wrap:pretty">Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. {{ wsMsg }}</p>
+              <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 5px;font-weight:700">{{ wsListTitle }}</h2>
+              <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:72ch;text-wrap:pretty">{{ wsListDesc }}</p>
             </div>
             <sc-if value="{{ canCreateEvent }}" hint-placeholder-val="{{ true }}">
             <button onClick="{{ addWorkshop }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13.5px;font-weight:700;white-space:nowrap" style-hover="background:#8A0F17">Workshop baru</button>
@@ -6660,6 +6660,10 @@ class Component extends DCLogic {
     };
     v.wsListHeadStyle = fokus ? { display: 'none' } : { display: 'flex', justifyContent: 'space-between', gap: '18px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '22px' };
     v.wsCompact = !!wsMilik && !fokus;
+    v.wsListTitle = st.isSuper ? 'Event pada platform ini' : 'Event yang Anda kelola';
+    v.wsListDesc = st.isSuper
+      ? 'Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. ' + (st.wsMsg || 'Perubahan di sini langsung tersimpan ke server.')
+      : 'Hanya event yang terhubung ke akun Anda yang tampil di sini. Pilih Kelola untuk menyusun sesi dan peserta, atau Edit detail untuk mengubah profil event.';
     v.wsFullStyle = v.wsCompact ? { display: 'none' } : { display: 'grid', gap: '14px' };
     v.wsRows = metaAdmin.filter(m => (!wsMilik || wsMilik.indexOf(m.id) >= 0) && (!fokus || m.id === fokus)).map(m => {
       const ubah = (k, val) => simpanMeta(list => { const x = list.find(y => y.id === m.id); if (x) x[k] = val; });
