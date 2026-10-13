@@ -624,6 +624,22 @@
           </div>
         </div>
       </sc-if>
+      <sc-if value="{{ pSesiShow }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ pSesiBarStyle }}">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A6F66">Pilih sesi</span>
+            <span style="font-size:12px;font-weight:600;color:#8C8078">{{ pSesiPos }}</span>
+          </div>
+          <div ref="{{ pSesiRef }}" style="display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px">
+            <sc-for list="{{ pSesiChips }}" as="c" hint-placeholder-count="3">
+              <button onClick="{{ c.pick }}" title="{{ c.full }}" style="{{ c.style }}">
+                <span style="{{ c.numStyle }}">{{ c.num }}</span>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ c.title }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
       <sc-if value="{{ noActiveSession }}" hint-placeholder-val="{{ false }}">
         <div style="background:#F6F1EA;border:1px dashed #DCD3C8;border-radius:14px;padding:44px 30px;text-align:center">
           <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:22px;font-weight:700;margin-bottom:8px">Belum ada sesi yang dibuka</div>
@@ -649,7 +665,7 @@
               <button onClick="{{ clearApiError }}" style="background:#FFF;border:1px solid #F0C9CC;color:#8E1018;border-radius:7px;padding:7px 11px;font-size:12px;font-weight:600;flex:none">Tutup</button>
             </div>
           </sc-if>
-          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:14px;overflow:hidden">
+          <div onTouchStart="{{ pSwipeStart }}" onTouchEnd="{{ pSwipeEnd }}" style="background:#FFF;border:1px solid #E6DFD6;border-radius:14px;overflow:hidden">
             <div style="padding:22px 24px;border-bottom:1px solid #EDE6DD">
               <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A5121C;margin-bottom:8px">{{ liveBadge }}</div>
               <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(21px,3vw,28px);line-height:1.2;margin:0 0 10px;font-weight:700;letter-spacing:-.015em">{{ sessionTitle }}</h2>
@@ -663,16 +679,6 @@
             </sc-if>
           </div>
 
-          <sc-if value="{{ pSesiShow }}" hint-placeholder-val="{{ false }}">
-            <div style="margin-top:16px">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A6F66;margin-bottom:9px">Pilih sesi</div>
-              <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
-                <sc-for list="{{ pSesiChips }}" as="c" hint-placeholder-count="4">
-                  <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.title }}</button>
-                </sc-for>
-              </div>
-            </div>
-          </sc-if>
 
           <sc-if value="{{ hasLiveCall }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:18px;background:#A5121C;color:#FFF;border-radius:14px;padding:20px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;animation:wsRise .3s ease">
@@ -1912,11 +1918,32 @@
                                 </sc-if>
                               </sc-if>
                               <div style="border-top:1px solid #D6E0EE;padding-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                                <div style="grid-column:1/-1;display:grid;gap:7px">
+                                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Sumber rekaman</span>
+                                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <sc-for list="{{ b.recSrcOpts }}" as="o" hint-placeholder-count="2">
+                                      <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+                                    </sc-for>
+                                  </div>
+                                </div>
+                                <sc-if value="{{ b.recLokal }}" hint-placeholder-val="{{ false }}">
+                                  <div style="grid-column:1/-1;background:#FFF;border:1px solid #D6E0EE;border-radius:9px;padding:13px 15px">
+                                    <div style="font-size:12.5px;font-weight:700;color:#1F3B5C;margin-bottom:7px">Rekam di komputer, lalu bagikan lewat Google Drive</div>
+                                    <ol style="margin:0;padding-left:19px;font-size:12.5px;color:#3B4A5E;line-height:1.7;display:grid;gap:2px">
+                                      <li>Pakai aplikasi Zoom desktop (bukan peramban atau ponsel). Saat rapat, tekan <b>Record → Record on this Computer</b>. Bisa di akun gratis.</li>
+                                      <li>Akhiri rapat. Zoom menyimpan berkas <b>.mp4</b> di folder <b>Dokumen/Zoom</b> setelah selesai mengonversi.</li>
+                                      <li>Unggah berkas itu ke Google Drive Anda.</li>
+                                      <li>Klik kanan berkasnya → <b>Bagikan</b> → <b>Akses umum: Siapa saja yang memiliki link</b> → peran <b>Pelihat</b>.</li>
+                                      <li>Tekan <b>Salin link</b>, lalu tempel di kolom Tautan rekaman di bawah, dan tekan <b>Simpan perubahan</b>.</li>
+                                    </ol>
+                                  </div>
+                                </sc-if>
                                 <label style="display:grid;gap:5px;align-content:start">
                                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tautan rekaman</span>
-                                  <input value="{{ b.recUrl }}" onChange="{{ b.onRecUrl }}" placeholder="terisi otomatis, atau tempel dari Zoom" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
+                                  <input value="{{ b.recUrl }}" onChange="{{ b.onRecUrl }}" placeholder="{{ b.recPh }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
+                                  <span style="{{ b.recWarnStyle }}">{{ b.recWarn }}</span>
                                 </label>
-                                <label style="display:grid;gap:5px;align-content:start">
+                                <label style="{{ b.recPassStyle }}">
                                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Passcode rekaman</span>
                                   <input value="{{ b.recPass }}" onChange="{{ b.onRecPass }}" placeholder="kosongkan bila tanpa passcode" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;outline:none;background:#FFF;min-width:0" style-focus="border-color:#2D6CDF" />
                                 </label>
@@ -4626,14 +4653,48 @@ class Component extends DCLogic {
     const multiAktif = !mandiri && idsAktif.length > 1;
     if (multiAktif && live) v.liveBadge = idsAktif.length + ' sesi berlangsung bersamaan';
     v.pSesiShow = (mandiri && (db.sessions || []).length > 1) || multiAktif;
-    v.pSesiChips = (db.sessions || []).map((s0, i) => ({ s0, i })).filter(x => !multiAktif || idsAktif.indexOf(x.s0.id) >= 0).map(({ s0, i }) => {
+    const daftarP = (db.sessions || []).map((s0, i) => ({ s0, i })).filter(x => !multiAktif || idsAktif.indexOf(x.s0.id) >= 0);
+    const posP = Math.max(0, daftarP.findIndex(x => live && x.s0.id === live.id));
+    const pindahP = id => this.setState({ pSesi: id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
+    v.pSesiPos = daftarP.length > 1 ? (posP + 1) + ' dari ' + daftarP.length + (st.narrow ? ' · geser kartu' : '') : '';
+    v.pSesiChips = daftarP.map(({ s0, i }) => {
       const on = live && s0.id === live.id;
       return {
-        title: (i + 1) + '. ' + (s0.title || 'Sesi'),
-        style: { background: on ? '#A5121C' : '#FFF', border: '1px solid ' + (on ? '#A5121C' : '#E0D8CE'), color: on ? '#FFF' : '#3B342E', borderRadius: '100px', padding: '9px 15px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none' },
-        pick: () => this.setState({ pSesi: s0.id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' })
+        num: String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi'),
+        numStyle: { flex: 'none', width: '22px', height: '22px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11.5px', fontWeight: 800, background: on ? 'rgba(255,255,255,.22)' : '#F1EBE3', color: on ? '#FFF' : '#7A6F66' },
+        style: { display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '44px', maxWidth: st.narrow ? '72vw' : '300px', background: on ? '#A5121C' : '#FFF', border: '1px solid ' + (on ? '#A5121C' : '#E0D8CE'), color: on ? '#FFF' : '#3B342E', borderRadius: '100px', padding: '0 16px 0 9px', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start', boxShadow: on ? '0 3px 10px rgba(165,18,28,.22)' : 'none' },
+        pick: () => pindahP(s0.id)
       };
     });
+    /* Bilah lengket diletakkan tepat di bawah header situs, yang tingginya berubah di ponsel. */
+    v.headH = (this._headH || 67) + 'px';
+    /* Lengket hanya di ponsel (satu kolom). Di desktop panel kanan sudah lengket sendiri. */
+    v.pSesiBarStyle = st.narrow
+      ? { position: 'sticky', top: v.headH, zIndex: 15, background: '#F3EDE5', margin: '0 -20px 12px', padding: '10px 20px', borderBottom: '1px solid #E6DFD6' }
+      : { margin: '0 0 14px' };
+    v.pSesiRef = el => {
+      this._pSesiBar = el;
+      const h = document.querySelector('header');
+      const tinggi = h ? Math.round(h.getBoundingClientRect().height) : 67;
+      if (tinggi && tinggi !== this._headH) { this._headH = tinggi; requestAnimationFrame(() => this.forceUpdate()); }
+      if (!el) return;
+      const anak = el.children[posP];
+      if (anak && this._pSesiLast !== posP + ':' + daftarP.length) {
+        this._pSesiLast = posP + ':' + daftarP.length;
+        requestAnimationFrame(() => el.scrollTo({ left: Math.max(0, anak.offsetLeft - el.offsetLeft - 8), behavior: 'smooth' }));
+      }
+    };
+    /* Geser kartu sesi ke kiri/kanan untuk pindah sesi (ponsel). */
+    v.pSwipeStart = e => { if (daftarP.length < 2) return; const t = e.touches && e.touches[0]; this._sw = t ? { x: t.clientX, y: t.clientY } : null; };
+    v.pSwipeEnd = e => {
+      const a = this._sw; this._sw = null;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!a || !t || daftarP.length < 2) return;
+      const dx = t.clientX - a.x, dy = t.clientY - a.y;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const ke = posP + (dx < 0 ? 1 : -1);
+      if (ke >= 0 && ke < daftarP.length) pindahP(daftarP[ke].s0.id);
+    };
     if (!started && !mandiri) {
       v.liveBadge = 'Belum dimulai';
       v.sessionTitle = 'Menunggu Sesi Dimulai';
@@ -7048,6 +7109,20 @@ class Component extends DCLogic {
           zoomRec: !((st.zoomForm || {})[b.id] && (st.zoomForm || {})[b.id].rec === false),
           onZoomRec: e => { const val = !!e.target.checked; this.setState(x => ({ zoomForm: Object.assign({}, x.zoomForm, { [b.id]: Object.assign({}, (x.zoomForm || {})[b.id], { rec: val }) }) })); },
           recUrl: b.recUrl || '', recPass: b.recPass || '',
+          recLokal: b.recSource === 'lokal',
+          recSrcOpts: [['cloud', 'Cloud Zoom (otomatis)'], ['lokal', 'Rekam di komputer → Google Drive']].map(([id, label]) => {
+            const on = (b.recSource || 'cloud') === id;
+            return {
+              label,
+              style: { background: on ? '#1F3B5C' : '#FFF', border: '1px solid ' + (on ? '#1F3B5C' : '#B9C8DE'), color: on ? '#FFF' : '#1F3B5C', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' },
+              pick: () => { if (!on) { this.markDraft(); mut(b.id, x => { x.recSource = id; }); } }
+            };
+          }),
+          recPh: b.recSource === 'lokal' ? 'https://drive.google.com/file/d/…' : 'terisi otomatis, atau tempel dari Zoom',
+          recWarn: b.recSource === 'lokal' && b.recUrl && !/drive\.google\.com|docs\.google\.com|youtu/i.test(b.recUrl)
+            ? 'Ini bukan tautan Google Drive. Pastikan peserta bisa membukanya tanpa izin khusus.' : '',
+          recWarnStyle: { fontSize: '11.5px', color: '#8A5A00', lineHeight: 1.5, display: b.recSource === 'lokal' && b.recUrl && !/drive\.google\.com|docs\.google\.com|youtu/i.test(b.recUrl) ? 'block' : 'none' },
+          recPassStyle: b.recSource === 'lokal' ? { display: 'none' } : { display: 'grid', gap: '5px', alignContent: 'start' },
           zoomHostLabel: b.zoomHost || ((this.wsNow() || {}).zoomHost) || 'akun Zoom utama',
           hasClash: !!(st.zoomClash && st.zoomClash.id === b.id),
           clashHost: (st.zoomClash && st.zoomClash.host) || '',
@@ -7063,9 +7138,11 @@ class Component extends DCLogic {
           onRecPass: e => { const val = e.target.value.trim(); this.markDraft(); mut(b.id, x => { x.recPass = val; }); },
           recNote: b.recUrl
             ? 'Rekaman tampil untuk peserta sebagai bahan yang selalu tersedia, termasuk di Perpustakaan. Kosongkan tautan untuk menyembunyikannya.'
-            : 'Setelah rapat selesai dan Zoom memproses rekaman cloud, tautannya terisi sendiri. Bisa juga ditempel manual.',
+            : b.recSource === 'lokal'
+              ? 'Rekaman dari komputer tidak masuk otomatis. Setelah tautan Drive ditempel, peserta melihatnya sebagai bahan yang selalu tersedia.'
+              : 'Butuh akun Zoom Pro. Setelah rapat selesai dan Zoom memproses rekaman cloud, tautannya terisi sendiri. Akun gratis? Pilih "Rekam di komputer".',
           recFetchLabel: st.recBusy === b.id ? 'Mengambil…' : b.recUrl ? 'Perbarui rekaman' : 'Ambil rekaman',
-          recFetchStyle: b.zoomId
+          recFetchStyle: b.zoomId && b.recSource !== 'lokal'
             ? { background: '#FFF', border: '1px solid #B9C8DE', color: '#1F3B5C', borderRadius: '8px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
             : { display: 'none' },
           recFetch: async () => {
