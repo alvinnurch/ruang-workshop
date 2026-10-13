@@ -349,11 +349,11 @@ function tandaiLunas(d, bayar) {
 }
 
 /* ── Xendit: QRIS dinamis ── */
-function xendit(jalur, badan) {
+function xendit(jalur, badan, metode) {
   return new Promise((selesai, gagal) => {
-    const isi = Buffer.from(JSON.stringify(badan), 'utf8');
+    const isi = badan ? Buffer.from(JSON.stringify(badan), 'utf8') : Buffer.alloc(0);
     const req = https.request({
-      hostname: 'api.xendit.co', path: jalur, method: 'POST',
+      hostname: 'api.xendit.co', path: jalur, method: metode || 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': isi.length,
@@ -1173,6 +1173,15 @@ function handleAction(p) {
           if (st === 'lunas') tandaiLunas(dPakai, bayar);
           else bayar.status = st;
           touch();
+          return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
+        }).catch(() => ({ ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } }));
+      }
+      /* Xendit: jangan hanya menunggu callback — tanyakan langsung pembayaran QR ini. */
+      if (bayar.provider === 'xendit' && bayar.status === 'menunggu' && XENDIT_SECRET && bayar.xenditId) {
+        const dPakai = db;
+        return xendit('/qr_codes/' + encodeURIComponent(bayar.xenditId) + '/payments', null, 'GET').then(j => {
+          const daftar = Array.isArray(j.data) ? j.data : [];
+          if (daftar.some(x => /SUCCEEDED|COMPLETED/i.test(String(x.status || '')))) { tandaiLunas(dPakai, bayar); touch(); }
           return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
         }).catch(() => ({ ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } }));
       }
