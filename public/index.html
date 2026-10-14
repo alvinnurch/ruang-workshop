@@ -1505,6 +1505,35 @@
         </sc-if>
 
         <sc-if value="{{ platLembaga }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;overflow:hidden;margin-bottom:18px">
+            <div style="padding:18px 22px;border-bottom:1px solid #EDE6DD">
+              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0;font-weight:700">Ajuan perubahan event</h3>
+              <div style="font-size:12.5px;color:#8C8078;margin-top:3px">{{ crMeta }}</div>
+            </div>
+            <sc-if value="{{ crKosong }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:22px;font-size:13.5px;color:#8C8078;text-align:center">Belum ada ajuan dari admin event.</div>
+            </sc-if>
+            <sc-for list="{{ crRows }}" as="r" hint-placeholder-count="2">
+              <div style="padding:15px 22px;border-top:1px solid #F1EBE3;display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+                <div style="flex:1 1 280px;min-width:min(100%,240px)">
+                  <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+                    <span style="{{ r.badgeStyle }}">{{ r.status }}</span>
+                    <span style="font-size:14px;font-weight:700">{{ r.label }}</span>
+                  </div>
+                  <div style="font-size:12.5px;color:#7A6F66;margin-top:5px;line-height:1.5;text-wrap:pretty">{{ r.wsTitle }} · oleh {{ r.by }} · {{ r.when }}</div>
+                  <sc-if value="{{ r.note }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:12.5px;color:#5C534B;margin-top:4px">“{{ r.note }}”</div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ r.pending }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:8px">
+                    <button onClick="{{ r.approve }}" style="background:#3E6B22;color:#FFF;border:none;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700" style-hover="background:#2C4D18">Setujui</button>
+                    <button onClick="{{ r.reject }}" style="background:#FFF;border:1px solid #F0C9CC;color:#A5121C;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700" style-hover="background:#FCEDEE">Tolak</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
           <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;overflow:hidden">
             <div style="padding:18px 22px;border-bottom:1px solid #EDE6DD;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center">
               <div>
@@ -2566,9 +2595,39 @@
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya (Rp, 0 = gratis)</span>
                     <input value="{{ w.price }}" onChange="{{ w.onPrice }}" disabled="{{ w.priceLocked }}" type="number" min="0" step="1000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                     <sc-if value="{{ w.priceLocked }}" hint-placeholder-val="{{ false }}">
-                      <span style="font-size:11.5px;color:#8C8078;line-height:1.45">Diatur super admin. Hubungi pengelola platform untuk mengubah biaya.</span>
+                      <span style="font-size:11.5px;color:#8C8078;line-height:1.45">Diatur super admin. Ajukan perubahan lewat kotak di bawah.</span>
                     </sc-if>
                   </label>
+                  <sc-if value="{{ w.priceLocked }}" hint-placeholder-val="{{ false }}">
+                    <div style="grid-column:1/-1;background:#FAF6F0;border:1px solid #E6DFD6;border-radius:11px;padding:16px 18px;display:grid;gap:14px">
+                      <div>
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;font-weight:700">Ajukan ke super admin</div>
+                        <div style="font-size:12.5px;color:#7A6F66;line-height:1.55;margin-top:3px;text-wrap:pretty">Biaya, penerbitan, dan penghapusan event diputuskan super admin. Ajuan Anda masuk ke dasbor super admin, dan statusnya tampil di sini.</div>
+                      </div>
+                      <div style="display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:8px;align-items:center">
+                        <input value="{{ w.reqPrice }}" onChange="{{ w.onReqPrice }}" type="number" min="0" step="1000" placeholder="Biaya baru (Rp)" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" />
+                        <input value="{{ w.reqNote }}" onChange="{{ w.onReqNote }}" placeholder="Alasan / catatan (opsional)" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" />
+                        <button onClick="{{ w.reqBiaya }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#1B1714">Ajukan revisi biaya</button>
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                        <button onClick="{{ w.reqPub }}" style="background:#FFF;border:1px solid #CFE2C2;color:#2C4D18;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:700" style-hover="background:#EEF5E9">{{ w.reqPubLabel }}</button>
+                        <button onClick="{{ w.reqHapus }}" style="background:#FFF;border:1px solid #F0C9CC;color:#A5121C;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:700" style-hover="background:#FCEDEE">Ajukan hapus event</button>
+                        <span style="font-size:12.5px;color:#7A6F66">{{ w.reqMsg }}</span>
+                      </div>
+                      <sc-if value="{{ w.hasReqs }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:grid;gap:6px;border-top:1px solid #E6DFD6;padding-top:12px">
+                          <sc-for list="{{ w.reqs }}" as="r" hint-placeholder-count="2">
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#5C534B">
+                              <span style="{{ r.badgeStyle }}">{{ r.status }}</span>
+                              <span style="font-weight:600;color:#3B342E">{{ r.label }}</span>
+                              <span style="color:#8C8078">{{ r.when }}</span>
+                              <span style="color:#7A6F66">{{ r.reply }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota (0 = tanpa batas)</span>
                     <input value="{{ w.quota }}" onChange="{{ w.onQuota }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -3179,6 +3238,33 @@ class Component extends DCLogic {
   }
   KINDS = { checkin: 'Check in', ppt: 'Bahan bacaan', video: 'Video', zoom: 'Tautan Zoom', countdown: 'Hitung mundur', icebreak: 'Ice breaking', quiz: 'Kuis', wordcloud: 'Word cloud', feedback: 'Umpan balik', form: 'Formulir' };
   SESSKEY = 'ws_sesi_v1';
+  REQ_LABEL = { biaya: 'Revisi biaya', terbit: 'Terbitkan di etalase', tarik: 'Tarik dari etalase', hapus: 'Hapus event' };
+  reqView(r) {
+    const warna = { menunggu: ['#FFF6E5', '#8A6A12', '#EBD9A8'], disetujui: ['#EEF5E9', '#2C4D18', '#CFE2C2'], ditolak: ['#FCEDEE', '#A5121C', '#F0C9CC'] }[r.status] || ['#F1EBE3', '#5C534B', '#E0D8CE'];
+    const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    return {
+      id: r.id, status: r.status,
+      label: (this.REQ_LABEL[r.kind] || r.kind) + (r.kind === 'biaya' ? ': ' + rp(r.before) + ' → ' + (r.value ? rp(r.value) : 'Gratis') : ''),
+      when: r.createdAt ? new Date(r.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }) : '',
+      reply: r.reply ? '· ' + r.reply : (r.note ? '· “' + r.note + '”' : ''),
+      by: r.by || '', wsTitle: r.wsTitle || '', note: r.note || '',
+      badgeStyle: { fontSize: '10.5px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: '100px', background: warna[0], color: warna[1], border: '1px solid ' + warna[2] }
+    };
+  }
+  async ajukanUbah(m, kind, value) {
+    const pesan = t => this.setState(x => ({ reqMsg: Object.assign({}, x.reqMsg, { [m.id]: t }) }));
+    pesan('Mengirim ajuan…');
+    if (!this.api()) {
+      const r = { id: 'cr' + Date.now().toString(36), wsId: m.id, wsTitle: m.title, kind, value: kind === 'biaya' ? value : null, before: m.price || 0, note: (this.state.reqNote || {})[m.id] || '', by: this.state.adminName || 'Admin event', status: 'menunggu', createdAt: new Date().toISOString() };
+      this.setState(x => ({ changeReq: [r].concat(x.changeReq || []), reqNote: Object.assign({}, x.reqNote, { [m.id]: '' }), reqPrice: Object.assign({}, x.reqPrice, { [m.id]: '' }) }));
+      return pesan('Ajuan terkirim (pratinjau).');
+    }
+    const out = await this.apiPost({ action: 'requestChange', password: this._pw || '', user: this._user || '', kind, value, note: (this.state.reqNote || {})[m.id] || '' });
+    if (out && out.ok) {
+      this.setState(x => ({ changeReq: out.data.changeReq, reqNote: Object.assign({}, x.reqNote, { [m.id]: '' }), reqPrice: Object.assign({}, x.reqPrice, { [m.id]: '' }) }));
+      pesan('Ajuan terkirim. Menunggu tinjauan super admin.');
+    } else pesan((out && out.error) || 'Ajuan gagal dikirim.');
+  }
   /* Selama tagihan terbuka, tanya status tiap 4 detik (maks. 1 jam). Berhenti sendiri saat lunas. */
   pantauBayar() {
     clearInterval(this._bayarT);
@@ -3892,6 +3978,7 @@ class Component extends DCLogic {
     if (out && typeof out.zoom === 'boolean' && out.zoom !== this.state.zoomOn) this.setState({ zoomOn: out.zoom });
     if (out && typeof out.mail === 'boolean' && out.mail !== this.state.mailOn) this.setState({ mailOn: out.mail });
     if (out && typeof out.fee !== 'undefined') this.setState({ fee: Number(out.fee) || 0 });
+    if (out && Array.isArray(out.changeReq) && !this.state.isSuper) this.setState({ changeReq: out.changeReq });
     if (out && Array.isArray(out.footer) && !this.state.footerEdit) this.setState({ footer: out.footer });
     if (out && typeof out.hostKeySet === 'boolean' && out.hostKeySet !== this.state.hostKeySet) this.setState({ hostKeySet: out.hostKeySet });
     if (out && out.ok && out.data && out.data.sessions && !out.meta && !this.state.soloMode) this.setState({ soloMode: true, role: this.state.role === 'pickWs' ? 'login' : this.state.role });
@@ -4914,6 +5001,25 @@ class Component extends DCLogic {
     v.platPayments = platTabId === 'payments';
     v.platSettings = platTabId === 'settings';
     v.platLembaga = platTabId === 'lembaga';
+    {
+      const cr = Array.isArray(P.changeReq) ? P.changeReq : (st.changeReq || []);
+      const tinjau = async (r, approve) => {
+        if (approve && r.kind === 'hapus' && !window.confirm('Setujui penghapusan “' + r.wsTitle + '”? Seluruh sesi, peserta, dan jawabannya ikut terhapus.')) return;
+        const reply = approve ? '' : (window.prompt('Alasan penolakan (opsional):', '') || '');
+        if (!this.api()) {
+          this.setState(x => ({ changeReq: (x.changeReq || []).map(y => y.id === r.id ? Object.assign({}, y, { status: approve ? 'disetujui' : 'ditolak', reply }) : y) }));
+          return;
+        }
+        const out = await this.apiPost({ action: 'reviewChange', password: this._pw || '', user: this._user || '', id: r.id, approve, reply });
+        if (out && out.ok) this.muatPlatform();
+        else this.setState({ ajuanMsg: (out && out.error) || 'Gagal meninjau ajuan.' });
+      };
+      v.crKosong = !cr.length;
+      v.crMeta = cr.filter(x => x.status === 'menunggu').length + ' menunggu tinjauan · ' + cr.length + ' total';
+      v.crRows = cr.slice(0, 30).map(r => Object.assign(this.reqView(r), {
+        pending: r.status === 'menunggu', approve: () => tinjau(r, true), reject: () => tinjau(r, false)
+      }));
+    }
     const ajuan = (P.lembaga || []);
     v.lembagaKosong = !ajuan.length;
     v.lembagaMeta = ajuan.length + ' pengajuan · ' + ajuan.filter(x => x.status === 'baru').length + ' belum ditinjau' + (st.ajuanMsg ? ' — ' + st.ajuanMsg : '');
@@ -6703,6 +6809,21 @@ class Component extends DCLogic {
         canEdit: !wsMilik,
         expanded: !!(st.wsOpen || {})[m.id],
         priceLocked: !st.isSuper,
+        reqPrice: (st.reqPrice || {})[m.id] == null ? '' : st.reqPrice[m.id],
+        reqNote: (st.reqNote || {})[m.id] || '',
+        reqMsg: (st.reqMsg || {})[m.id] || '',
+        onReqPrice: e => { const t = e.target.value; this.setState(x => ({ reqPrice: Object.assign({}, x.reqPrice, { [m.id]: t }) })); },
+        onReqNote: e => { const t = e.target.value; this.setState(x => ({ reqNote: Object.assign({}, x.reqNote, { [m.id]: t }) })); },
+        reqPubLabel: m.published ? 'Ajukan tarik dari etalase' : 'Ajukan terbit di etalase',
+        reqBiaya: () => {
+          const v0 = (st.reqPrice || {})[m.id];
+          if (v0 === '' || v0 == null) return this.setState(x => ({ reqMsg: Object.assign({}, x.reqMsg, { [m.id]: 'Isi biaya baru dulu (0 = gratis).' }) }));
+          this.ajukanUbah(m, 'biaya', parseInt(v0, 10) || 0);
+        },
+        reqPub: () => this.ajukanUbah(m, m.published ? 'tarik' : 'terbit'),
+        reqHapus: () => { if (window.confirm('Ajukan penghapusan event “' + m.title + '” ke super admin?')) this.ajukanUbah(m, 'hapus'); },
+        reqs: (st.changeReq || []).filter(r => r.wsId === m.id).slice(0, 6).map(r => this.reqView(r)),
+        hasReqs: (st.changeReq || []).some(r => r.wsId === m.id),
         toggleTitle: (st.wsOpen || {})[m.id] ? 'Ciutkan' : 'Buka detail',
         toggleOpen: () => this.setState(x => ({ wsOpen: Object.assign({}, x.wsOpen, { [m.id]: !(x.wsOpen || {})[m.id] }) })),
         chevronStyle: { display: 'inline-block', fontSize: '14px', color: '#8C8078', width: '14px', flex: 'none', transition: 'transform .2s', transform: (st.wsOpen || {})[m.id] ? 'rotate(90deg)' : 'none' },
