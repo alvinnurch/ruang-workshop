@@ -2564,7 +2564,10 @@
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya (Rp, 0 = gratis)</span>
-                    <input value="{{ w.price }}" onChange="{{ w.onPrice }}" type="number" min="0" step="1000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                    <input value="{{ w.price }}" onChange="{{ w.onPrice }}" disabled="{{ w.priceLocked }}" type="number" min="0" step="1000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                    <sc-if value="{{ w.priceLocked }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11.5px;color:#8C8078;line-height:1.45">Diatur super admin. Hubungi pengelola platform untuk mengubah biaya.</span>
+                    </sc-if>
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota (0 = tanpa batas)</span>
@@ -6659,7 +6662,7 @@ class Component extends DCLogic {
       this.setState({ wsFokus: null });
     };
     v.wsListHeadStyle = fokus ? { display: 'none' } : { display: 'flex', justifyContent: 'space-between', gap: '18px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '22px' };
-    v.wsCompact = !!wsMilik && !fokus;
+    v.wsCompact = !!wsMilik && !fokus && metaAdmin.length > 1;
     v.wsListTitle = st.isSuper ? 'Event pada platform ini' : 'Event yang Anda kelola';
     v.wsListDesc = st.isSuper
       ? 'Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. ' + (st.wsMsg || 'Perubahan di sini langsung tersimpan ke server.')
@@ -6698,7 +6701,8 @@ class Component extends DCLogic {
         onJenis: e => ubah('jenis', e.target.value),
         jenisLabel: this.jenisOf(m),
         canEdit: !wsMilik,
-        expanded: !wsMilik && !!(st.wsOpen || {})[m.id],
+        expanded: !!(st.wsOpen || {})[m.id],
+        priceLocked: !st.isSuper,
         toggleTitle: (st.wsOpen || {})[m.id] ? 'Ciutkan' : 'Buka detail',
         toggleOpen: () => this.setState(x => ({ wsOpen: Object.assign({}, x.wsOpen, { [m.id]: !(x.wsOpen || {})[m.id] }) })),
         chevronStyle: { display: 'inline-block', fontSize: '14px', color: '#8C8078', width: '14px', flex: 'none', transition: 'transform .2s', transform: (st.wsOpen || {})[m.id] ? 'rotate(90deg)' : 'none' },
@@ -6723,7 +6727,7 @@ class Component extends DCLogic {
         togglePub: () => ubah('published', !m.published),
         manage: () => this.pilihWs(m.id),
         /* Dari daftar ringkas: buka isian event ini saja, atau langsung ke panel sesinya. */
-        editFokus: () => { this.setState(x => ({ wsFokus: m.id, wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) })); window.scrollTo({ top: 0 }); },
+        editFokus: () => { if (m.id !== st.wsId) this.pilihWs(m.id, 'admin'); this.setState(x => ({ tab: 'workshops', wsFokus: m.id, wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) })); window.scrollTo({ top: 0 }); },
         kelola: () => { this.pilihWs(m.id, 'admin'); this.setState({ tab: 'control', wsFokus: null }); },
         manageLabel: dipilih ? 'Sedang dikelola' : 'Kelola workshop ini',
         manageStyle: { background: dipilih ? '#F6F1EA' : '#3E6B22', border: dipilih ? '1px solid #E0D8CE' : 'none', color: dipilih ? '#8C8078' : '#FFF', borderRadius: '8px', padding: '9px 14px', fontSize: '12.5px', fontWeight: 700, cursor: dipilih ? 'default' : 'pointer' },
