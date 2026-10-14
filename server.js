@@ -1173,6 +1173,47 @@ function handleAction(p) {
       return { ok: true, data: { meta: metaPublik() } };
     }
 
+    /* Admin event mengajukan perubahan yang menjadi kewenangan super admin. */
+    case 'requestChange': {
+      if (!siapa || siapa.superadmin) return { ok: false, error: 'Hanya admin event yang mengajukan perubahan.' };
+      const m = store.meta.filter(x => x.id === wid)[0];
+      if (!m) return { ok: false, error: 'Event tidak ditemukan.' };
+      const jenis = String(p.kind || '');
+      if (['biaya', 'terbit', 'tarik', 'hapus'].indexOf(jenis) < 0) return { ok: false, error: 'Jenis ajuan tidak dikenal.' };
+      store.changeReq = Array.isArray(store.changeReq) ? store.changeReq : [];
+      if (store.changeReq.some(r => r.wsId === wid && r.kind === jenis && r.status === 'menunggu')) return { ok: false, error: 'Ajuan serupa masih menunggu tinjauan super admin.' };
+      const nilai = jenis === 'biaya' ? Math.max(0, parseInt(p.value, 10) || 0) : null;
+      store.changeReq.push({
+        id: 'cr' + Date.now().toString(36), wsId: wid, wsTitle: m.title || wid, kind: jenis, value: nilai,
+        before: jenis === 'biaya' ? (m.price || 0) : null, note: String(p.note || '').slice(0, 600),
+        by: siapa.name || siapa.user || 'Admin event', byUser: siapa.user || '', status: 'menunggu', createdAt: new Date().toISOString()
+      });
+      console.log('[ajuan] ' + jenis + ' · ' + (m.title || wid) + ' · oleh ' + (siapa.user || '-'));
+      touch();
+      return { ok: true, data: { changeReq: store.changeReq.filter(r => r.wsId === wid).slice().reverse() } };
+    }
+
+    case 'reviewChange': {
+      if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin yang meninjau ajuan.' };
+      const r = (store.changeReq || []).filter(x => x.id === p.id)[0];
+      if (!r) return { ok: false, error: 'Ajuan tidak ditemukan.' };
+      if (r.status !== 'menunggu') return { ok: false, error: 'Ajuan ini sudah ditinjau.' };
+      const setuju = !!p.approve;
+      const m = store.meta.filter(x => x.id === r.wsId)[0];
+      if (setuju) {
+        if (!m) return { ok: false, error: 'Event sudah tidak ada.' };
+        if (r.kind === 'biaya') m.price = r.value || 0;
+        if (r.kind === 'terbit') m.published = true;
+        if (r.kind === 'tarik') m.published = false;
+        if (r.kind === 'hapus') { store.meta = store.meta.filter(x => x.id !== r.wsId); delete store.data[r.wsId]; }
+      }
+      r.status = setuju ? 'disetujui' : 'ditolak';
+      r.reply = String(p.reply || '').slice(0, 600);
+      r.reviewedAt = new Date().toISOString();
+      touch();
+      return { ok: true, data: { changeReq: store.changeReq.slice().reverse() } };
+    }
+
     /* Kirim tiket (PNG yang disusun di peramban) ke email peserta. */
     case 'sendTicket': {
       if (!MAIL_AKTIF) return { ok: false, error: 'Email belum diatur di server (SMTP_HOST, SMTP_USER, SMTP_PASS).' };
@@ -1357,7 +1398,7 @@ function handleAction(p) {
       return {
         ok: true,
         data: {
-          meta: metaPublik(), payments: bayar, admins, lembaga: (store.lembaga || []).slice().reverse(), hero: store.hero || '',
+          meta: metaPublik(), payments: bayar, admins, lembaga: (store.lembaga || []).slice().reverse(), changeReq: (store.changeReq || []).slice().reverse(), hero: store.hero || '',
           xendit: { aktif: !!XENDIT_SECRET, callback: !!XENDIT_TOKEN },
           midtrans: { aktif: !!MIDTRANS_KEY, produksi: MIDTRANS_PROD },
           payProvider: penyedia(), zoom: ZOOM_AKTIF, fee: Number(store.fee) || 0,
@@ -1559,7 +1600,7 @@ const server = http.createServer(async (req, res) => {
       const wid = pakai(decodeURIComponent(wsParam || ''));
       if (url.indexOf('action=health') >= 0) return json(res, { ok: true, data: { version, workshops: store.meta.length } });
       if (url.indexOf('action=list') >= 0) return json(res, { ok: true, data: { meta: metaPublik() }, version });
-      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0, footer: Array.isArray(store.footer) ? store.footer : null, hostKeySet: !!store.zoomHostKey, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
+      return json(res, { ok: true, data: dbPublik(), meta: metaPublik(), changeReq: (store.changeReq || []).filter(r => r.wsId === wid).slice(-20).reverse(), hero: store.hero || '', fee: Number(store.fee) || 0, footer: Array.isArray(store.footer) ? store.footer : null, hostKeySet: !!store.zoomHostKey, zoom: ZOOM_AKTIF, mail: MAIL_AKTIF, ws: wid, version });
     }
     if (req.method === 'POST') {
       try {
