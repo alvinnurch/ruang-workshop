@@ -2522,6 +2522,13 @@
               </sc-for>
             </div>
           </sc-if>
+          <sc-if value="{{ wsBulkShow }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin:-8px 0 12px">
+              <button onClick="{{ wsOpenAll }}" style="background:none;border:none;color:#A5121C;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px">Buka semua</button>
+              <span style="color:#D6CCC2">·</span>
+              <button onClick="{{ wsCloseAll }}" style="background:none;border:none;color:#A5121C;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 2px">Tutup semua</button>
+            </div>
+          </sc-if>
           <div style="{{ wsFullStyle }}">
             <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="2">
               <div style="{{ w.cardStyle }}">
@@ -2538,7 +2545,10 @@
                       </span>
                     </span>
                   </button>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <button onClick="{{ w.toggleOpen }}" aria-expanded="{{ w.expandedAttr }}" style="{{ w.toggleBtnStyle }}" style-hover="background:#F6F1EA">
+                      <span style="{{ w.toggleIconStyle }}">⌄</span>{{ w.toggleBtnLabel }}
+                    </button>
                     <button onClick="{{ w.manage }}" style="{{ w.manageStyle }}">{{ w.manageLabel }}</button>
                     <sc-if value="{{ w.canEdit }}" hint-placeholder-val="{{ true }}">
                     <button onClick="{{ w.togglePub }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">{{ w.pubLabel }}</button>
@@ -6774,6 +6784,9 @@ class Component extends DCLogic {
       ? 'Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. ' + (st.wsMsg || 'Perubahan di sini langsung tersimpan ke server.')
       : 'Hanya event yang terhubung ke akun Anda yang tampil di sini. Pilih Kelola untuk menyusun sesi dan peserta, atau Edit detail untuk mengubah profil event.';
     v.wsFullStyle = v.wsCompact ? { display: 'none' } : { display: 'grid', gap: '14px' };
+    v.wsBulkShow = !v.wsCompact && !fokus && metaAdmin.length > 1;
+    v.wsOpenAll = () => this.setState({ wsOpen: metaAdmin.reduce((o, m) => { o[m.id] = true; return o; }, {}) });
+    v.wsCloseAll = () => this.setState({ wsOpen: {} });
     v.wsRows = metaAdmin.filter(m => (!wsMilik || wsMilik.indexOf(m.id) >= 0) && (!fokus || m.id === fokus)).map(m => {
       const ubah = (k, val) => simpanMeta(list => { const x = list.find(y => y.id === m.id); if (x) x[k] = val; });
       const dipilih = m.id === st.wsId;
@@ -6809,6 +6822,14 @@ class Component extends DCLogic {
         canEdit: !wsMilik,
         expanded: !!(st.wsOpen || {})[m.id],
         priceLocked: !st.isSuper,
+        expandedAttr: (st.wsOpen || {})[m.id] ? 'true' : 'false',
+        toggleBtnLabel: (st.wsOpen || {})[m.id] ? 'Tutup detail' : 'Buka detail',
+        toggleBtnStyle: {
+          display: 'inline-flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap', cursor: 'pointer',
+          background: (st.wsOpen || {})[m.id] ? '#F6F1EA' : '#FFF', border: '1px solid #DCD3C8', color: '#3B342E',
+          borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700
+        },
+        toggleIconStyle: { display: 'inline-block', fontSize: '15px', lineHeight: 1, marginTop: '-3px', transition: 'transform .2s', transform: (st.wsOpen || {})[m.id] ? 'rotate(180deg) translateY(-3px)' : 'none' },
         reqPrice: (st.reqPrice || {})[m.id] == null ? '' : st.reqPrice[m.id],
         reqNote: (st.reqNote || {})[m.id] || '',
         reqMsg: (st.reqMsg || {})[m.id] || '',
