@@ -3467,6 +3467,15 @@ class Component extends DCLogic {
     const admins = (db.admins || []).map(a => ({ id: a.id, name: a.name, user: a.user || '', role: a.role, wsId: wid, wsTitle: (meta[0] && meta[0].title) || '' }));
     this.setState({ platform: { meta, payments, admins, xendit: { aktif: false, callback: false }, superUser: 'superadmin' } });
   }
+  /* Embed: ubah di layar seketika, lalu kirim ke server tanpa menunggu Simpan perubahan. */
+  async setEmbed(sessionId, blockId, ubah) {
+    const terap = d => { const s = (d.sessions || []).find(x => x.id === sessionId); const b = s && (s.blocks || []).find(x => x.id === blockId); if (b) Object.assign(b, ubah); };
+    this.setState(st => { const db = JSON.parse(JSON.stringify(st.db)); terap(db); return { db }; });
+    if (this._draftDb) terap(this._draftDb);
+    if (!this.api()) return this.setState({ embedMsg: { id: blockId, text: 'Mode pratinjau: embed hanya berfungsi di server.' } });
+    const out = await this.apiPost({ action: 'setEmbed', password: this._pw || '', user: this._user || '', blockId, embed: ubah.embed, embedResult: ubah.embedResult });
+    this.setState({ embedMsg: { id: blockId, text: out && out.ok ? 'Tersimpan.' : ((out && out.error) || 'Gagal menyimpan.') } });
+  }
   cdAktif() {
     const db = this.state.db || {};
     const s = (db.sessions || []).filter(x => x.id === db.activeSessionId)[0];
@@ -7478,9 +7487,9 @@ class Component extends DCLogic {
           embedBtnStyle: b.embed
             ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '5px 12px', fontSize: '12px', fontWeight: 700 }
             : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '5px 12px', fontSize: '12px', fontWeight: 600 },
-          toggleEmbed: () => mut(b.id, x => { x.embed = !x.embed; }),
+          toggleEmbed: () => this.setEmbed(cur.id, b.id, { embed: !b.embed }),
           embedResultLabel: b.embedResult === false ? 'Hasil disembunyikan dari pengunjung' : 'Hasil ditampilkan ke pengunjung',
-          toggleEmbedResult: () => mut(b.id, x => { x.embedResult = x.embedResult === false; }),
+          toggleEmbedResult: () => this.setEmbed(cur.id, b.id, { embedResult: b.embedResult === false }),
           embedCode: (() => {
             const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
             const src = asal + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id);
@@ -7489,7 +7498,7 @@ class Component extends DCLogic {
           hasResultLink: b.type === 'wordcloud' || b.type === 'feedback',
           resultUrl: ((typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co') + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id) + '?hasil=1',
           embedNote: 'Tempel di WordPress lewat blok Custom HTML. Pengunjung cukup mengisi nama; jawabannya masuk ke rekap event ini dengan tanda (tamu)' +
-            (b.type === 'wordcloud' ? ', dan ikut tampil di proyektor maupun layar hasil.' : '.') + (st.draftPending || this._dirty ? ' Tekan Simpan perubahan agar embed berlaku.' : ''),
+            (b.type === 'wordcloud' ? ', dan ikut tampil di proyektor maupun layar hasil.' : '.') + (st.embedMsg && st.embedMsg.id === b.id ? ' ' + st.embedMsg.text : ''),
           copyLabel: st.embedCopied === b.id ? 'Tersalin ✓' : 'Salin kode embed',
           copyEmbed: () => {
             const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
