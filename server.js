@@ -221,6 +221,7 @@ function pakai(id) {
 }
 function normalize(d) {
   d.sessions = d.sessions || [];
+  d.guests = d.guests && typeof d.guests === 'object' ? d.guests : {};
   d.participants = d.participants || [];
   d.groups = Array.isArray(d.groups) ? d.groups : [];
   d.admins = Array.isArray(d.admins) ? d.admins : [];
@@ -258,6 +259,45 @@ function metaPublik() {
 function slot(sessionId) {
   if (!db.responses[sessionId]) db.responses[sessionId] = { checkins: {}, quiz: {}, words: [], feedback: {}, forms: {} };
   return db.responses[sessionId];
+}
+/* Embed: cari materi di semua sesi, kembalikan sesi & materinya. */
+const EMBED_JENIS = { quiz: 1, wordcloud: 1, form: 1, feedback: 1 };
+function cariMateri(blockId) {
+  for (const s of (db.sessions || [])) {
+    const b = (s.blocks || []).find(x => x.id === blockId);
+    if (b) return { s, b };
+  }
+  return null;
+}
+function embedPublik(wid, blockId) {
+  const hit = cariMateri(blockId);
+  if (!hit || !EMBED_JENIS[hit.b.type]) return { ok: false, error: 'Materi tidak ditemukan.' };
+  const b = hit.b;
+  if (!b.embed) return { ok: false, error: 'Materi ini belum diizinkan untuk disematkan.' };
+  const m = (store.meta || []).find(x => x.id === wid) || {};
+  const out = {
+    ws: wid, sessionId: hit.s.id, blockId: b.id, type: b.type, title: b.title || '', desc: b.desc || '',
+    prompt: b.prompt || '', event: m.title || '', session: hit.s.title || '', showResult: b.embedResult !== false
+  };
+  if (b.type === 'quiz') {
+    out.questions = (b.questions || []).map(q => ({ text: q.text || '', options: q.options || [] }));
+    out.maxTries = b.allowRetake ? Math.max(1, b.retakeMax || 2) : 1;
+  }
+  if (b.type === 'form') out.fields = (b.fields || []).map(x => ({ id: x.id, label: x.label, type: x.type, required: !!x.required, options: x.options || [] }));
+  if (b.type === 'wordcloud' || b.type === 'feedback') {
+    const R = (db.responses || {})[hit.s.id] || {};
+    if (b.type === 'wordcloud') {
+      const c = {};
+      (R.words || []).filter(w => w.blockId === b.id).forEach(w => { const k = String(w.word).toLowerCase(); c[k] = (c[k] || 0) + 1; });
+      out.words = Object.keys(c).map(k => ({ word: k, count: c[k] })).sort((x, y) => y.count - x.count).slice(0, 80);
+      out.people = new Set((R.words || []).filter(w => w.blockId === b.id).map(w => w.by)).size;
+    } else {
+      const fb = (R.feedback || {})[b.id] || {}, c = {};
+      Object.values(fb).forEach(x => { c[x.emoji] = (c[x.emoji] || 0) + 1; });
+      out.emoji = c;
+    }
+  }
+  return { ok: true, data: out };
 }
 function blockOf(sessionId, blockId) {
   const s = db.sessions.find(x => x.id === sessionId);
@@ -735,6 +775,56 @@ function handleAction(p) {
       slot(p.sessionId).checkins[p.id] = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
       touch();
       return { ok: true };
+    }
+
+    /* Kiriman dari halaman embed (WordPress dsb.): pengunjung cukup mengisi nama. */
+    case 'embedSubmit': {
+      const hit = cariMateri(p.blockId);
+      if (!hit || !EMBED_JENIS[hit.b.type] || !hit.b.embed) return { ok: false, error: 'Materi ini tidak menerima kiriman dari luar.' };
+      const nama = String(p.name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+      if (nama.length < 2) return { ok: false, error: 'Isi nama Anda dulu.' };
+      let gid = String(p.guestId || '').replace(/[^a-z0-9-]/gi, '').slice(0, 40);
+      if (!/^g-/.test(gid)) gid = 'g-' + crypto.randomBytes(6).toString('hex');
+      db.guests[gid] = { name: nama, at: new Date().toISOString(), via: 'embed' };
+      const b = hit.b, sid = hit.s.id, R = slot(sid);
+      if (b.type === 'wordcloud') {
+        const mine = R.words.filter(w => w.blockId === b.id && w.by === gid);
+        if (mine.length >= 3) return { ok: false, error: 'Kuota tiga kata sudah terpakai.' };
+        const w = String(p.word || '').trim().toLowerCase().slice(0, 40);
+        if (!w) return { ok: false, error: 'Tulis satu kata dulu.' };
+        R.words.push({ blockId: b.id, word: w, by: gid, guest: true });
+        touch();
+        return { ok: true, data: { guestId: gid, left: 2 - mine.length } };
+      }
+      if (b.type === 'quiz') {
+        const qs = b.questions || [], answers = (p.answers || []).slice(0, qs.length);
+        const benar = qs.filter((q, i) => answers[i] === q.answer).length;
+        const score = qs.length ? Math.round(benar / qs.length * 100) : 0;
+        if (!R.quiz[b.id]) R.quiz[b.id] = {};
+        const prev = R.quiz[b.id][gid];
+        const maxTries = b.allowRetake ? Math.max(1, b.retakeMax || 2) : 1;
+        const tries = ((prev && prev.tries) || 0) + 1;
+        if (tries > maxTries) return { ok: false, error: 'Kesempatan mengerjakan kuis sudah terpakai (' + maxTries + '×).' };
+        R.quiz[b.id][gid] = { answers, score, tries, guest: true };
+        touch();
+        return { ok: true, data: { guestId: gid, score, benar, total: qs.length, tries, maxTries, key: b.embedResult !== false ? qs.map(q => q.answer) : null } };
+      }
+      if (b.type === 'form') {
+        const vals = p.values || {};
+        const miss = (b.fields || []).filter(x => x.required && !String(vals[x.id] == null ? '' : vals[x.id]).trim())[0];
+        if (miss) return { ok: false, error: '“' + miss.label + '” wajib diisi.' };
+        if (!R.forms[b.id]) R.forms[b.id] = {};
+        R.forms[b.id][gid] = vals;
+        touch();
+        return { ok: true, data: { guestId: gid } };
+      }
+      if (b.type === 'feedback') {
+        if (!R.feedback[b.id]) R.feedback[b.id] = {};
+        R.feedback[b.id][gid] = { emoji: String(p.emoji || ''), note: String(p.note || '').slice(0, 600) };
+        touch();
+        return { ok: true, data: { guestId: gid } };
+      }
+      return { ok: false, error: 'Jenis materi tidak didukung.' };
     }
 
     case 'quiz': {
@@ -1593,6 +1683,14 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { return json(res, { ok: false, error: e.message }, 400); }
   }
 
+  /* Data publik untuk halaman embed. */
+  if (url.startsWith('/api/embed') && req.method === 'GET') {
+    const q = new URLSearchParams(url.split('?')[1] || '');
+    const wid = pakai(q.get('ws') || '');
+    if (!wid || wid !== q.get('ws')) return json(res, { ok: false, error: 'Event tidak ditemukan.' });
+    return json(res, Object.assign(embedPublik(wid, q.get('b') || ''), { version }));
+  }
+
   if (url.startsWith('/api')) {
     if (req.method === 'GET') {
       const q = url.split('?')[1] || '';
@@ -1618,6 +1716,21 @@ const server = http.createServer(async (req, res) => {
     const og = jalur.match(/^\/og\/(home|ws\/([^/.]+))\.img$/);
     if (og) return kirimGambarOg(req, res, og[1] === 'home' ? 'home' : og[2]);
     if (jalur === '/' || jalur === '/index.html') return kirimIndexOg(req, res, '');
+    /* Halaman embed: boleh dibingkai oleh situs lain (EMBED_ALLOW untuk membatasi). */
+    if (/^\/embed\/[^/]+\/[^/]+\/?$/.test(jalur) || jalur === '/embed.js') {
+      const file = path.join(PUBLIC_DIR, jalur === '/embed.js' ? 'embed.js' : 'embed.html');
+      return fs.readFile(file, (err, buf) => {
+        if (err) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Tidak ditemukan'); }
+        const izin = String(process.env.EMBED_ALLOW || '*').trim() || '*';
+        res.writeHead(200, {
+          'Content-Type': jalur === '/embed.js' ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          'Content-Security-Policy': "frame-ancestors 'self' " + izin,
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(buf);
+      });
+    }
     const ws = jalur.match(/^\/workshop\/([a-z0-9-]+)\/?$/);
     if (ws) return kirimIndexOg(req, res, ws[1]);
   }
