@@ -1905,6 +1905,32 @@
                     <sc-if value="{{ b.running }}" hint-placeholder-val="{{ false }}">
                       <div style="margin-top:12px;background:#FBEFEF;border:1px solid #F0C9CC;border-radius:9px;padding:11px 14px;font-size:13px;color:#8E1018;font-weight:600">{{ b.runStatus }}</div>
                     </sc-if>
+                    <sc-if value="{{ b.canEmbed }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:12px;border:1px dashed #DCCFC0;border-radius:10px;padding:12px 14px;display:grid;gap:10px">
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                          <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5C534B">Embed ke situs lain</span>
+                          <button onClick="{{ b.toggleEmbed }}" style="{{ b.embedBtnStyle }}">{{ b.embedLabel }}</button>
+                          <sc-if value="{{ b.embedOn }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                              <button onClick="{{ b.copyEmbed }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700" style-hover="background:#1B1714">{{ b.copyLabel }}</button>
+                              <button onClick="{{ b.toggleEmbedResult }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600" style-hover="background:#F6F1EA">{{ b.embedResultLabel }}</button>
+                              <sc-if value="{{ b.hasResultLink }}" hint-placeholder-val="{{ false }}">
+                                <a href="{{ b.resultUrl }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;text-decoration:none">Buka layar hasil ↗</a>
+                              </sc-if>
+                            </div>
+                          </sc-if>
+                        </div>
+                        <sc-if value="{{ b.embedNoWs }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12.5px;color:#8E1018;font-weight:600;line-height:1.5">Pilih event dulu (Event saya → Kelola) agar kode embed bisa dibuat.</div>
+                        </sc-if>
+                        <sc-if value="{{ b.embedOn }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:grid;gap:7px">
+                            <textarea readonly="" value="{{ b.embedCode }}" onFocus="{{ b.selectAll }}" rows="3" style="width:100%;box-sizing:border-box;border:1px solid #E0D8CE;border-radius:8px;padding:9px 11px;font:12px/1.5 ui-monospace,Menlo,monospace;background:#FCFAF7;color:#3B342E;resize:vertical"></textarea>
+                            <div style="font-size:12px;color:#7A6F66;line-height:1.55;text-wrap:pretty">{{ b.embedNote }}</div>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
 
                     <sc-if value="{{ b.editing }}" hint-placeholder-val="{{ false }}">
                       <div style="border-top:1px solid #EDE6DD;margin-top:16px;padding-top:16px;display:grid;gap:14px;animation:wsRise .2s ease">
@@ -4773,6 +4799,15 @@ class Component extends DCLogic {
 
   renderVals() {
     const st = this.state, db = st.db;
+    if (db && db.participants && db.guests && db.participants.__tamu !== db.guests) {
+      const g = db.guests;
+      Object.defineProperty(db.participants, '__tamu', { value: g, configurable: true, writable: true });
+      db.participants.find = function (fn) {
+        const r = Array.prototype.find.call(this, fn); if (r) return r;
+        for (const id in g) { const x = { id, name: (g[id].name || 'Tamu') + ' (tamu)', group: 'Tamu embed', code: '', guest: true }; if (fn(x)) return x; }
+        return undefined;
+      };
+    }
     const v = {
       groups: this.groupList(),
       formCode: st.formCode, loginError: st.loginError,
@@ -7305,6 +7340,7 @@ class Component extends DCLogic {
       d.sessions.splice(to, 0, d.sessions.splice(from, 1)[0]);
     });
     const navS = on => ({ width: '28px', height: '28px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF', border: '1px solid #E0D8CE', color: on ? '#5C534B' : '#CFC5B8', borderRadius: '7px', padding: 0, fontSize: '12px', fontWeight: 700, cursor: on ? 'pointer' : 'default' });
+    const embedWid = st.wsId || (this.wsNow() && this.wsNow().id) || ((st.wsMeta || []).length === 1 ? st.wsMeta[0].id : '');
     v.sessionList = db.sessions.filter(s => !izin || izin.indexOf(s.id) >= 0).map((s, si, arr) => {
       const idsNow = this.aktifIds(db);
       const isActive = idsNow.indexOf(s.id) >= 0;
@@ -7435,6 +7471,33 @@ class Component extends DCLogic {
             : { display: 'none' },
           showOnScreen: () => { if (!shown) this.save(d => { d.sessions.find(x => x.id === cur.id).active = b.id; }, null, true); },
           enabledLabel: b.enabled ? 'Keluarkan' : 'Pakai',
+          canEmbed: !!{ quiz: 1, wordcloud: 1, form: 1, feedback: 1 }[b.type] && (st.adminRole || 'penuh') !== 'pemantau',
+          embedOn: !!b.embed && !!embedWid,
+          embedNoWs: !!b.embed && !embedWid,
+          embedLabel: b.embed ? 'Aktif' : 'Nonaktif',
+          embedBtnStyle: b.embed
+            ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '5px 12px', fontSize: '12px', fontWeight: 700 }
+            : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '5px 12px', fontSize: '12px', fontWeight: 600 },
+          toggleEmbed: () => mut(b.id, x => { x.embed = !x.embed; }),
+          embedResultLabel: b.embedResult === false ? 'Hasil disembunyikan dari pengunjung' : 'Hasil ditampilkan ke pengunjung',
+          toggleEmbedResult: () => mut(b.id, x => { x.embedResult = x.embedResult === false; }),
+          embedCode: (() => {
+            const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
+            const src = asal + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id);
+            return '<iframe src="' + src + '" style="width:100%;border:0" height="' + (b.type === 'quiz' || b.type === 'form' ? 640 : 480) + '" loading="lazy" title="' + String(b.title || 'Ruang islami.co').replace(/"/g, '') + '"></iframe>\n<script src="' + asal + '/embed.js" async></' + 'script>';
+          })(),
+          hasResultLink: b.type === 'wordcloud' || b.type === 'feedback',
+          resultUrl: ((typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co') + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id) + '?hasil=1',
+          embedNote: 'Tempel di WordPress lewat blok Custom HTML. Pengunjung cukup mengisi nama; jawabannya masuk ke rekap event ini dengan tanda (tamu)' +
+            (b.type === 'wordcloud' ? ', dan ikut tampil di proyektor maupun layar hasil.' : '.') + (st.draftPending || this._dirty ? ' Tekan Simpan perubahan agar embed berlaku.' : ''),
+          copyLabel: st.embedCopied === b.id ? 'Tersalin ✓' : 'Salin kode embed',
+          copyEmbed: () => {
+            const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
+            const kode = '<iframe src="' + asal + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id) + '" style="width:100%;border:0" height="' + (b.type === 'quiz' || b.type === 'form' ? 640 : 480) + '" loading="lazy" title="' + String(b.title || 'Ruang islami.co').replace(/"/g, '') + '"></iframe>\n<script src="' + asal + '/embed.js" async></' + 'script>';
+            const ok = () => { this.setState({ embedCopied: b.id }); clearTimeout(this._copyT); this._copyT = setTimeout(() => this.setState({ embedCopied: null }), 2200); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(kode).then(ok, ok); else ok();
+          },
+          selectAll: e => { try { e.target.select(); } catch (er) {} },
           toggleEnabled: () => mut(b.id, (x, s) => { x.enabled = !x.enabled; if (!x.enabled) { x.open = false; if (s.active === x.id) s.active = null; } }),
           openLabel: this.selalu(b) ? 'Selalu tampil' : b.open ? 'Tutup' : (cur.multiOpen === false ? 'Buka & tampilkan' : 'Buka'),
           openBtnStyle: this.selalu(b) ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: 'default' } : { background: b.open ? '#F6F1EA' : '#A5121C', border: b.open ? '1px solid #E0D8CE' : 'none', color: b.open ? '#5C534B' : '#FFF', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, opacity: b.enabled ? 1 : 0.4 },

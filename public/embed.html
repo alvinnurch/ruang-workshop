@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruang islami.co</title>
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --red:#B31F24; --red-d:#8E171C; --ink:#1B1714; --ink2:#3B3238; --muted:#7A6F76; --line:#EAD9C6; --cream:#FFF7EE; --bg:#FFFBF6; --ok:#2C4D18; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; color: var(--ink); font: 15px/1.55 'IBM Plex Sans', system-ui, sans-serif; }
+  a { color: var(--red); } a:hover { color: var(--red-d); }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: clamp(18px, 4vw, 28px); max-width: 760px; margin: 0 auto; }
+  .kick { font: 700 11.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--red); }
+  h1 { font: 800 clamp(20px, 3.4vw, 26px)/1.22 'Plus Jakarta Sans', sans-serif; letter-spacing: -.015em; margin: 6px 0 8px; text-wrap: balance; }
+  .desc { color: var(--muted); margin: 0 0 18px; text-wrap: pretty; white-space: pre-line; }
+  label.f { display: grid; gap: 6px; margin-bottom: 14px; }
+  label.f > span { font: 700 11.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--ink2); }
+  input[type=text], input[type=number], textarea { width: 100%; border: 1.5px solid #E2D3C2; border-radius: 11px; padding: 12px 14px; font: 500 15px 'IBM Plex Sans', sans-serif; background: #FFF; color: var(--ink); outline: none; }
+  input:focus, textarea:focus { border-color: var(--red); }
+  textarea { min-height: 110px; resize: vertical; }
+  .btn { background: var(--red); color: #FFF; border: none; border-radius: 11px; padding: 13px 20px; font: 700 14.5px 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
+  .btn:hover { background: var(--red-d); } .btn:disabled { background: #D6C6B5; cursor: default; }
+  .ghost { background: #FFF; color: var(--ink2); border: 1.5px solid #E2D3C2; }
+  .ghost:hover { background: #FBF3EA; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .err { color: var(--red); font-weight: 600; font-size: 13.5px; margin-top: 10px; min-height: 1em; }
+  .ok { background: #EEF5E9; border: 1px solid #CFE2C2; color: var(--ok); border-radius: 12px; padding: 14px 16px; font-weight: 600; }
+  .q { border-top: 1px solid #F0E4D6; padding: 16px 0 6px; }
+  .q:first-of-type { border-top: 0; padding-top: 4px; }
+  .q p { font: 700 15.5px/1.4 'Plus Jakarta Sans', sans-serif; margin: 0 0 10px; }
+  .opt { display: flex; gap: 11px; align-items: center; border: 1.5px solid #E8DACB; background: #FFF; border-radius: 11px; padding: 11px 13px; margin-bottom: 8px; cursor: pointer; }
+  .opt b { width: 28px; height: 28px; flex: none; border-radius: 8px; background: #F3EAE0; display: grid; place-items: center; font: 800 13px 'Plus Jakarta Sans', sans-serif; }
+  .opt.on { border-color: var(--red); background: #FCEDEE; } .opt.on b { background: var(--red); color: #FFF; }
+  .opt.benar { border-color: #9BC383; background: #EEF5E9; } .opt.salah { border-color: #E9A7AB; background: #FCEDEE; }
+  .opt input { display: none; }
+  .emo { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 9px; margin-bottom: 14px; }
+  .emo button { border: 1.5px solid #E8DACB; background: #FFF; border-radius: 13px; padding: 12px 6px; cursor: pointer; font: 600 12.5px 'IBM Plex Sans', sans-serif; color: var(--ink2); display: grid; gap: 4px; justify-items: center; }
+  .emo button span { font-size: 28px; line-height: 1; }
+  .emo button.on { border-color: var(--red); background: #FCEDEE; }
+  .cloud { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: center; align-items: baseline; padding: 18px 6px 6px; }
+  .cloud span { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+  .foot { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 20px; padding-top: 14px; border-top: 1px solid #F0E4D6; font-size: 12px; color: var(--muted); }
+  .foot img { height: 20px; width: auto; display: block; }
+  .meta { font-size: 12.5px; color: var(--muted); }
+  /* Mode hasil (layar besar / proyektor) */
+  body.hasil { background: #1B1714; color: #FFF7EE; min-height: 100vh; }
+  body.hasil .card { background: transparent; border: 0; max-width: none; min-height: 100vh; display: flex; flex-direction: column; padding: clamp(24px, 5vw, 56px); }
+  body.hasil h1 { font-size: clamp(28px, 4.6vw, 58px); color: #FFF7EE; }
+  body.hasil .kick { color: #E9A0A4; }
+  body.hasil .cloud { flex: 1; align-content: center; gap: 6px 30px; }
+  body.hasil .foot { border-color: #3A302B; color: #B9ADA2; }
+  body.hasil .meta { color: #B9ADA2; }
+</style>
+</head>
+<body>
+<div class="card" id="app"><div class="meta">Memuat…</div></div>
+<script>
+(function () {
+  var parts = location.pathname.split('/').filter(Boolean);
+  var WS = decodeURIComponent(parts[1] || ''), BLOCK = decodeURIComponent(parts[2] || '');
+  var qs = new URLSearchParams(location.search);
+  var HASIL = qs.get('hasil') === '1' || qs.get('mode') === 'hasil';
+  var app = document.getElementById('app');
+  var EMOJIS = [['sangat', '🤩', 'Sangat bermanfaat'], ['baik', '🙂', 'Bermanfaat'], ['netral', '😐', 'Biasa saja'], ['kurang', '🙁', 'Kurang sesuai'], ['bingung', '😵', 'Masih bingung']];
+  var KEY = 'ruang_tamu_v1', DONE = 'ruang_embed_done_' + WS + '_' + BLOCK;
+  var guest = {}; try { guest = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  var state = { data: null, done: null, answers: [], emoji: '', err: '', busy: false };
+  try { state.done = JSON.parse(localStorage.getItem(DONE) || 'null'); } catch (e) {}
+  if (HASIL) document.body.className = 'hasil';
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function tinggi() {
+    var h = Math.ceil(document.documentElement.scrollHeight);
+    try { parent.postMessage({ ruangEmbed: true, src: location.href, height: h }, '*'); } catch (e) {}
+  }
+  if (window.ResizeObserver) new ResizeObserver(tinggi).observe(document.body);
+
+  function muat() {
+    return fetch('/api/embed?ws=' + encodeURIComponent(WS) + '&b=' + encodeURIComponent(BLOCK), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (out) {
+        if (!out.ok) { app.innerHTML = '<div class="meta">' + esc(out.error || 'Materi tidak tersedia.') + '</div>'; tinggi(); return; }
+        var first = !state.data; state.data = out.data;
+        if (first || HASIL || out.data.type === 'wordcloud' || out.data.type === 'feedback') gambar();
+      })
+      .catch(function () { if (!state.data) app.innerHTML = '<div class="meta">Tidak bisa tersambung ke Ruang. Coba muat ulang.</div>'; tinggi(); });
+  }
+  function kirim(payload) {
+    state.busy = true; state.err = ''; gambar();
+    payload.action = 'embedSubmit'; payload.ws = WS; payload.blockId = BLOCK;
+    payload.name = guest.name || ''; payload.guestId = guest.id || '';
+    return fetch('/api', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (out) {
+        state.busy = false;
+        if (!out.ok) { state.err = out.error || 'Gagal mengirim.'; gambar(); return null; }
+        if (out.data && out.data.guestId) { guest.id = out.data.guestId; try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (e) {} }
+        return out.data;
+      })
+      .catch(function () { state.busy = false; state.err = 'Koneksi terputus. Coba kirim lagi.'; gambar(); return null; });
+  }
+  function selesai(info) { state.done = info || { at: Date.now() }; try { localStorage.setItem(DONE, JSON.stringify(state.done)); } catch (e) {} gambar(); muat(); }
+
+  function kepala(d) {
+    return '<div class="kick">' + esc(d.event || 'Ruang islami.co') + '</div>' +
+      '<h1>' + esc(d.type === 'wordcloud' ? (d.prompt || d.title) : d.title) + '</h1>' +
+      (!HASIL && d.desc ? '<p class="desc">' + esc(d.desc) + '</p>' : '');
+  }
+  function kaki(extra) {
+    return '<div class="foot"><span>' + (extra || '') + '</span><a href="https://ruang.islami.co" target="_blank" rel="noopener"><img src="/assets/ruang-logo.png" alt="Ruang islami.co"></a></div>';
+  }
+  function kolomNama() {
+    return '<label class="f"><span>Nama Anda</span><input type="text" id="nama" maxlength="80" placeholder="mis. Siti Aminah" value="' + esc(guest.name || '') + '"></label>';
+  }
+  function ambilNama() {
+    var el = document.getElementById('nama'); var n = el ? el.value.trim() : (guest.name || '');
+    if (n.length < 2) { state.err = 'Isi nama Anda dulu.'; gambar(); return false; }
+    guest.name = n; try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (e) {}
+    return true;
+  }
+  function awan(words, dark) {
+    if (!words || !words.length) return '<div class="meta" style="text-align:center;padding:24px 0">Belum ada kata masuk.</div>';
+    var mx = words[0].count, pal = dark ? ['#FFF7EE', '#E8B84B', '#E9A0A4', '#B9ADA2'] : ['#B31F24', '#3B3238', '#C07A12', '#7A6F76'];
+    var acak = words.slice().sort(function (a, b) { return (a.word.length * 7 + a.count) % 5 - (b.word.length * 7 + b.count) % 5; });
+    return '<div class="cloud">' + acak.map(function (w, i) {
+      var k = mx > 1 ? (w.count - 1) / (mx - 1) : 1;
+      var size = dark ? Math.round(22 + k * 64) : Math.round(15 + k * 30);
+      return '<span style="font-size:' + size + 'px;color:' + pal[i % pal.length] + '">' + esc(w.word) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function gambar() {
+    var d = state.data; if (!d) return;
+    var h = kepala(d), err = '<div class="err">' + esc(state.err) + '</div>', dis = state.busy ? ' disabled' : '';
+    if (HASIL) {
+      if (d.type === 'wordcloud') h += awan(d.words, true) + kaki((d.people || 0) + ' orang ikut mengisi');
+      else if (d.type === 'feedback') h += emojiHasil(d, true) + kaki('');
+      else h += '<div class="meta">Tampilan hasil hanya untuk word cloud dan umpan balik.</div>' + kaki('');
+      app.innerHTML = h; return tinggi();
+    }
+    if (d.type === 'wordcloud') {
+      var sisa = state.done && state.done.left != null ? state.done.left : 3;
+      if (sisa > 0) {
+        h += kolomNama() + '<label class="f"><span>Satu kata</span><input type="text" id="kata" maxlength="40" placeholder="Tulis satu kata"></label>' +
+          '<div class="row"><button class="btn" id="kirim"' + dis + '>Kirim kata</button><span class="meta">Sisa ' + sisa + ' kata</span></div>' + err;
+      } else h += '<div class="ok">Terima kasih, ketiga kata Anda sudah masuk.</div>';
+      if (d.showResult) h += awan(d.words, false);
+      app.innerHTML = h + kaki((d.people || 0) + ' orang ikut mengisi');
+      var b1 = document.getElementById('kirim');
+      if (b1) {
+        var kirimKata = function () {
+          if (!ambilNama()) return;
+          var w = (document.getElementById('kata').value || '').trim(); if (!w) { state.err = 'Tulis satu kata dulu.'; return gambar(); }
+          kirim({ word: w }).then(function (r) { if (r) selesai({ left: r.left }); });
+        };
+        b1.onclick = kirimKata;
+        document.getElementById('kata').onkeydown = function (e) { if (e.key === 'Enter') kirimKata(); };
+      }
+      return tinggi();
+    }
+    if (d.type === 'quiz') {
+      var hasil = state.done && state.done.score != null ? state.done : null;
+      var bolehUlang = hasil && hasil.tries < hasil.maxTries;
+      if (hasil && !state.ulang) {
+        h += '<div class="ok" style="font-size:17px">Skor Anda: <b>' + hasil.score + '</b> · ' + hasil.benar + ' dari ' + hasil.total + ' benar</div>';
+        if (hasil.key) h += (d.questions || []).map(function (q, i) {
+          return '<div class="q"><p>' + (i + 1) + '. ' + esc(q.text) + '</p>' + q.options.map(function (o, j) {
+            var c = j === hasil.key[i] ? ' benar' : (hasil.answers && hasil.answers[i] === j ? ' salah' : '');
+            return '<div class="opt' + c + '"><b>' + 'ABCDEF'[j] + '</b>' + esc(o) + '</div>';
+          }).join('') + '</div>';
+        }).join('');
+        if (bolehUlang) h += '<div class="row" style="margin-top:14px"><button class="btn ghost" id="ulang">Kerjakan ulang (' + (hasil.maxTries - hasil.tries) + ' kesempatan lagi)</button></div>';
+        app.innerHTML = h + kaki('');
+        var u = document.getElementById('ulang'); if (u) u.onclick = function () { state.ulang = true; state.answers = []; gambar(); };
+        return tinggi();
+      }
+      h += kolomNama() + (d.questions || []).map(function (q, i) {
+        return '<div class="q"><p>' + (i + 1) + '. ' + esc(q.text) + '</p>' + q.options.map(function (o, j) {
+          return '<label class="opt' + (state.answers[i] === j ? ' on' : '') + '" data-q="' + i + '" data-o="' + j + '"><b>' + 'ABCDEF'[j] + '</b>' + esc(o) + '</label>';
+        }).join('') + '</div>';
+      }).join('') + '<div class="row" style="margin-top:8px"><button class="btn" id="kirim"' + dis + '>Kirim jawaban</button></div>' + err;
+      app.innerHTML = h + kaki((d.questions || []).length + ' soal');
+      [].forEach.call(app.querySelectorAll('.opt[data-q]'), function (el) {
+        el.onclick = function () {
+          var nm = document.getElementById('nama'); if (nm) guest.name = nm.value.trim();
+          state.answers[+el.dataset.q] = +el.dataset.o; gambar();
+        };
+      });
+      document.getElementById('kirim').onclick = function () {
+        if (!ambilNama()) return;
+        var kosong = (d.questions || []).findIndex(function (q, i) { return state.answers[i] == null; });
+        if (kosong >= 0) { state.err = 'Soal nomor ' + (kosong + 1) + ' belum dijawab.'; return gambar(); }
+        var ans = state.answers.slice();
+        kirim({ answers: ans }).then(function (r) { if (r) { state.ulang = false; r.answers = ans; selesai(r); } });
+      };
+      return tinggi();
+    }
+    if (d.type === 'form') {
+      if (state.done) { app.innerHTML = h + '<div class="ok">Terima kasih, isian Anda sudah kami terima.</div>' + kaki(''); return tinggi(); }
+      h += kolomNama() + (d.fields || []).map(function (f) {
+        var lab = '<span>' + esc(f.label) + (f.required ? ' *' : '') + '</span>', id = 'f_' + esc(f.id);
+        if (f.type === 'long') return '<label class="f">' + lab + '<textarea id="' + id + '"></textarea></label>';
+        if (f.type === 'number') return '<label class="f">' + lab + '<input type="number" id="' + id + '"></label>';
+        if (f.type === 'choice') return '<div class="f" style="display:grid;gap:6px;margin-bottom:14px">' + lab.replace('<span>', '<span style="font:700 11.5px Plus Jakarta Sans,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#3B3238">') +
+          (f.options || []).map(function (o, j) { return '<label class="opt" data-f="' + esc(f.id) + '" data-v="' + esc(o) + '"><b>' + 'ABCDEF'[j] + '</b>' + esc(o) + '</label>'; }).join('') + '</div>';
+        if (f.type === 'image') return '<label class="f">' + lab + '<input type="file" accept="image/*" id="' + id + '"></label>';
+        return '<label class="f">' + lab + '<input type="text" id="' + id + '"></label>';
+      }).join('') + '<div class="row"><button class="btn" id="kirim"' + dis + '>Kirim</button></div>' + err;
+      var simpanan = {};
+      [].forEach.call(app.querySelectorAll('input,textarea'), function (el) { if (el.type !== 'file') simpanan[el.id] = el.value; });
+      app.innerHTML = h + kaki('');
+      Object.keys(simpanan).forEach(function (k) { var el = document.getElementById(k); if (el && simpanan[k]) el.value = simpanan[k]; });
+      var pilih = state.pilih || (state.pilih = {});
+      [].forEach.call(app.querySelectorAll('.opt[data-f]'), function (el) {
+        if (pilih[el.dataset.f] === el.dataset.v) el.classList.add('on');
+        el.onclick = function () {
+          pilih[el.dataset.f] = el.dataset.v;
+          [].forEach.call(app.querySelectorAll('.opt[data-f="' + el.dataset.f + '"]'), function (x) { x.classList.toggle('on', x === el); });
+        };
+      });
+      document.getElementById('kirim').onclick = function () {
+        if (!ambilNama()) return;
+        var vals = {}, tunggu = [];
+        (d.fields || []).forEach(function (f) {
+          var el = document.getElementById('f_' + f.id);
+          if (f.type === 'choice') vals[f.id] = pilih[f.id] || '';
+          else if (f.type === 'image') {
+            var file = el && el.files && el.files[0]; vals[f.id] = '';
+            if (file) tunggu.push(new Promise(function (ok, no) {
+              if (file.size > 2.5 * 1024 * 1024) return no('Gambar maksimal 2,5 MB.');
+              var rd = new FileReader(); rd.onload = function () { vals[f.id] = rd.result; vals[f.id + '_nama'] = file.name; ok(); }; rd.readAsDataURL(file);
+            }));
+          } else vals[f.id] = el ? (f.type === 'number' && el.value !== '' ? Number(el.value) : el.value) : '';
+        });
+        Promise.all(tunggu).then(function () { return kirim({ values: vals }); }, function (m) { state.err = m; gambar(); return null; })
+          .then(function (r) { if (r) selesai({ at: Date.now() }); });
+      };
+      return tinggi();
+    }
+    if (d.type === 'feedback') {
+      if (state.done) { app.innerHTML = h + '<div class="ok">Terima kasih atas umpan baliknya.</div>' + (d.showResult ? emojiHasil(d, false) : '') + kaki(''); return tinggi(); }
+      h += kolomNama() + '<div class="emo">' + EMOJIS.map(function (e) {
+        return '<button type="button" data-e="' + e[0] + '" class="' + (state.emoji === e[0] ? 'on' : '') + '"><span>' + e[1] + '</span>' + e[2] + '</button>';
+      }).join('') + '</div><label class="f"><span>Catatan (opsional)</span><textarea id="catatan" placeholder="Apa yang paling berkesan atau perlu diperbaiki?"></textarea></label>' +
+        '<div class="row"><button class="btn" id="kirim"' + dis + '>Kirim</button></div>' + err;
+      var cat = (document.getElementById('catatan') || {}).value || '';
+      app.innerHTML = h + kaki('');
+      document.getElementById('catatan').value = cat;
+      [].forEach.call(app.querySelectorAll('.emo button'), function (el) {
+        el.onclick = function () { var nm = document.getElementById('nama'); if (nm) guest.name = nm.value.trim(); state.emoji = el.dataset.e; gambar(); };
+      });
+      document.getElementById('kirim').onclick = function () {
+        if (!ambilNama()) return;
+        if (!state.emoji) { state.err = 'Pilih salah satu ekspresi dulu.'; return gambar(); }
+        kirim({ emoji: state.emoji, note: document.getElementById('catatan').value }).then(function (r) { if (r) selesai({ at: Date.now() }); });
+      };
+      return tinggi();
+    }
+  }
+  function emojiHasil(d, dark) {
+    var c = d.emoji || {}, tot = EMOJIS.reduce(function (n, e) { return n + (c[e[0]] || 0); }, 0) || 1;
+    return '<div style="display:grid;gap:10px;margin-top:16px">' + EMOJIS.map(function (e) {
+      var n = c[e[0]] || 0, p = Math.round(n / tot * 100);
+      return '<div style="display:grid;grid-template-columns:' + (dark ? '64px' : '38px') + ' 1fr auto;gap:12px;align-items:center"><span style="font-size:' + (dark ? 44 : 24) + 'px">' + e[1] + '</span>' +
+        '<div style="height:' + (dark ? 18 : 10) + 'px;background:' + (dark ? '#2E2823' : '#F1E6DA') + ';border-radius:100px;overflow:hidden"><div style="height:100%;width:' + p + '%;background:#B31F24"></div></div>' +
+        '<b style="font:800 ' + (dark ? 24 : 14) + 'px Plus Jakarta Sans,sans-serif">' + n + '</b></div>';
+    }).join('') + '</div>';
+  }
+
+  muat();
+  /* Pembaruan langsung: dengarkan perubahan; cadangan putaran 5 detik. */
+  var putar = setInterval(muat, HASIL ? 4000 : 8000);
+  try {
+    var es = new EventSource('/api/events'), jeda = null;
+    es.onmessage = function () { clearTimeout(jeda); jeda = setTimeout(muat, 250); };
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
