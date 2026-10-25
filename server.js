@@ -777,6 +777,17 @@ function handleAction(p) {
       return { ok: true };
     }
 
+    /* Saklar embed langsung tersimpan, tanpa menunggu "Simpan perubahan". */
+    case 'setEmbed': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh mengatur embed.' };
+      const hit = cariMateri(p.blockId);
+      if (!hit || !EMBED_JENIS[hit.b.type]) return { ok: false, error: 'Materi tidak ditemukan di server. Simpan perubahan dulu, lalu coba lagi.' };
+      if (typeof p.embed === 'boolean') hit.b.embed = p.embed;
+      if (typeof p.embedResult === 'boolean') hit.b.embedResult = p.embedResult;
+      touch();
+      return { ok: true, data: { embed: !!hit.b.embed, embedResult: hit.b.embedResult !== false } };
+    }
+
     /* Kiriman dari halaman embed (WordPress dsb.): pengunjung cukup mengisi nama. */
     case 'embedSubmit': {
       const hit = cariMateri(p.blockId);
