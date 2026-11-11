@@ -405,6 +405,39 @@
             </sc-if>
           </div>
 
+          <sc-if value="{{ profilIsBundle }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#FFF7EE;border-radius:min(5vw,36px);padding:min(4vw,32px)">
+              <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 6px;font-weight:700;color:#3B3238">Isi rangkaian</h2>
+              <p style="font-size:13.5px;color:#7A6F76;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Sekali daftar, Anda terdaftar di semua event berikut dengan satu kode peserta.</p>
+              <div style="display:grid;gap:11px">
+                <sc-for list="{{ profilBundle }}" as="e" hint-placeholder-count="3">
+                  <button onClick="{{ e.open }}" style="background:#FFF;border:none;border-radius:18px;padding:16px 18px;display:flex;gap:16px;align-items:center;text-align:left;cursor:pointer;font:inherit;width:100%" style-hover="box-shadow:0 10px 26px -18px rgba(139,79,40,.6)">
+                    <div style="width:46px;flex:none;text-align:center;background:#F3EAFB;border-radius:12px;padding:8px 4px">
+                      <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;font-weight:700;color:#5B2E86;line-height:1">{{ e.no }}</div>
+                      <div style="font-size:9.5px;color:#5B2E86;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Event</div>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FFF7EE;background:#B31F24;border-radius:100px;padding:3px 10px">{{ e.jenis }}</span>
+                        <span style="font-size:12px;color:#7A6F76">{{ e.format }}</span>
+                      </div>
+                      <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;font-weight:700;color:#3B3238;line-height:1.35;margin-top:6px;text-wrap:balance">{{ e.title }}</div>
+                      <div style="font-size:12.5px;color:#7A6F76;margin-top:4px;line-height:1.5">{{ e.meta }}</div>
+                    </div>
+                    <span style="font-size:22px;color:#C9B9AB;flex:none">›</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ profilInBundle }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ profilBundleOpen }}" style="background:#F3EAFB;border:1px solid #E4D3F2;border-radius:18px;padding:14px 18px;display:flex;gap:12px;align-items:center;text-align:left;cursor:pointer;font:inherit;width:100%" style-hover="background:#EEE1F8">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FFF;background:#5B2E86;border-radius:100px;padding:4px 11px;flex:none">Rangkaian</span>
+              <span style="font-size:13.5px;color:#3B3238;line-height:1.45;flex:1">{{ profilBundleLabel }}</span>
+              <span style="font-size:20px;color:#5B2E86">›</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{ profilNotBundle }}" hint-placeholder-val="{{ true }}">
           <div style="background:#FFF7EE;border-radius:min(5vw,36px);padding:min(4vw,32px)">
             <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 16px;font-weight:700;color:#3B3238">Jadwal Sesi</h2>
             <div style="display:grid;gap:20px">
@@ -447,6 +480,7 @@
               <div style="font-size:13.5px;color:#7A6F76;line-height:1.6">Susunan sesi sedang disiapkan panitia.</div>
             </sc-if>
           </div>
+          </sc-if>
 
           <sc-if value="{{ profilHasNarsum }}" hint-placeholder-val="{{ false }}">
             <div style="background:#FFF7EE;border-radius:min(5vw,36px);padding:min(4vw,32px)">
@@ -615,6 +649,17 @@
             </label>
             <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
               <div style="background:#FCEDEE;border:1px solid #F0C9CC;color:#8E1018;border-radius:9px;padding:11px 13px;font-size:13.5px;line-height:1.5">{{ loginError }}</div>
+            </sc-if>
+            <sc-if value="{{ hasLoginPilih }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#FBF5FF;border:1px solid #E4D3F2;border-radius:11px;padding:14px;display:grid;gap:8px">
+                <div style="font-size:13px;font-weight:700;color:#5B2E86">Kode Anda berlaku di beberapa event. Pilih yang ingin dibuka:</div>
+                <sc-for list="{{ loginPilih }}" as="o" hint-placeholder-count="2">
+                  <button onClick="{{ o.go }}" style="background:#FFF;border:1px solid #DCCDE8;border-radius:9px;padding:11px 13px;text-align:left;font:inherit;cursor:pointer;display:grid;gap:2px" style-hover="border-color:#5B2E86">
+                    <span style="font-size:14px;font-weight:700;color:#1B1714">{{ o.title }}</span>
+                    <span style="font-size:12px;color:#7A6F76">{{ o.sub }}</span>
+                  </button>
+                </sc-for>
+              </div>
             </sc-if>
             <button onClick="{{ doLogin }}" style="background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:14px 18px;font-size:15px;font-weight:700" style-hover="background:#8A0F17" style-active="transform:translateY(1px)">Masuk ke sesi</button>
           </div>
@@ -1489,25 +1534,32 @@
               </sc-for>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px">
-            <sc-for list="{{ superWs }}" as="w" hint-placeholder-count="2">
-              <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:20px;display:flex;flex-direction:column;gap:12px">
-                <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;overflow:hidden">
+            <div style="padding:13px 20px;border-bottom:1px solid #EDE6DD;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+              <span style="font-size:12.5px;color:#7A6F66">{{ superWsCount }}</span>
+              <input value="{{ superCari }}" onChange="{{ onSuperCari }}" placeholder="Cari event atau lembaga" style="border:1px solid #DCD3C8;border-radius:100px;padding:8px 14px;font-size:13px;background:#FCFAF7;outline:none;flex:0 1 260px;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
+            </div>
+            <sc-for list="{{ superWs }}" as="w" hint-placeholder-count="4">
+              <div style="display:flex;gap:14px 18px;align-items:center;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #F3EDE6" style-hover="background:#FCFAF7">
+                <div style="flex:2 1 280px;min-width:0;display:flex;gap:12px;align-items:center">
                   <div role="img" aria-label="{{ w.partnerName }}" style="{{ w.logoStyle }}"></div>
-                  <span style="{{ w.badgeStyle }}">{{ w.badge }}</span>
+                  <div style="min-width:0">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <span style="{{ w.badgeStyle }}">{{ w.badge }}</span>
+                      <span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8C8078">{{ w.jenis }}</span>
+                    </div>
+                    <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;font-weight:700;line-height:1.35;margin-top:4px">{{ w.title }}</div>
+                    <div style="font-size:12px;color:#8C8078;margin-top:2px;line-height:1.45">{{ w.meta }}</div>
+                  </div>
                 </div>
-                <div>
-                  <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;margin:0 0 5px;font-weight:700;line-height:1.3">{{ w.title }}</h3>
-                  <div style="font-size:12.5px;color:#7A6F66;line-height:1.55">{{ w.meta }}</div>
-                </div>
-                <div style="display:grid;gap:6px;font-size:12.5px;color:#5C534B;border-top:1px solid #F1EBE3;padding-top:11px">
-                  <sc-for list="{{ w.lines }}" as="l" hint-placeholder-count="3">
-                    <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#8C8078">{{ l.label }}</span><b>{{ l.value }}</b></div>
+                <div style="flex:1 1 300px;display:flex;gap:6px 18px;flex-wrap:wrap;font-size:12.5px;color:#5C534B">
+                  <sc-for list="{{ w.lines }}" as="l" hint-placeholder-count="4">
+                    <span><span style="color:#8C8078">{{ l.label }}</span> <b>{{ l.value }}</b></span>
                   </sc-for>
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
-                  <button onClick="{{ w.edit }}" style="flex:1 1 120px;background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:700" style-hover="background:#F6F1EA">Edit detail</button>
-                  <button onClick="{{ w.manage }}" style="flex:1 1 150px;background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700" style-hover="background:#8A0F17">{{ w.manageLabel }}</button>
+                <div style="display:flex;gap:8px;flex:none">
+                  <button onClick="{{ w.edit }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#F6F1EA">Edit detail</button>
+                  <button onClick="{{ w.manage }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#8A0F17">Kelola</button>
                 </div>
               </div>
             </sc-for>
@@ -1863,31 +1915,6 @@
           </div>
 
           <div style="flex:1 1 380px;min-width:min(100%,300px);display:grid;gap:16px;align-content:start">
-            <sc-if value="{{ canEdit }}" hint-placeholder-val="{{ false }}">
-              <details open="{{ programsOpen }}" style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:16px 22px">
-                <summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;list-style:none">
-                  <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700">Rangkaian program</span>
-                  <span style="font-size:12.5px;color:#8C8078">{{ programSummary }}</span>
-                </summary>
-                <p style="font-size:13px;color:#7A6F66;margin:12px 0 14px;line-height:1.6;text-wrap:pretty">Satu event bisa berisi beberapa kegiatan — misalnya seminar pembuka, dua workshop paralel, lalu diskusi penutup. Buat programnya di sini, lalu pilih program pada tiap sesi. Peserta tetap memakai satu kode untuk semuanya.</p>
-                <div style="display:grid;gap:8px">
-                  <sc-for list="{{ programRows }}" as="p" hint-placeholder-count="2">
-                    <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:7px;align-items:center">
-                      <input value="{{ p.title }}" onChange="{{ p.onTitle }}" placeholder="Nama program" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
-                      <select value="{{ p.jenis }}" onChange="{{ p.onJenis }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0">
-                        <sc-for list="{{ programJenisOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
-                      </select>
-                      <input value="{{ p.date }}" onChange="{{ p.onDate }}" placeholder="Tanggal / jam" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
-                      <button onClick="{{ p.remove }}" title="Hapus program" style="background:#FFF;border:1px solid #F0C9CC;border-radius:7px;width:34px;height:36px;color:#A5121C">×</button>
-                    </div>
-                  </sc-for>
-                </div>
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
-                  <button onClick="{{ addProgram }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">+ Tambah program</button>
-                  <span style="font-size:12px;color:#8C8078">Tekan Simpan perubahan setelah selesai.</span>
-                </div>
-              </details>
-            </sc-if>
             <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px">
               <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;margin:0 0 16px;font-weight:700">Detail sesi</h3>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
@@ -1917,15 +1944,6 @@
                       </div>
                     </sc-for>
                   </div>
-                </sc-if>
-                <sc-if value="{{ hasPrograms }}" hint-placeholder-val="{{ false }}">
-                  <label style="display:grid;gap:5px">
-                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Bagian dari program</span>
-                    <select value="{{ sProgram }}" onChange="{{ onSProgram }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none">
-                      <option value="">— Tanpa program —</option>
-                      <sc-for list="{{ programOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
-                    </select>
-                  </label>
                 </sc-if>
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Waktu</span>
@@ -2630,17 +2648,17 @@
           </div>
 
           <sc-if value="{{ wsCompact }}" hint-placeholder-val="{{ false }}">
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px">
-              <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="2">
-                <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
-                  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
-                    <span style="{{ w.badgeStyle }}">{{ w.badge }}</span>
-                    <span style="font-size:12px;color:#8C8078">{{ w.stats }}</span>
+            <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;overflow:hidden">
+              <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:13px 20px;border-top:1px solid #F3EDE6" style-hover="background:#FCFAF7">
+                  <span style="{{ w.badgeStyle }}">{{ w.badge }}</span>
+                  <div style="flex:1 1 220px;min-width:0">
+                    <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;font-weight:700;line-height:1.35">{{ w.title }}</div>
+                    <div style="font-size:12px;color:#8C8078;margin-top:2px">{{ w.jenisLabel }} · {{ w.stats }}</div>
                   </div>
-                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16.5px;font-weight:700;line-height:1.35;text-wrap:balance">{{ w.title }}</div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
-                    <button onClick="{{ w.editFokus }}" style="flex:1 1 110px;background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700" style-hover="background:#F6F1EA">Edit detail</button>
-                    <button onClick="{{ w.kelola }}" style="flex:1 1 130px;background:#A5121C;color:#FFF;border:none;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700" style-hover="background:#8A0F17">Kelola</button>
+                  <div style="display:flex;gap:8px;flex:none">
+                    <button onClick="{{ w.editFokus }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#F6F1EA">Edit detail</button>
+                    <button onClick="{{ w.kelola }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#8A0F17">Kelola</button>
                   </div>
                 </div>
               </sc-for>
@@ -2690,6 +2708,20 @@
                       </sc-for>
                     </select>
                   </label>
+                  <sc-if value="{{ w.isBundle }}" hint-placeholder-val="{{ false }}">
+                    <div style="grid-column:1/-1;background:#FBF5FF;border:1px solid #E4D3F2;border-radius:11px;padding:14px 16px;display:grid;gap:11px">
+                      <div>
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;font-weight:700">Isi rangkaian</div>
+                        <div style="font-size:12.5px;color:#7A6F66;line-height:1.5;margin-top:2px;text-wrap:pretty">Pilih event yang sudah ada. Peserta yang mendaftar rangkaian otomatis terdaftar di semua event terpilih dengan satu kode. Tiap event tetap punya sesi, admin, dan rekapnya sendiri.</div>
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <sc-for list="{{ w.bundleChips }}" as="c" hint-placeholder-count="3">
+                          <button onClick="{{ c.toggle }}" style="{{ c.style }}">{{ c.label }}</button>
+                        </sc-for>
+                      </div>
+                      <div style="font-size:12.5px;font-weight:600;color:#5B2E86">{{ w.bundleNote }}</div>
+                    </div>
+                  </sc-if>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nama event</span>
                     <input value="{{ w.title }}" onChange="{{ w.onTitle }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -2719,7 +2751,7 @@
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Cara peserta masuk</span>
-                    <select value="{{ w.registration }}" onChange="{{ w.onReg }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;background:#FCFAF7;outline:none">
+                    <select value="{{ w.registration }}" onChange="{{ w.onReg }}" style="width:100%;min-width:0;box-sizing:border-box;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;background:#FCFAF7;outline:none;text-overflow:ellipsis">
                       <sc-for list="{{ regOptions }}" as="o" hint-placeholder-count="3">
                         <option value="{{ o.id }}">{{ o.label }}</option>
                       </sc-for>
@@ -3856,12 +3888,16 @@ class Component extends DCLogic {
   }
   FORMATS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
   JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', rangkaian: 'Rangkaian' };
+  /* Rangkaian = bungkus beberapa event yang sudah ada. */
+  isiRangkaian(m) { const all = this.state.wsMeta || []; return ((m && m.items) || []).map(id => all.find(x => x.id === id)).filter(Boolean); }
+  rangkaianDari(m) { return (this.state.wsMeta || []).filter(x => x.jenis === 'rangkaian' && x.published && (x.items || []).indexOf(m && m.id) >= 0); }
   JENIS_PROGRAM = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', talkshow: 'Talkshow', pameran: 'Pameran', lainnya: 'Lainnya' };
   /* Fasilitator: nama & Instagram dipasangkan menurut urutan (dipisah koma). */
   igList(str) { return String(str || '').split(/[,;\n]/).map(x => x.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@/, '')).map(x => /^[A-Za-z0-9._]{1,30}$/.test(x) ? x : ''); }
   /* Foto sebagai latar: gagal dimuat pun diam, inisial di bawahnya tetap terlihat. */
   fotoBg(h) { return { position: 'absolute', inset: 0, backgroundImage: 'url("' + this.avatarIg(h) + '")', backgroundSize: 'cover', backgroundPosition: 'center' }; }
-  avatarIg(h) { return h ? 'https://unavatar.io/instagram/' + encodeURIComponent(h) + '?fallback=false' : ''; }
+  avatarIg(h) {
+    if (h && this.api()) return '/api/ig-avatar/' + encodeURIComponent(h); return h ? 'https://unavatar.io/instagram/' + encodeURIComponent(h) + '?fallback=false' : ''; }
   narasumberSesi(x) {
     const nama = String(x.speaker || '').split(/[,;\n]/).map(t => t.trim()).filter(Boolean);
     const ig = this.igList(x.speakerIg);
@@ -4091,8 +4127,9 @@ class Component extends DCLogic {
       : { display: 'none' };
   }
   statKartu(m, jumlahSesi) {
+    const isi = m && m.jenis === 'rangkaian' ? this.isiRangkaian(m).length : -1;
     return [
-      { icon: '◷', label: 'Sesi', value: jumlahSesi ? jumlahSesi + ' sesi' : '—' },
+      isi >= 0 ? { icon: '◫', label: 'Event', value: isi ? isi + ' event' : '—' } : { icon: '◷', label: 'Sesi', value: jumlahSesi ? jumlahSesi + ' sesi' : '—' },
       { icon: '◍', label: 'Kuota', value: m.quota ? m.quota + ' kursi' : 'Terbuka' },
       { icon: '✓', label: 'Sertifikat', value: m.sertifikat === false ? 'Tidak' : 'Ya' }
     ];
@@ -4260,6 +4297,29 @@ class Component extends DCLogic {
           capaian: ['Menelusuri dan memverifikasi sumber informasi', 'Mengenali pola penyebaran hoaks di kanal komunitas', 'Menyusun narasi damai yang sesuai audiens'],
           sessionCount: (this.state.db.sessions || []).length,
           participantCount: (this.state.db.participants || []).length
+        }, {
+          id: 'ws-seminar', jenis: 'seminar', title: 'Seminar Nasional Moderasi Beragama di Ruang Digital',
+          partnerName: 'Wahid Foundation', partnerLogo: 'assets/wahid-foundation.png',
+          place: 'Auditorium UIN Jakarta', dateLabel: '18 September 2026', published: true,
+          registration: 'mandiri', price: 0, quota: 300, format: 'offline', kategori: 'Moderasi Beragama',
+          ringkasan: 'Seminar pembuka: tiga pembicara membedah tantangan moderasi beragama di media sosial.',
+          sessionCount: 2, participantCount: 128
+        }, {
+          id: 'ws-diskusi', jenis: 'diskusi', title: 'Diskusi Kelompok Terpumpun: Narasi Damai',
+          partnerName: 'Wahid Foundation', partnerLogo: 'assets/wahid-foundation.png',
+          place: 'Zoom', dateLabel: '25 September 2026', published: true,
+          registration: 'mandiri', price: 0, quota: 60, format: 'online', kategori: 'Narasi Damai',
+          ringkasan: 'Diskusi lanjutan untuk merumuskan rencana tindak lanjut komunitas.',
+          sessionCount: 1, participantCount: 41
+        }, {
+          id: 'rg-damai', jenis: 'rangkaian', title: 'Pekan Literasi Damai 2026',
+          partnerName: 'Wahid Foundation', partnerLogo: 'assets/wahid-foundation.png',
+          place: 'Jakarta & daring', dateLabel: '17–25 September 2026', published: true,
+          registration: 'mandiri', price: 200000, quota: 40, format: 'hybrid', kategori: 'Paket hemat',
+          items: ['ws-seminar', 'ws-lokal', 'ws-diskusi'],
+          ringkasan: 'Satu pendaftaran untuk tiga kegiatan: seminar pembuka, workshop dua hari, dan diskusi penutup. Kode peserta coba: RG-2026.',
+          deskripsi: 'Ikuti seluruh rangkaian dengan sekali daftar. Setiap kegiatan punya jadwal, materi, dan sertifikatnya sendiri; satu kode peserta berlaku untuk semuanya.',
+          sessionCount: 0, participantCount: 18
         }]
       }, () => { if (this._hashAwal) this.bacaRute(this._hashAwal); });
     }
@@ -5147,6 +5207,7 @@ class Component extends DCLogic {
         this.setState({ loginError: '' });
         const out = await this.apiPost({ action: 'findCode', code });
         if (!out || !out.ok) return this.setState({ loginError: (out && out.error) || 'Kode peserta tidak dikenali.' });
+        if (Array.isArray(out.data.pilih)) return this.setState({ loginPilih: out.data.pilih, loginError: '' });
         try { localStorage.setItem(this.WSKEY, out.data.ws); } catch (e) {}
         this.remember({ role: 'peserta', userId: out.data.id });
         this._ulang = {}; this._autoSent = null; this._tries = {};
@@ -5154,6 +5215,11 @@ class Component extends DCLogic {
         return;
       }
       const hits = db.participants.filter(x => String(x.code).trim().toUpperCase() === code);
+      /* Pratinjau: kode contoh rangkaian membuka pilihan event. */
+      if (!this.api() && code === 'RG-2026') {
+        const rg = (st.wsMeta || []).find(x => x.jenis === 'rangkaian');
+        return this.setState({ loginError: '', loginPilih: this.isiRangkaian(rg).map(x => ({ ws: x.id, id: hits[0] ? hits[0].id : (db.participants[0] || {}).id, title: x.title })) });
+      }
       if (!hits.length) return this.setState({ loginError: 'Kode peserta tidak dikenali. Periksa kembali atau tanyakan ke panitia.' });
       if (hits.length > 1) return this.setState({ loginError: 'Kode ini terdaftar lebih dari sekali. Hubungi panitia.' });
       this.remember({ role: 'peserta', userId: hits[0].id });
@@ -5177,6 +5243,20 @@ class Component extends DCLogic {
     }
     v.certSayaUnduh = () => { if (v.certSaya) this.cetakSertifikat(wsSaya, akuCert); };
     v.doLogin = tryLogin;
+    v.hasLoginPilih = Array.isArray(st.loginPilih) && st.loginPilih.length > 0;
+    v.loginPilih = (st.loginPilih || []).map(o => {
+      const mm = (st.wsMeta || []).find(x => x.id === o.ws) || {};
+      return {
+        title: o.title || mm.title || 'Event',
+        sub: [this.jenisOf(mm), String(mm.dateLabel || '').trim()].filter(Boolean).join(' · '),
+        go: () => {
+          try { localStorage.setItem(this.WSKEY, o.ws); } catch (e) {}
+          this.remember({ role: 'peserta', userId: o.id });
+          this._ulang = {}; this._autoSent = null; this._tries = {};
+          this.setState({ wsId: o.ws, loginGlobal: false, loginPilih: null, role: 'peserta', userId: o.id, panel: null, loginError: '', draft: {}, formDraft: {}, formError: '', formSent: false }, () => this.api() && this.apiGet(true).catch(() => {}));
+        }
+      };
+    });
 
     /* ── Banyak workshop dalam satu platform ── */
     const meta = st.wsMeta || [];
@@ -5295,24 +5375,30 @@ class Component extends DCLogic {
       label, go: () => this.setState({ platTab: id }),
       style: { background: 'none', border: 'none', borderBottom: '2px solid ' + (platTabId === id ? '#A5121C' : 'transparent'), color: platTabId === id ? '#A5121C' : '#7A6F66', padding: '11px 4px', marginBottom: '-1px', marginRight: '14px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }
     }));
-    v.superWs = (P.meta || []).map(m => {
+    const kata = String(st.superCari || '').trim().toLowerCase();
+    const semuaMeta = P.meta || [];
+    const metaCari = semuaMeta.filter(m => !kata || [m.title, m.partnerName, m.place].join(' ').toLowerCase().indexOf(kata) >= 0);
+    v.superCari = st.superCari || '';
+    v.onSuperCari = e => this.setState({ superCari: e.target.value });
+    v.superWsCount = metaCari.length + ' dari ' + semuaMeta.length + ' event · ' + semuaMeta.filter(m => m.published).length + ' terbit';
+    v.superWs = metaCari.map(m => {
       const bayarWs = (P.payments || []).filter(x => x.wsId === m.id);
       const lunasWs = bayarWs.filter(x => x.status === 'lunas');
       return {
-        title: m.title, partnerName: m.partnerName || '',
+        title: m.title, partnerName: m.partnerName || '', jenis: this.jenisOf(m),
         logoStyle: m.partnerLogo
-          ? { height: '28px', width: '120px', backgroundImage: 'url("' + m.partnerLogo + '")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'left center' }
-          : { display: 'none' },
+          ? { height: '40px', width: '64px', flex: 'none', backgroundImage: 'url("' + m.partnerLogo + '")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundColor: '#FAF6F0', borderRadius: '8px' }
+          : { height: '40px', width: '64px', flex: 'none', borderRadius: '8px', background: '#F3EDE5' },
         badge: m.published ? 'Terbit' : 'Draf',
-        badgeStyle: { marginLeft: 'auto', fontSize: '10.5px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '100px', background: m.published ? '#EEF5E9' : '#F1EBE3', color: m.published ? '#2C4D18' : '#8C8078', border: '1px solid ' + (m.published ? '#CFE2C2' : '#E0D8CE') },
+        badgeStyle: { fontSize: '10px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '100px', background: m.published ? '#EEF5E9' : '#F1EBE3', color: m.published ? '#2C4D18' : '#8C8078', border: '1px solid ' + (m.published ? '#CFE2C2' : '#E0D8CE') },
         meta: [m.partnerName, m.dateLabel, m.place].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'Belum ada keterangan',
         lines: [
-          { label: 'Sesi', value: m.sessionCount || 0 },
+          m.jenis === 'rangkaian' ? { label: 'Isi', value: this.isiRangkaian(m).length + ' event' } : { label: 'Sesi', value: m.sessionCount || 0 },
           { label: 'Peserta', value: (m.participantCount || 0) + (m.quota ? ' / ' + m.quota : '') },
           { label: 'Biaya', value: m.price > 0 ? rupiah(m.price) : 'Gratis' },
           { label: 'Terbayar', value: m.price > 0 ? lunasWs.length + ' dari ' + bayarWs.length : '—' }
         ],
-        manageLabel: 'Kelola ' + this.jenisOf(m).toLowerCase() + ' ini',
+        manageLabel: 'Kelola',
         manage: () => { this.pilihWs(m.id); this.setState({ role: 'admin', tab: 'control' }); },
         edit: () => {
           this.pilihWs(m.id);
@@ -5632,7 +5718,9 @@ class Component extends DCLogic {
         format: this.FORMATS[m.format || 'online'], badgeStyle: badge(m),
         logoStyle: this.logoKotak(m.partnerLogo, 26, 78),
         inisialStyle: m.partnerLogo ? { display: 'none' } : { width: '30px', height: '30px', borderRadius: '9px', background: '#FDECEC', color: '#9B1B20', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none' },
-        kategori: (Array.isArray(m.programs) && m.programs.length > 1
+        kategori: m.jenis === 'rangkaian'
+          ? 'Rangkaian · ' + this.isiRangkaian(m).length + ' event'
+          : (Array.isArray(m.programs) && m.programs.length > 1
           ? 'Rangkaian · ' + m.programs.map(p => this.JENIS_PROGRAM[p.jenis] || 'Program').filter((x, i, a) => a.indexOf(x) === i).join(', ')
           : this.jenisOf(m)) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
@@ -5657,6 +5745,17 @@ class Component extends DCLogic {
       const m = wsAktif, w = fmtOf(m);
       const ses = db.sessions || [];
       v.profilTitle = m.title;
+      const bundel = m.jenis === 'rangkaian';
+      v.profilIsBundle = bundel; v.profilNotBundle = !bundel;
+      v.profilBundle = bundel ? this.isiRangkaian(m).map((x, i) => ({
+        no: i + 1, title: x.title, jenis: this.jenisOf(x), format: this.FORMATS[x.format || 'online'],
+        meta: [String(x.dateLabel || '').trim(), lokasiOf(x), (x.sessionCount || 0) + ' sesi'].filter(Boolean).join(' · '),
+        open: () => bukaProfil(x.id)
+      })) : [];
+      const induk = bundel ? [] : this.rangkaianDari(m);
+      v.profilInBundle = induk.length > 0;
+      v.profilBundleLabel = induk.length ? 'Event ini juga bagian dari “' + induk[0].title + '” — daftar sekali untuk ' + this.isiRangkaian(induk[0]).length + ' event.' : '';
+      v.profilBundleOpen = () => { if (induk[0]) bukaProfil(induk[0].id); };
       v.profilJenis = this.jenisOf(m);
       v.profilFormat = this.FORMATS[m.format || 'online'];
       v.profilFormatStyle = badge(m);
@@ -5707,7 +5806,7 @@ class Component extends DCLogic {
         });
       });
       v.profilNarsum = narsum;
-      v.profilHasNarsum = !!narsum.length;
+      v.profilHasNarsum = !!narsum.length && !bundel;
       v.profilHarga = this.hargaLabel(m.price, m);
       v.profilDonasi = !!m.donasi;
       v.profilDonasiTujuan = String(m.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.';
@@ -7015,7 +7114,7 @@ class Component extends DCLogic {
       this.setState(x => ({ wsOpen: Object.assign({}, x.wsOpen, { [idBaru]: true }) }));
       list.push({ id: idBaru, jenis: 'seminar', title: 'Seminar baru', subtitle: '', partnerName: '', partnerLogo: '', place: '', dateLabel: '', published: false, registration: 'mandiri', price: 0, quota: 0, format: 'hybrid' });
     });
-    v.jenisOptions = Object.keys(this.JENIS).map(id => ({ id, label: this.JENIS[id] }));
+    v.jenisOptions = Object.keys(this.JENIS).map(id => ({ id, label: this.JENIS[id] + (id === 'rangkaian' ? ' (bundling)' : '') }));
     const wsMilik = !st.isSuper ? ((st.adminWsIds || []).length ? st.adminWsIds : [st.wsId]) : null;
     v.canCreateEvent = !wsMilik;
     v.feeStatusOptions = Object.keys(this.FEE_STATUS).map(id => ({ id, label: this.FEE_STATUS[id] }));
@@ -7029,7 +7128,8 @@ class Component extends DCLogic {
       this.setState({ wsFokus: null });
     };
     v.wsListHeadStyle = fokus ? { display: 'none' } : { display: 'flex', justifyContent: 'space-between', gap: '18px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '22px' };
-    v.wsCompact = !!wsMilik && !fokus && metaAdmin.length > 1;
+    /* Tanpa fokus: daftar ringkas. "Edit detail" membuka satu event saja. */
+    v.wsCompact = !fokus && metaAdmin.length > 1;
     v.wsListTitle = st.isSuper ? 'Event pada platform ini' : 'Event yang Anda kelola';
     v.wsListDesc = st.isSuper
       ? 'Tiap event punya sesi, materi, peserta, dan hasilnya sendiri. Logo mitra yang Anda pasang di sini tampil di kepala halaman selama event itu dikelola atau diikuti. ' + (st.wsMsg || 'Perubahan di sini langsung tersimpan ke server.')
@@ -7087,6 +7187,21 @@ class Component extends DCLogic {
         jenis: m.jenis || 'workshop',
         onJenis: e => ubah('jenis', e.target.value),
         jenisLabel: this.jenisOf(m),
+        isBundle: m.jenis === 'rangkaian',
+        bundleNote: (() => { const n = (m.items || []).filter(id => metaAdmin.some(x => x.id === id)).length; return n ? n + ' event dalam rangkaian ini' : 'Belum ada event dipilih.'; })(),
+        bundleChips: m.jenis !== 'rangkaian' ? [] : metaAdmin.filter(x => x.id !== m.id && x.jenis !== 'rangkaian').map(x => {
+          const on = (m.items || []).indexOf(x.id) >= 0;
+          return {
+            label: (on ? '✓ ' : '+ ') + x.title + ' · ' + this.jenisOf(x),
+            style: { background: on ? '#5B2E86' : '#FFF', color: on ? '#FFF' : '#3B342E', border: '1px solid ' + (on ? '#5B2E86' : '#DCCDE8'), borderRadius: '100px', padding: '7px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' },
+            toggle: () => simpanMeta(list => {
+              const y = list.find(z => z.id === m.id); if (!y) return;
+              const it = Array.isArray(y.items) ? y.items.slice() : [];
+              const i = it.indexOf(x.id); if (i >= 0) it.splice(i, 1); else it.push(x.id);
+              y.items = it;
+            })
+          };
+        }),
         canEdit: !wsMilik,
         expanded: !!(st.wsOpen || {})[m.id],
         priceLocked: !st.isSuper,
