@@ -854,6 +854,20 @@ function handleAction(p) {
       return { ok: true };
     }
 
+    /* Pengumuman untuk peserta: langsung tersimpan. */
+    case 'setPengumuman': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh menerbitkan pengumuman.' };
+      db.pengumuman = (Array.isArray(p.list) ? p.list : []).slice(0, 30).map(a => ({
+        id: String(a.id || ''), text: String(a.text || '').slice(0, 2000),
+        url: /^https?:\/\//i.test(String(a.url || '')) ? String(a.url).slice(0, 600) : '',
+        urlLabel: String(a.urlLabel || '').slice(0, 60),
+        img: /^https?:\/\//i.test(String(a.img || '')) ? String(a.img).slice(0, 800) : '',
+        at: Number(a.at) || Date.now(), by: String(a.by || 'Panitia').slice(0, 60)
+      }));
+      touch();
+      return { ok: true };
+    }
+
     /* Saklar pembagian kelompok: langsung tersimpan. */
     case 'setGroups': {
       if (!siapa || !BOLEH_SUSUN[siapa.role]) return { ok: false, error: 'Hanya admin yang boleh mengatur kelompok.' };
@@ -1656,6 +1670,15 @@ function handleAction(p) {
       db.groups = Array.isArray(incoming.groups) ? incoming.groups : (db.groups || []);
       if (typeof incoming.useGroups === 'boolean') db.useGroups = incoming.useGroups;
       if (Array.isArray(incoming.programs)) db.programs = incoming.programs;
+      if (incoming.narsumFoto && typeof incoming.narsumFoto === 'object') {
+        /* Hanya link (bukan berkas) agar data tetap ringan. */
+        db.narsumFoto = {};
+        Object.keys(incoming.narsumFoto).slice(0, 200).forEach(k => {
+          const u = String(incoming.narsumFoto[k] || '');
+          if (/^https?:\/\//i.test(u)) db.narsumFoto[String(k).slice(0, 80)] = u.slice(0, 800);
+        });
+      }
+      if (Array.isArray(incoming.pengumuman)) db.pengumuman = incoming.pengumuman;
       db.activeSessionId = incoming.activeSessionId || (db.sessions[0] ? db.sessions[0].id : null);
       /* Saklar "Semua sesi terbuka" ikut tersimpan saat admin penuh menyimpan susunan. */
       if (typeof incoming.allOpen === 'boolean') db.allOpen = incoming.allOpen;
