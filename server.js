@@ -1840,6 +1840,16 @@ const server = http.createServer(async (req, res) => {
   const igM = url.match(/^\/api\/ig-avatar\/([A-Za-z0-9._]{1,30})(?:\?.*)?$/);
   if (igM && req.method === 'GET') return layaniAvatarIg(igM[1].toLowerCase(), res);
 
+  /* Kartu promosi event untuk situs lain. */
+  if (url.startsWith('/api/embed-event') && req.method === 'GET') {
+    const q = new URLSearchParams(url.split('?')[1] || '');
+    const m = (store.meta || []).find(x => x.id === q.get('ws'));
+    if (!m || !m.published || !m.embedPromo) return json(res, { ok: false, error: 'Event ini belum dibuka untuk dipromosikan.' });
+    const ambil = ['id', 'slug', 'title', 'jenis', 'format', 'partnerName', 'partnerLogo', 'flyer', 'dateLabel', 'place', 'quota', 'price', 'donasi', 'registration', 'ringkasan'];
+    const out = {}; ambil.forEach(k => { if (m[k] != null) out[k] = m[k]; });
+    return json(res, { ok: true, data: out });
+  }
+
   /* Data publik untuk halaman embed. */
   if (url.startsWith('/api/embed') && req.method === 'GET') {
     const q = new URLSearchParams(url.split('?')[1] || '');
@@ -1874,8 +1884,8 @@ const server = http.createServer(async (req, res) => {
     if (og) return kirimGambarOg(req, res, og[1] === 'home' ? 'home' : og[2]);
     if (jalur === '/' || jalur === '/index.html') return kirimIndexOg(req, res, '');
     /* Halaman embed: boleh dibingkai oleh situs lain (EMBED_ALLOW untuk membatasi). */
-    if (/^\/embed\/[^/]+\/[^/]+\/?$/.test(jalur) || jalur === '/embed.js') {
-      const file = path.join(PUBLIC_DIR, jalur === '/embed.js' ? 'embed.js' : 'embed.html');
+    if (/^\/embed\/[^/]+\/[^/]+\/?$/.test(jalur) || /^\/embed-event\/[^/]+\/?$/.test(jalur) || jalur === '/embed.js') {
+      const file = path.join(PUBLIC_DIR, jalur === '/embed.js' ? 'embed.js' : jalur.indexOf('/embed-event/') === 0 ? 'embed-event.html' : 'embed.html');
       return fs.readFile(file, (err, buf) => {
         if (err) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Tidak ditemukan'); }
         const izin = String(process.env.EMBED_ALLOW || '*').trim() || '*';
