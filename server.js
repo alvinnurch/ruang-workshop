@@ -253,7 +253,10 @@ function touch() { version++; persist(); broadcast(); }
 function metaPublik() {
   return store.meta.map(m => {
     const d = store.data[m.id] || EMPTY;
-    return Object.assign({}, m, { sessionCount: (d.sessions || []).length, participantCount: (d.participants || []).length });
+    return Object.assign({}, m, {
+      sessionCount: (d.sessions || []).length, participantCount: (d.participants || []).length,
+      programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' }))
+    });
   });
 }
 function slot(sessionId) {
@@ -1373,7 +1376,7 @@ function handleAction(p) {
       const pid = 'p' + Date.now().toString(36);
       db.participants.push({
         id: pid, name: nama, code: kode,
-        group: (db.groups || [])[0] || 'Kelompok A', org: p.org || '', phone: p.phone || '', email: email,
+        group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
         status: perlu ? 'menunggu' : 'aktif', registeredAt: new Date().toISOString()
       });
       touch();
