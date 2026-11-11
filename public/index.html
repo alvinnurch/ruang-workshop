@@ -473,6 +473,12 @@
           <div style="background:#FFF;border-radius:min(5vw,36px);padding:min(4vw,30px);box-shadow:0 18px 40px -26px rgba(139,79,40,.55)">
             <div style="font-size:12px;color:#7A6F76;letter-spacing:.06em;text-transform:uppercase;font-weight:700">Biaya pendaftaran</div>
             <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(28px,3.6vw,38px);font-weight:700;color:#B31F24;margin:6px 0 18px;line-height:1">{{ profilHarga }}</div>
+            <sc-if value="{{ profilDonasi }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#FFF7EE;border-radius:16px;padding:14px 16px;margin:-6px 0 18px">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B1B20">Donasi Anda digunakan untuk</div>
+                <div style="font-size:13.5px;color:#3B3238;line-height:1.6;margin-top:5px;white-space:pre-line;text-wrap:pretty">{{ profilDonasiTujuan }}</div>
+              </div>
+            </sc-if>
             <div style="display:grid;gap:10px;border-top:1px solid #F3E8DC;padding-top:16px;margin-bottom:20px">
               <sc-for list="{{ profilInfo }}" as="i" hint-placeholder-count="4">
                 <div style="display:flex;gap:12px;font-size:13px;line-height:1.5"><span style="color:#7A6F76;width:96px;flex:none">{{ i.label }}</span><b style="color:#3B3238;flex:1">{{ i.value }}</b></div>
@@ -559,6 +565,24 @@
                   <input value="{{ regEmail }}" onChange="{{ onRegEmail }}" style="border:1px solid #DCD3C8;border-radius:9px;padding:12px 14px;font-size:15px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
               </div>
+              <sc-if value="{{ regDonasi }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:16px;display:grid;gap:12px">
+                  <div>
+                    <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B1B20">Donasi sukarela</div>
+                    <div style="font-size:13px;color:#3B3238;line-height:1.6;margin-top:4px;white-space:pre-line;text-wrap:pretty">{{ regDonasiTujuan }}</div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ regDonasiChips }}" as="c" hint-placeholder-count="3">
+                      <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+                    </sc-for>
+                  </div>
+                  <label style="display:grid;gap:6px">
+                    <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Nominal lain (Rp)</span>
+                    <input value="{{ regDonasiInput }}" onChange="{{ onRegDonasi }}" inputmode="numeric" placeholder="Tulis nominal Anda" style="border:1px solid #DCD3C8;border-radius:9px;padding:12px 14px;font-size:15px;font-weight:600;background:#FFF;outline:none" style-focus="border-color:#A5121C" />
+                  </label>
+                  <div style="font-size:12px;color:#7A6F66;line-height:1.5">{{ regDonasiNote }}</div>
+                </div>
+              </sc-if>
               <sc-if value="{{ regErr }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:13px;color:#A5121C;font-weight:600;line-height:1.5">{{ regErr }}</div>
               </sc-if>
@@ -2708,6 +2732,33 @@
                       <span style="font-size:11.5px;color:#8C8078;line-height:1.45">Diatur super admin. Ajukan perubahan lewat kotak di bawah.</span>
                     </sc-if>
                   </label>
+                  <div style="grid-column:1/-1;background:#FFFBF4;border:1px solid #EAD9C6;border-radius:11px;padding:14px 16px;display:grid;gap:12px">
+                    <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+                      <div style="flex:1 1 240px">
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;font-weight:700">Daftar dengan donasi sukarela</div>
+                        <div style="font-size:12.5px;color:#7A6F66;line-height:1.5;margin-top:2px;text-wrap:pretty">Peserta menentukan sendiri nominalnya. Saat aktif, kolom biaya di atas diabaikan.</div>
+                      </div>
+                      <button onClick="{{ w.toggleDonasi }}" disabled="{{ w.priceLocked }}" style="{{ w.donasiBtnStyle }}">{{ w.donasiLabel }}</button>
+                    </div>
+                    <sc-if value="{{ w.donasi }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:grid;gap:12px">
+                        <label style="display:grid;gap:5px">
+                          <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Donasi digunakan untuk</span>
+                          <textarea value="{{ w.donasiTujuan }}" onChange="{{ w.onDonasiTujuan }}" rows="3" placeholder="mis. Seluruh donasi untuk beasiswa santri penulis dan biaya konsumsi peserta dari daerah." style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;resize:vertical;line-height:1.55" style-focus="border-color:#A5121C"></textarea>
+                        </label>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;align-items:end">
+                          <label style="display:grid;gap:5px">
+                            <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Pilihan nominal (Rp)</span>
+                            <input value="{{ w.donasiSaran }}" onChange="{{ w.onDonasiSaran }}" placeholder="25000, 50000, 100000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FFF;outline:none" style-focus="border-color:#A5121C" />
+                          </label>
+                          <label style="display:flex;gap:9px;align-items:center;font-size:13px;color:#3B342E;font-weight:600;padding:10px 0;cursor:pointer">
+                            <input type="checkbox" checked="{{ w.donasiOpsional }}" onChange="{{ w.onDonasiOpsional }}" style="width:17px;height:17px;accent-color:#A5121C" />
+                            Boleh daftar tanpa donasi
+                          </label>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
                   <sc-if value="{{ w.priceLocked }}" hint-placeholder-val="{{ false }}">
                     <div style="grid-column:1/-1;background:#FAF6F0;border:1px solid #E6DFD6;border-radius:11px;padding:16px 18px;display:grid;gap:14px">
                       <div>
@@ -4028,7 +4079,12 @@ class Component extends DCLogic {
     const out = await this.apiPost({ action: 'revenue', password: this._pw || '' });
     if (out && out.ok) this.setState({ revenue: out.data });
   }
-  hargaLabel(n) { return Number(n) > 0 ? 'Rp' + Number(n).toLocaleString('id-ID') : 'Gratis'; }
+  hargaLabel(n, m) { if (m && m.donasi) return 'Donasi sukarela'; return Number(n) > 0 ? 'Rp' + Number(n).toLocaleString('id-ID') : 'Gratis'; }
+  DONASI_SARAN = [25000, 50000, 100000];
+  DONASI_MIN = 2000;
+  rp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+  /* Event berbayar = harga tetap, atau donasi dengan nominal > 0 yang dipilih peserta. */
+  perluBayarWs(m, nominal) { return !!m && (m.donasi ? Number(nominal) > 0 : Number(m.price) > 0); }
   logoKotak(url, tinggi, lebar) {
     return url
       ? { height: tinggi + 'px', width: lebar + 'px', flex: 'none', backgroundImage: 'url("' + url + '")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'left center' }
@@ -5451,7 +5507,7 @@ class Component extends DCLogic {
       v.unggulanBadgeStyle = badge(unggulan);
       v.unggulanPartner = unggulan.partnerName || 'Penyelenggara';
       v.unggulanDate = String(unggulan.dateLabel || '').trim() || 'Jadwal menyusul';
-      v.unggulanPrice = this.hargaLabel(unggulan.price);
+      v.unggulanPrice = this.hargaLabel(unggulan.price, unggulan);
       v.unggulanOpen = () => bukaProfil(unggulan.id);
       v.unggulanLogoStyle = this.logoKotak(unggulan.partnerLogo, 22, 74);
       v.unggulanStats = this.statKartu(unggulan, unggulan.sessionCount || 0);
@@ -5580,7 +5636,7 @@ class Component extends DCLogic {
           ? 'Rangkaian · ' + m.programs.map(p => this.JENIS_PROGRAM[p.jenis] || 'Program').filter((x, i, a) => a.indexOf(x) === i).join(', ')
           : this.jenisOf(m)) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
-        lokasi: lokasiOf(m), harga: this.hargaLabel(m.price),
+        lokasi: lokasiOf(m), harga: this.hargaLabel(m.price, m),
         /* Flyer (16:9) menjadi sampul kartu; tanpa flyer, warna format seperti biasa. */
         coverStyle: Object.assign(
           { color: '#FFF7EE', border: 'none', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', cursor: 'pointer', font: 'inherit', width: '100%' },
@@ -5652,7 +5708,9 @@ class Component extends DCLogic {
       });
       v.profilNarsum = narsum;
       v.profilHasNarsum = !!narsum.length;
-      v.profilHarga = this.hargaLabel(m.price);
+      v.profilHarga = this.hargaLabel(m.price, m);
+      v.profilDonasi = !!m.donasi;
+      v.profilDonasiTujuan = String(m.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.';
       v.profilInfo = [
         { label: 'Tanggal mulai', value: String(m.dateLabel || '').trim() || 'Menyusul' },
         { label: 'Format', value: this.FORMATS[m.format || 'online'] },
@@ -5660,14 +5718,14 @@ class Component extends DCLogic {
         { label: 'Batas daftar', value: String(m.batasDaftar || '').trim() || 'Selama kuota tersedia' }
       ];
       const bolehDaftarProfil = (m.registration || 'panitia') !== 'panitia';
-      v.profilDaftarLabel = bolehDaftarProfil ? (m.price > 0 ? 'Daftar & Bayar' : 'Daftar Sekarang') : 'Pendaftaran lewat panitia';
+      v.profilDaftarLabel = bolehDaftarProfil ? (m.donasi ? 'Daftar & Donasi' : m.price > 0 ? 'Daftar & Bayar' : 'Daftar Sekarang') : 'Pendaftaran lewat panitia';
       v.profilDaftarStyle = {
         width: '100%', background: bolehDaftarProfil ? '#B31F24' : '#EFEAE6', color: bolehDaftarProfil ? '#FFF7EE' : '#7A6F76',
         border: 'none', borderRadius: '100px', padding: '15px', fontSize: '14.5px', fontWeight: 700,
         cursor: bolehDaftarProfil ? 'pointer' : 'default'
       };
       v.profilDaftarNote = bolehDaftarProfil
-        ? (m.price > 0 ? 'Pendaftaran dan pembayaran diproses di halaman berikutnya. Kode peserta aktif setelah pembayaran diterima.' : 'Kode peserta terbit seketika setelah pendaftaran.')
+        ? (m.donasi ? 'Anda bebas menentukan nominal donasi di halaman berikutnya.' + (m.donasiOpsional ? ' Boleh juga mendaftar tanpa donasi.' : '') : m.price > 0 ? 'Pendaftaran dan pembayaran diproses di halaman berikutnya. Kode peserta aktif setelah pembayaran diterima.' : 'Kode peserta terbit seketika setelah pendaftaran.')
         : 'Hubungi penyelenggara untuk didaftarkan; kode peserta dibagikan panitia.';
       v.profilDaftar = () => { if (bolehDaftarProfil) this.setState({ role: 'register', regErr: '', regCode: '' }); };
       v.profilMasuk = () => this.setState({ role: 'login', loginError: '' });
@@ -5827,14 +5885,29 @@ class Component extends DCLogic {
 
     /* Pendaftaran mandiri */
     v.regIntro = wsAktif
-      ? 'Untuk ' + wsAktif.title + '. ' + (wsAktif.registration === 'mandiri-setuju' || (wsAktif.price > 0)
+      ? 'Untuk ' + wsAktif.title + '. ' + (wsAktif.donasi
+        ? 'Tentukan sendiri nominal donasi Anda di bawah. Kode peserta aktif setelah donasi diterima' + (wsAktif.donasiOpsional ? ', atau langsung bila Anda memilih tanpa donasi.' : '.')
+        : (wsAktif.registration === 'mandiri-setuju' || (wsAktif.price > 0))
         ? 'Kode Anda terbit setelah panitia menyetujui pendaftaran.'
         : 'Kode peserta langsung terbit dan bisa dipakai masuk.')
       : 'Pilih workshop terlebih dahulu.';
     v.regName = st.regName || ''; v.regOrg = st.regOrg || '';
     v.regPhone = st.regPhone || ''; v.regEmail = st.regEmail || '';
     v.regErr = st.regErr || ''; v.regCode = st.regCode || '';
-    const perluBayar = !!st.regCode && !!(wsAktif && wsAktif.price > 0) && st.payStatus !== 'lunas';
+    const donasiOn = !!(wsAktif && wsAktif.donasi);
+    const nominal = donasiOn ? (Number(st.regDonasi) || 0) : 0;
+    v.regDonasi = donasiOn && !st.regCode;
+    v.regDonasiTujuan = donasiOn ? (String(wsAktif.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.') : '';
+    const saran = donasiOn ? (Array.isArray(wsAktif.donasiSaran) && wsAktif.donasiSaran.length ? wsAktif.donasiSaran : this.DONASI_SARAN) : [];
+    const chipS = on => ({ background: on ? '#B31F24' : '#FFF', color: on ? '#FFF7EE' : '#3B3238', border: '1px solid ' + (on ? '#B31F24' : '#EAD9C6'), borderRadius: '100px', padding: '9px 16px', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer' });
+    v.regDonasiChips = saran.map(n => ({ label: this.rp(n), style: chipS(nominal === n), pick: () => this.setState({ regDonasi: n, regDonasiTxt: '', regErr: '' }) }))
+      .concat(donasiOn && wsAktif.donasiOpsional ? [{ label: 'Tanpa donasi', style: chipS(st.regDonasi === 0), pick: () => this.setState({ regDonasi: 0, regDonasiTxt: '', regErr: '' }) }] : []);
+    v.regDonasiInput = st.regDonasiTxt || '';
+    v.onRegDonasi = e => { const t = String(e.target.value).replace(/\D/g, '').slice(0, 9); this.setState({ regDonasiTxt: t ? Number(t).toLocaleString('id-ID') : '', regDonasi: t ? Number(t) : null, regErr: '' }); };
+    v.regDonasiNote = nominal > 0 ? 'Anda berdonasi ' + this.rp(nominal) + '. Kode peserta aktif setelah donasi diterima.'
+      : st.regDonasi === 0 ? 'Anda mendaftar tanpa donasi. Kode peserta langsung aktif.'
+      : 'Pilih nominal, atau tulis sendiri. Minimal ' + this.rp(this.DONASI_MIN) + '.';
+    const perluBayar = !!st.regCode && (donasiOn ? !!st.regBayarNominal : !!(wsAktif && wsAktif.price > 0)) && st.payStatus !== 'lunas';
     v.regPay = perluBayar;
     v.regDone = !!st.regCode && !perluBayar;
     v.unduhTiketLabel = st.tiketUnduh ? 'Menyiapkan…' : '⬇  Unduh tiket';
@@ -5852,12 +5925,12 @@ class Component extends DCLogic {
     v.regForm = !st.regCode;
     v.regMailNote = st.regMailed ? 'Tiket dan kode juga sudah dikirim ke ' + (st.regEmail || 'email Anda') + '.' : '';
     v.regMailShow = !!st.regMailed;
-    v.payAmount = wsAktif && wsAktif.price > 0 ? 'Rp ' + Number(wsAktif.price).toLocaleString('id-ID') : '';
+    v.payAmount = donasiOn ? (st.regBayarNominal ? this.rp(st.regBayarNominal) : '') : (wsAktif && wsAktif.price > 0 ? this.rp(wsAktif.price) : '');
     const viaLink = st.payProvider === 'midtrans';
     v.payIsLink = viaLink && !!st.payUrl;
     v.payIsQr = !viaLink;
     v.payUrl = st.payUrl || '#';
-    v.payTitle = viaLink ? 'Pembayaran via Midtrans' : 'Pembayaran QRIS';
+    v.payTitle = donasiOn ? (viaLink ? 'Donasi via Midtrans' : 'Donasi lewat QRIS') : (viaLink ? 'Pembayaran via Midtrans' : 'Pembayaran QRIS');
     v.payRetryLabel = viaLink ? 'Buat tautan baru' : 'Muat ulang kode QR';
     v.payNote = viaLink
       ? (st.payUrl ? 'Selesaikan pembayaran di halaman Midtrans. Status di sini berubah sendiri begitu pembayaran diterima.' : 'Menyiapkan tautan pembayaran…')
@@ -5883,7 +5956,7 @@ class Component extends DCLogic {
         return this.loadQrGen().then(() => this.forceUpdate());
       }
       this.setState({ payErr: '' });
-      const out = await this.apiPost({ action: 'payQris', id: pid });
+      const out = await this.apiPost({ action: 'payQris', id: pid, amount: this.state.regBayarNominal || 0 });
       if (!out || !out.ok) return this.setState({ payErr: (out && out.error) || 'Gagal membuat QRIS.' });
       if (out.data.paid) return this.setState({ payStatus: 'lunas' });
       if (out.data.provider === 'midtrans') {
@@ -5928,13 +6001,20 @@ class Component extends DCLogic {
     v.doRegister = async () => {
       const nama = String(st.regName || '').trim();
       if (!nama) return this.setState({ regErr: 'Nama belum diisi.' });
+      if (donasiOn) {
+        if (st.regDonasi == null) return this.setState({ regErr: wsAktif.donasiOpsional ? 'Pilih nominal donasi, atau pilih Tanpa donasi.' : 'Pilih atau tulis nominal donasi dulu.' });
+        if (st.regDonasi > 0 && st.regDonasi < this.DONASI_MIN) return this.setState({ regErr: 'Nominal donasi minimal ' + this.rp(this.DONASI_MIN) + '.' });
+        if (!(st.regDonasi > 0) && !wsAktif.donasiOpsional) return this.setState({ regErr: 'Event ini meminta donasi, berapa pun nominalnya.' });
+      }
+      const bayar = this.perluBayarWs(wsAktif, nominal);
+      this.setState({ regBayarNominal: donasiOn ? nominal : 0 });
       if (!this.api()) {
         const kode = 'WS-' + Math.random().toString(36).toUpperCase().slice(2, 6);
-        this.setState({ regCode: kode, regStatus: wsAktif && wsAktif.price > 0 ? 'menunggu' : 'aktif', regPid: 'demo', regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '' });
-        if (wsAktif && wsAktif.price > 0) setTimeout(() => v.payStart(), 60);
+        this.setState({ regCode: kode, regStatus: bayar ? 'menunggu' : 'aktif', regPid: 'demo', regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '' });
+        if (bayar) setTimeout(() => v.payStart(), 60);
         return;
       }
-      const out = await this.apiPost({ action: 'register', name: nama, org: st.regOrg, phone: st.regPhone, email: st.regEmail });
+      const out = await this.apiPost({ action: 'register', name: nama, org: st.regOrg, phone: st.regPhone, email: st.regEmail, donasi: donasiOn ? nominal : undefined });
       if (!out || !out.ok) return this.setState({ regErr: (out && out.error) || 'Pendaftaran gagal. Coba lagi.' });
       this.setState({ regCode: out.data.code, regStatus: out.data.status, regPid: out.data.id || null, regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '', regMailed: false });
       this._tiketBayar = false;
@@ -5942,7 +6022,7 @@ class Component extends DCLogic {
       if (out.data.status === 'aktif' && !out.data.lama && st.regEmail && wsR && wsR.ticketAuto !== false && this.state.mailOn)
         this.kirimTiket(wsR, { id: out.data.id, name: nama, code: out.data.code, email: st.regEmail }, false).then(r => { if (r && r.ok) this.setState({ regMailed: true }); }).catch(() => {});
       this.apiGet(true).catch(() => {});
-      if (wsAktif && wsAktif.price > 0 && out.data.id) setTimeout(() => v.payStart(), 60);
+      if (bayar && out.data.id && out.data.status !== 'aktif') setTimeout(() => v.payStart(), 60);
     };
     v.onCodeKey = e => { if (e.key === 'Enter') tryLogin(); };
 
@@ -6976,6 +7056,23 @@ class Component extends DCLogic {
         onPlace: e => ubah('place', e.target.value),
         onDate: e => ubah('dateLabel', e.target.value),
         onPrice: e => ubah('price', Math.max(0, parseInt(e.target.value, 10) || 0)),
+        donasi: !!m.donasi,
+        donasiLabel: m.donasi ? 'Aktif' : 'Nonaktif',
+        donasiBtnStyle: m.donasi
+          ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
+          : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
+        toggleDonasi: () => ubah('donasi', !m.donasi),
+        donasiTujuan: m.donasiTujuan || '',
+        onDonasiTujuan: e => ubah('donasiTujuan', e.target.value),
+        /* Teks mentah disimpan apa adanya agar koma & angka baru bisa diketik; daftar angka dihitung terpisah. */
+        donasiSaran: m.donasiSaranTxt != null ? m.donasiSaranTxt : (Array.isArray(m.donasiSaran) ? m.donasiSaran : this.DONASI_SARAN).join(', '),
+        onDonasiSaran: e => {
+          const t = String(e.target.value);
+          const angka = t.split(/[,;\s]+/).map(x => parseInt(x.replace(/\D/g, ''), 10)).filter(n => n > 0).slice(0, 6);
+          simpanMeta(list => { const x = list.find(y => y.id === m.id); if (x) { x.donasiSaranTxt = t; x.donasiSaran = angka; } });
+        },
+        donasiOpsional: !!m.donasiOpsional,
+        onDonasiOpsional: e => ubah('donasiOpsional', !!e.target.checked),
         showFee: !(m.price > 0) && !wsMilik && (bolehPlatform || st.isSuper),
         platformFee: m.platformFee || 0, platformFeeStatus: m.platformFeeStatus || 'belum', platformFeeNote: m.platformFeeNote || '',
         onPlatformFee: e => ubah('platformFee', Math.max(0, parseInt(e.target.value, 10) || 0)),
