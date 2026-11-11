@@ -8278,10 +8278,15 @@ class Component extends DCLogic {
     v.groupToggleStyle = pakaiGrup
       ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
       : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' };
-    v.toggleGroups = () => this.save(d => {
-      d.useGroups = !this.usesGroups(d);
-      if (d.useGroups && (!Array.isArray(d.groups) || !d.groups.length)) d.groups = this.GROUPS.slice();
-    });
+    v.toggleGroups = async () => {
+      const on = !this.usesGroups(db);
+      const terap = d => { d.useGroups = on; if (on && (!Array.isArray(d.groups) || !d.groups.length)) d.groups = this.GROUPS.slice(); };
+      this.setState(x => { const d = JSON.parse(JSON.stringify(x.db)); terap(d); return { db: d, groupError: '' }; });
+      if (this._draftDb) terap(this._draftDb);
+      if (!this.api()) return;
+      const out = await this.apiPost({ action: 'setGroups', password: this._pw || '', user: this._user || '', on });
+      if (!out || !out.ok) this.setState({ groupError: (out && out.error) || 'Gagal menyimpan pengaturan kelompok.' });
+    };
     v.newGroupName = st.newGroupName || '';
     v.groupError = st.groupError || '';
     v.onNewGroupName = e => this.setState({ newGroupName: e.target.value, groupError: '' });
