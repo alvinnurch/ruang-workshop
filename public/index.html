@@ -407,17 +407,39 @@
 
           <div style="background:#FFF7EE;border-radius:min(5vw,36px);padding:min(4vw,32px)">
             <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 16px;font-weight:700;color:#3B3238">Jadwal Sesi</h2>
-            <div style="display:grid;gap:11px">
-              <sc-for list="{{ profilSesi }}" as="s" hint-placeholder-count="3">
-                <div style="background:#FFF;border-radius:18px;padding:16px 18px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
-                  <div style="width:46px;flex:none;text-align:center;background:#FDECEC;border-radius:12px;padding:8px 4px">
-                    <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;font-weight:700;color:#B31F24;line-height:1">{{ s.no }}</div>
-                    <div style="font-size:9.5px;color:#9B1B20;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Sesi</div>
-                  </div>
-                  <div style="flex:1;min-width:min(100%,180px)">
-                    <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;font-weight:700;color:#3B3238;line-height:1.35;text-wrap:balance">{{ s.title }}</div>
-                    <div style="font-size:12.5px;color:#7A6F76;margin-top:5px;line-height:1.5">{{ s.meta }}</div>
-                  </div>
+            <div style="display:grid;gap:20px">
+              <sc-for list="{{ profilGrup }}" as="g" hint-placeholder-count="1">
+                <div style="display:grid;gap:11px">
+                  <sc-if value="{{ g.hasHead }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:2px 4px">
+                      <sc-if value="{{ g.jenis }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FFF7EE;background:#B31F24;border-radius:100px;padding:4px 11px">{{ g.jenis }}</span>
+                      </sc-if>
+                      <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16.5px;font-weight:700;color:#3B3238">{{ g.title }}</span>
+                      <span style="font-size:12.5px;color:#7A6F76">{{ g.date }}</span>
+                    </div>
+                  </sc-if>
+                  <sc-for list="{{ g.sesi }}" as="s" hint-placeholder-count="3">
+                    <div style="background:#FFF;border-radius:18px;padding:16px 18px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+                      <div style="width:46px;flex:none;text-align:center;background:#FDECEC;border-radius:12px;padding:8px 4px">
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;font-weight:700;color:#B31F24;line-height:1">{{ s.no }}</div>
+                        <div style="font-size:9.5px;color:#9B1B20;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Sesi</div>
+                      </div>
+                      <div style="flex:1;min-width:min(100%,180px)">
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;font-weight:700;color:#3B3238;line-height:1.35;text-wrap:balance">{{ s.title }}</div>
+                        <div style="font-size:12.5px;color:#7A6F76;margin-top:5px;line-height:1.5">{{ s.meta }}</div>
+                        <sc-if value="{{ s.hasOrang }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                            <sc-for list="{{ s.orang }}" as="n" hint-placeholder-count="1">
+                              <span style="display:inline-flex;gap:7px;align-items:center;background:#FFF7EE;border-radius:100px;padding:3px 11px 3px 3px;font-size:12px;font-weight:600;color:#4A3F46">
+                                <span style="position:relative;width:24px;height:24px;border-radius:50%;background:#FDBB6E;color:#7A4708;display:grid;place-items:center;font-size:10px;font-weight:700;overflow:hidden;flex:none"><span>{{ n.inisial }}</span><span style="{{ n.fotoStyle }}"></span></span>{{ n.nama }}
+                              </span>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
                 </div>
               </sc-for>
             </div>
@@ -432,10 +454,13 @@
               <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:13px">
                 <sc-for list="{{ profilNarsum }}" as="n" hint-placeholder-count="2">
                   <div style="background:#FFF;border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center">
-                    <span style="width:40px;height:40px;border-radius:50%;background:#FDBB6E;color:#7A4708;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">{{ n.inisial }}</span>
-                    <div>
+                    <span style="position:relative;width:52px;height:52px;border-radius:50%;background:#FDBB6E;color:#7A4708;display:grid;place-items:center;font-size:16px;font-weight:700;flex:none;overflow:hidden"><span>{{ n.inisial }}</span><span style="{{ n.fotoStyle }}"></span></span>
+                    <div style="min-width:0">
                       <div style="font-size:14px;font-weight:700;color:#3B3238;line-height:1.3">{{ n.nama }}</div>
                       <div style="font-size:12px;color:#7A6F76;margin-top:3px">{{ n.peran }}</div>
+                      <sc-if value="{{ n.hasIg }}" hint-placeholder-val="{{ false }}">
+                        <a href="{{ n.igUrl }}" target="_blank" rel="noopener" style="display:inline-block;font-size:12px;font-weight:700;color:#B31F24;margin-top:4px;text-decoration:none">{{ n.igLabel }}</a>
+                      </sc-if>
                     </div>
                   </div>
                 </sc-for>
@@ -1814,6 +1839,31 @@
           </div>
 
           <div style="flex:1 1 380px;min-width:min(100%,300px);display:grid;gap:16px;align-content:start">
+            <sc-if value="{{ canEdit }}" hint-placeholder-val="{{ false }}">
+              <details open="{{ programsOpen }}" style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:16px 22px">
+                <summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;list-style:none">
+                  <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700">Rangkaian program</span>
+                  <span style="font-size:12.5px;color:#8C8078">{{ programSummary }}</span>
+                </summary>
+                <p style="font-size:13px;color:#7A6F66;margin:12px 0 14px;line-height:1.6;text-wrap:pretty">Satu event bisa berisi beberapa kegiatan — misalnya seminar pembuka, dua workshop paralel, lalu diskusi penutup. Buat programnya di sini, lalu pilih program pada tiap sesi. Peserta tetap memakai satu kode untuk semuanya.</p>
+                <div style="display:grid;gap:8px">
+                  <sc-for list="{{ programRows }}" as="p" hint-placeholder-count="2">
+                    <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:7px;align-items:center">
+                      <input value="{{ p.title }}" onChange="{{ p.onTitle }}" placeholder="Nama program" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
+                      <select value="{{ p.jenis }}" onChange="{{ p.onJenis }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0">
+                        <sc-for list="{{ programJenisOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+                      </select>
+                      <input value="{{ p.date }}" onChange="{{ p.onDate }}" placeholder="Tanggal / jam" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FCFAF7;outline:none;min-width:0" style-focus="border-color:#A5121C;background:#FFF" />
+                      <button onClick="{{ p.remove }}" title="Hapus program" style="background:#FFF;border:1px solid #F0C9CC;border-radius:7px;width:34px;height:36px;color:#A5121C">×</button>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+                  <button onClick="{{ addProgram }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">+ Tambah program</button>
+                  <span style="font-size:12px;color:#8C8078">Tekan Simpan perubahan setelah selesai.</span>
+                </div>
+              </details>
+            </sc-if>
             <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px">
               <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17px;margin:0 0 16px;font-weight:700">Detail sesi</h3>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
@@ -1827,8 +1877,32 @@
                 </label>
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Narasumber / fasilitator</span>
-                  <input value="{{ sSpeaker }}" onChange="{{ onSSpeaker }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                  <input value="{{ sSpeaker }}" onChange="{{ onSSpeaker }}" placeholder="Pisahkan dengan koma bila lebih dari satu" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
+                <label style="display:grid;gap:5px">
+                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Instagram fasilitator</span>
+                  <input value="{{ sSpeakerIg }}" onChange="{{ onSSpeakerIg }}" placeholder="@akun1, @akun2 — urutan sama dengan nama" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                </label>
+                <sc-if value="{{ hasSpeakerPreview }}" hint-placeholder-val="{{ false }}">
+                  <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap">
+                    <sc-for list="{{ speakerPreview }}" as="n" hint-placeholder-count="1">
+                      <div style="display:flex;gap:9px;align-items:center;background:#FAF6F0;border:1px solid #E6DFD6;border-radius:100px;padding:5px 14px 5px 5px">
+                        <span style="position:relative;width:32px;height:32px;border-radius:50%;background:#FDBB6E;color:#7A4708;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;overflow:hidden"><span>{{ n.inisial }}</span><span style="{{ n.fotoStyle }}"></span></span>
+                        <span style="font-size:13px;font-weight:600;color:#3B342E">{{ n.nama }}</span>
+                        <span style="font-size:12px;color:#8C8078">{{ n.igLabel }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ hasPrograms }}" hint-placeholder-val="{{ false }}">
+                  <label style="display:grid;gap:5px">
+                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Bagian dari program</span>
+                    <select value="{{ sProgram }}" onChange="{{ onSProgram }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none">
+                      <option value="">— Tanpa program —</option>
+                      <sc-for list="{{ programOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+                    </select>
+                  </label>
+                </sc-if>
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Waktu</span>
                   <input value="{{ sTime }}" onChange="{{ onSTime }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -2461,7 +2535,7 @@
                   <div style="font-size:12.5px;color:#8E1018;margin-top:5px;line-height:1.5;max-width:62ch">{{ quizHint }}</div>
                 </sc-if>
               </div>
-              <select value="{{ filterGroup }}" onChange="{{ onFilterGroup }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:8px 11px;font-size:13px;background:#FCFAF7;outline:none">
+              <select value="{{ filterGroup }}" onChange="{{ onFilterGroup }}" style="{{ filterGroupStyle }}">
                 <option value="">Semua kelompok</option>
                 <sc-for list="{{ groups }}" as="g" hint-placeholder-count="4">
                   <option value="{{ g }}">{{ g }}</option>
@@ -2473,7 +2547,7 @@
                 <thead>
                   <tr style="background:#FAF6F0">
                     <th style="text-align:left;padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Nama</th>
-                    <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kelompok</th>
+                    <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}"><th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kelompok</th></sc-if>
                     <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Instansi</th>
                     <th style="text-align:center;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">{{ attendHead }}</th>
                     <th style="text-align:center;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Pre</th>
@@ -2486,7 +2560,7 @@
                   <sc-for list="{{ participantRows }}" as="p" hint-placeholder-count="8">
                     <tr style="border-top:1px solid #F1EBE3">
                       <td style="padding:12px 22px;font-size:13.5px;font-weight:600">{{ p.name }}<span style="display:block;font-size:11.5px;color:#8C8078;font-weight:400;letter-spacing:.1em">{{ p.code }}</span></td>
-                      <td style="padding:12px;font-size:13px;color:#5C534B">{{ p.group }}</td>
+                      <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}"><td style="padding:12px;font-size:13px;color:#5C534B">{{ p.group }}</td></sc-if>
                       <td style="padding:12px;font-size:13px;color:#5C534B">{{ p.org }}</td>
                       <td style="padding:12px;text-align:center;font-size:13px">{{ p.attend }}</td>
                       <td style="padding:12px;text-align:center;font-size:13px;font-weight:600">{{ p.pre }}</td>
@@ -3135,6 +3209,16 @@
           </div>
 
           <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px;margin-bottom:18px">
+            <div style="display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+              <div style="flex:1 1 260px">
+                <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 4px;font-weight:700">Pembagian kelompok</h3>
+                <p style="font-size:13px;color:#8C8078;margin:0;line-height:1.6;text-wrap:pretty">{{ groupModeNote }}</p>
+              </div>
+              <button onClick="{{ toggleGroups }}" style="{{ groupToggleStyle }}">{{ groupToggleLabel }}</button>
+            </div>
+          </div>
+          <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px;margin-bottom:18px">
             <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 4px;font-weight:700">Nama kelompok</h3>
             <p style="font-size:13px;color:#8C8078;margin:0 0 14px;line-height:1.6;text-wrap:pretty">Kelompok yang Anda tambahkan di sini muncul sebagai pilihan saat menambah peserta dan sebagai penyaring rekap.</p>
             <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px">
@@ -3153,6 +3237,7 @@
               <div style="font-size:12.5px;color:#A5121C;font-weight:600;margin-top:10px">{{ groupError }}</div>
             </sc-if>
           </div>
+          </sc-if>
 
           <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px;margin-bottom:18px">
             <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 14px;font-weight:700">Tambah peserta</h3>
@@ -3161,6 +3246,7 @@
                 <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nama</span>
                 <input value="{{ newName }}" onChange="{{ onNewName }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
               </label>
+              <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}">
               <label style="display:grid;gap:5px">
                 <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kelompok</span>
                 <select value="{{ newGroup }}" onChange="{{ onNewGroup }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none">
@@ -3169,6 +3255,7 @@
                   </sc-for>
                 </select>
               </label>
+              </sc-if>
               <label style="display:grid;gap:5px">
                 <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Instansi</span>
                 <input value="{{ newOrg }}" onChange="{{ onNewOrg }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -3192,7 +3279,7 @@
                   <tr style="background:#FAF6F0">
                     <th style="text-align:left;padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Nama</th>
                     <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kode</th>
-                    <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kelompok</th>
+                    <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}"><th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kelompok</th></sc-if>
                     <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Instansi</th>
                     <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Kontak</th>
                     <th style="text-align:right;padding:11px 22px"></th>
@@ -3207,6 +3294,7 @@
                       <td style="padding:6px">
                         <input value="{{ p.code }}" onChange="{{ p.onCode }}" placeholder="KODE" style="width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13px;background:none;outline:none;font-family:inherit;color:inherit;font-weight:700;letter-spacing:.1em;color:#A5121C;text-transform:uppercase" style-focus="border-color:#A5121C;background:#FFF" style-hover="border-color:#E0D8CE" />
                       </td>
+                      <sc-if value="{{ useGroups }}" hint-placeholder-val="{{ false }}">
                       <td style="padding:6px">
                         <select value="{{ p.group }}" onChange="{{ p.onGroup }}" style="width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13px;background:none;outline:none;font-family:inherit;color:inherit;color:#5C534B;cursor:pointer" style-focus="border-color:#A5121C;background:#FFF" style-hover="border-color:#E0D8CE">
                           <sc-for list="{{ groupsAvailable }}" as="g" hint-placeholder-count="4">
@@ -3214,6 +3302,7 @@
                           </sc-for>
                         </select>
                       </td>
+                      </sc-if>
                       <td style="padding:6px">
                         <input value="{{ p.org }}" onChange="{{ p.onOrg }}" placeholder="Instansi" style="width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13px;background:none;outline:none;font-family:inherit;color:inherit;color:#5C534B" style-focus="border-color:#A5121C;background:#FFF" style-hover="border-color:#E0D8CE" />
                       </td>
@@ -3582,7 +3671,7 @@ class Component extends DCLogic {
     const id = 's' + Math.random().toString(36).slice(2, 7);
     return {
       sessions: [{ id, title: 'Sesi baru', desc: '', speaker: '', time: '', venue: '', mode: 'Tatap muka', active: null, run: null, blocks: [] }],
-      activeSessionId: id, participants: [], groups: this.GROUPS.slice(),
+      activeSessionId: id, participants: [], groups: [], useGroups: false, programs: [],
       responses: { [id]: { checkins: {}, quiz: {}, words: [], feedback: {}, forms: {} } }
     };
   }
@@ -3715,7 +3804,24 @@ class Component extends DCLogic {
     this.pilihWs(m.id, bagian[2] === 'daftar' ? 'register' : bagian[2] === 'masuk' ? 'login' : 'profil');
   }
   FORMATS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
-  JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi' };
+  JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', rangkaian: 'Rangkaian' };
+  JENIS_PROGRAM = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', talkshow: 'Talkshow', pameran: 'Pameran', lainnya: 'Lainnya' };
+  /* Fasilitator: nama & Instagram dipasangkan menurut urutan (dipisah koma). */
+  igList(str) { return String(str || '').split(/[,;\n]/).map(x => x.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@/, '')).map(x => /^[A-Za-z0-9._]{1,30}$/.test(x) ? x : ''); }
+  /* Foto sebagai latar: gagal dimuat pun diam, inisial di bawahnya tetap terlihat. */
+  fotoBg(h) { return { position: 'absolute', inset: 0, backgroundImage: 'url("' + this.avatarIg(h) + '")', backgroundSize: 'cover', backgroundPosition: 'center' }; }
+  avatarIg(h) { return h ? 'https://unavatar.io/instagram/' + encodeURIComponent(h) + '?fallback=false' : ''; }
+  narasumberSesi(x) {
+    const nama = String(x.speaker || '').split(/[,;\n]/).map(t => t.trim()).filter(Boolean);
+    const ig = this.igList(x.speakerIg);
+    return nama.map((n, i) => ({ nama: n, ig: ig[i] || '' }));
+  }
+  usesGroups(d) {
+    d = d || this.state.db || {};
+    if (d.useGroups === true) return true;
+    if (d.useGroups === false) return false;
+    return (d.participants || []).some(p => String(p.group || '').trim());
+  }
   jenisOf(m) { return this.JENIS[(m && m.jenis) || 'workshop'] || 'Workshop'; }
   FORMAT_WARNA = {
     online: { cover: '#B31F24', bg: '#FDECEC', fg: '#9B1B20' },
@@ -5470,7 +5576,9 @@ class Component extends DCLogic {
         format: this.FORMATS[m.format || 'online'], badgeStyle: badge(m),
         logoStyle: this.logoKotak(m.partnerLogo, 26, 78),
         inisialStyle: m.partnerLogo ? { display: 'none' } : { width: '30px', height: '30px', borderRadius: '9px', background: '#FDECEC', color: '#9B1B20', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none' },
-        kategori: this.jenisOf(m) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
+        kategori: (Array.isArray(m.programs) && m.programs.length > 1
+          ? 'Rangkaian · ' + m.programs.map(p => this.JENIS_PROGRAM[p.jenis] || 'Program').filter((x, i, a) => a.indexOf(x) === i).join(', ')
+          : this.jenisOf(m)) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
         lokasi: lokasiOf(m), harga: this.hargaLabel(m.price),
         /* Flyer (16:9) menjadi sampul kartu; tanpa flyer, warna format seperti biasa. */
@@ -5511,16 +5619,35 @@ class Component extends DCLogic {
       v.flyerStyle = m.flyer
         ? { width: '100%', aspectRatio: '16 / 9', borderRadius: '24px', backgroundImage: 'url("' + m.flyer + '")', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: '0 20px 42px -26px rgba(139,79,40,.65)' }
         : { width: '100%', aspectRatio: '16 / 9', borderRadius: '24px', background: 'linear-gradient(135deg,#FDBB6E,#E08A2E)', boxShadow: '0 20px 42px -26px rgba(139,79,40,.65)' };
-      v.profilSesi = ses.map((x, i) => ({
+      const sembunyiP = e => { e.target.style.display = 'none'; };
+      const kartuSesi = (x, i) => ({
         no: i + 1, title: x.title,
-        meta: [String(x.time || '').trim(), String(x.venue || '').trim(), String(x.mode || '').trim()].filter(Boolean).join(' · ') || 'Jadwal menyusul'
-      }));
+        meta: [String(x.time || '').trim(), String(x.venue || '').trim(), String(x.mode || '').trim()].filter(Boolean).join(' · ') || 'Jadwal menyusul',
+        orang: this.narasumberSesi(x).map(n => ({ nama: n.nama, inisial: this.inisial(n.nama), hasFoto: !!n.ig, foto: this.avatarIg(n.ig) || this.BLANK, onErr: sembunyiP, fotoStyle: n.ig ? this.fotoBg(n.ig) : { display: 'none' }, })),
+        hasOrang: this.narasumberSesi(x).length > 0
+      });
+      v.profilSesi = ses.map(kartuSesi);
+      const progP = Array.isArray(db.programs) ? db.programs : [];
+      const grup = progP.map(p => ({ p, items: [] }));
+      const lepas = [];
+      ses.forEach((x, i) => { const g = grup.find(y => y.p.id === x.programId); (g ? g.items : lepas).push(kartuSesi(x, i)); });
+      v.profilGrup = grup.filter(g => g.items.length).map(g => ({
+        hasHead: true, title: g.p.title || 'Program', jenis: this.JENIS_PROGRAM[g.p.jenis] || 'Program', date: g.p.date || '', sesi: g.items
+      })).concat(lepas.length ? [{ hasHead: progP.length > 0, title: 'Sesi lainnya', jenis: '', date: '', sesi: lepas }] : []);
       v.profilSesiKosong = !ses.length;
       const narsum = [];
       ses.forEach(x => {
-        [x.speaker].concat((x.blocks || []).map(b => b.presenter)).forEach(nm => {
-          const n = String(nm || '').trim();
-          if (n && !narsum.some(y => y.nama.toLowerCase() === n.toLowerCase())) narsum.push({ nama: n, peran: 'Narasumber / fasilitator', inisial: this.inisial(n) });
+        this.narasumberSesi(x).concat((x.blocks || []).map(b => ({ nama: String(b.presenter || '').trim(), ig: '' }))).forEach(o => {
+          const n = o.nama;
+          if (!n) return;
+          const ada = narsum.find(y => y.nama.toLowerCase() === n.toLowerCase());
+          if (ada) { if (!ada.ig && o.ig) Object.assign(ada, { ig: o.ig, hasFoto: true, foto: this.avatarIg(o.ig), fotoStyle: this.fotoBg(o.ig), igUrl: 'https://instagram.com/' + o.ig, igLabel: '@' + o.ig, hasIg: true }); return; }
+          narsum.push({
+            nama: n, peran: 'Narasumber / fasilitator', inisial: this.inisial(n), ig: o.ig,
+            hasFoto: !!o.ig, foto: this.avatarIg(o.ig) || this.BLANK, onErr: sembunyiP,
+            fotoStyle: o.ig ? this.fotoBg(o.ig) : { display: 'none' },
+            hasIg: !!o.ig, igUrl: o.ig ? 'https://instagram.com/' + o.ig : '', igLabel: o.ig ? '@' + o.ig : ''
+          });
         });
       });
       v.profilNarsum = narsum;
@@ -7411,6 +7538,33 @@ class Component extends DCLogic {
       v.resultSubtitle = [cur.title, String(cur.time || '').trim()].filter(Boolean).join(' · ');
       v.sTitle = cur.title; v.sDesc = cur.desc; v.sSpeaker = cur.speaker; v.sTime = cur.time; v.sVenue = cur.venue; v.sMode = cur.mode;
       v.onSTitle = setS('title'); v.onSDesc = setS('desc'); v.onSSpeaker = setS('speaker'); v.onSTime = setS('time'); v.onSVenue = setS('venue'); v.onSMode = setS('mode');
+      v.sSpeakerIg = cur.speakerIg || ''; v.onSSpeakerIg = setS('speakerIg');
+      const sembunyi = e => { e.target.style.display = 'none'; };
+      v.speakerPreview = this.narasumberSesi(cur).map(n => ({
+        nama: n.nama, inisial: this.inisial(n.nama), hasFoto: !!n.ig, foto: this.avatarIg(n.ig) || this.BLANK, onErr: sembunyi, fotoStyle: n.ig ? this.fotoBg(n.ig) : { display: 'none' },
+        igLabel: n.ig ? '@' + n.ig : 'tanpa Instagram'
+      }));
+      v.hasSpeakerPreview = v.speakerPreview.length > 0;
+      const progs = Array.isArray(db.programs) ? db.programs : [];
+      v.hasPrograms = progs.length > 0;
+      v.sProgram = cur.programId || '';
+      v.onSProgram = setS('programId');
+      v.programOptions = progs.map(p => ({ id: p.id, label: (p.title || 'Program') + ' · ' + (this.JENIS_PROGRAM[p.jenis] || 'Program') }));
+      v.programJenisOptions = Object.keys(this.JENIS_PROGRAM).map(id => ({ id, label: this.JENIS_PROGRAM[id] }));
+      v.programsOpen = progs.length > 0 || !!st.programsOpen;
+      v.programSummary = progs.length ? progs.length + ' program · ' + progs.map(p => this.JENIS_PROGRAM[p.jenis] || 'Program').filter((x, i, a) => a.indexOf(x) === i).join(', ') : 'Belum ada — event ini berisi satu kegiatan';
+      const ubahProg = fn => { this.markDraft(); this.save(d => { d.programs = Array.isArray(d.programs) ? d.programs : []; fn(d.programs, d); }); };
+      v.programRows = progs.map(p => ({
+        title: p.title || '', jenis: p.jenis || 'workshop', date: p.date || '',
+        onTitle: e => { const t = e.target.value; ubahProg(l => { const x = l.find(y => y.id === p.id); if (x) x.title = t; }); },
+        onJenis: e => { const t = e.target.value; ubahProg(l => { const x = l.find(y => y.id === p.id); if (x) x.jenis = t; }); },
+        onDate: e => { const t = e.target.value; ubahProg(l => { const x = l.find(y => y.id === p.id); if (x) x.date = t; }); },
+        remove: () => ubahProg((l, d) => {
+          const i = l.findIndex(y => y.id === p.id); if (i >= 0) l.splice(i, 1);
+          (d.sessions || []).forEach(x => { if (x.programId === p.id) x.programId = ''; });
+        })
+      }));
+      v.addProgram = () => { this.setState({ programsOpen: true }); ubahProg(l => { l.push({ id: this.uid('pg'), title: 'Program ' + (l.length + 1), jenis: l.length ? 'workshop' : 'seminar', date: '' }); }); };
 
       const enabledBlocks = (cur.blocks || []).filter(b => b.enabled);
       v.kpis = [
@@ -7961,7 +8115,7 @@ class Component extends DCLogic {
       const name = st.newName.trim();
       if (!name) return;
       this.save(d => {
-        d.participants.push({ id: this.uid('p'), name, code: this.code(d.participants.map(p => p.code)), group: st.newGroup, org: st.newOrg.trim(), phone: st.newPhone.trim(), email: st.newEmail.trim() });
+        d.participants.push({ id: this.uid('p'), name, code: this.code(d.participants.map(p => p.code)), group: this.usesGroups(d) ? st.newGroup : '', org: st.newOrg.trim(), phone: st.newPhone.trim(), email: st.newEmail.trim() });
       });
       this.setState({ newName: '', newOrg: '', newPhone: '', newEmail: '' });
     };
@@ -8015,6 +8169,22 @@ class Component extends DCLogic {
           (lewat.length ? ' · ' + lewat.length + ' dilewati: ' + lewat.join('; ') : '') + '. Tekan Simpan perubahan.'
       });
     };
+    const pakaiGrup = this.usesGroups(db);
+    v.useGroups = pakaiGrup;
+    v.filterGroupStyle = pakaiGrup
+      ? { border: '1px solid #DCD3C8', borderRadius: '8px', padding: '8px 11px', fontSize: '13px', background: '#FCFAF7', outline: 'none' }
+      : { display: 'none' };
+    v.groupModeNote = pakaiGrup
+      ? 'Aktif — peserta dibagi ke kelompok untuk diskusi atau tugas. Matikan bila event ini tidak memerlukannya; data kelompok yang sudah ada tetap tersimpan.'
+      : 'Nonaktif — peserta tidak dibagi kelompok. Nyalakan hanya bila event membutuhkan kerja kelompok.';
+    v.groupToggleLabel = pakaiGrup ? 'Aktif' : 'Nonaktif';
+    v.groupToggleStyle = pakaiGrup
+      ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
+      : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' };
+    v.toggleGroups = () => this.save(d => {
+      d.useGroups = !this.usesGroups(d);
+      if (d.useGroups && (!Array.isArray(d.groups) || !d.groups.length)) d.groups = this.GROUPS.slice();
+    });
     v.newGroupName = st.newGroupName || '';
     v.groupError = st.groupError || '';
     v.onNewGroupName = e => this.setState({ newGroupName: e.target.value, groupError: '' });
