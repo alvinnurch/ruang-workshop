@@ -387,12 +387,79 @@ function statusMidtrans(t) {
   if (/deny|cancel|expire|failure/.test(s)) return 'gagal';
   return 'menunggu';
 }
+/* Peserta rangkaian dicerminkan ke tiap event isinya (id & kode sama). */
+function sebarStatus(ps) {
+  if (!ps || !Array.isArray(ps.bundleItems)) return;
+  ps.bundleItems.forEach(wid => {
+    const d = store.data[wid]; if (!d) return;
+    const x = (d.participants || []).find(y => y.id === ps.id);
+    if (x) { x.status = ps.status; if (ps.paidAt) x.paidAt = ps.paidAt; }
+  });
+}
+/* ── Avatar Instagram ── */
+const AVATAR_DIR = path.join(path.dirname(DATA_FILE), 'avatars');
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+const igSedang = {};
+function ambilUrl(u, headers, lompat) {
+  return new Promise((ok, no) => {
+    const req = https.get(u, { headers: Object.assign({ 'User-Agent': UA, Accept: '*/*' }, headers || {}), timeout: 9000 }, r => {
+      if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location && (lompat || 0) < 4) {
+        r.resume(); return ok(ambilUrl(new URL(r.headers.location, u).href, headers, (lompat || 0) + 1));
+      }
+      const buf = [];
+      r.on('data', c => buf.push(c));
+      r.on('end', () => ok({ status: r.statusCode, type: String(r.headers['content-type'] || ''), body: Buffer.concat(buf) }));
+    });
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.on('error', no);
+  });
+}
+async function cariFotoIg(h) {
+  /* 1. Profil publik Instagram */
+  try {
+    const r = await ambilUrl('https://www.instagram.com/api/v1/users/web_profile_info/?username=' + encodeURIComponent(h), { 'x-ig-app-id': '936619743392459', Accept: 'application/json' });
+    if (r.status === 200) {
+      const j = JSON.parse(r.body.toString('utf8'));
+      const u = j && j.data && j.data.user && (j.data.user.profile_pic_url_hd || j.data.user.profile_pic_url);
+      if (u) { const img = await ambilUrl(u); if (img.status === 200 && /^image\//.test(img.type)) return img; }
+    }
+  } catch (e) {}
+  /* 2. Cadangan: unavatar.io */
+  try {
+    const img = await ambilUrl('https://unavatar.io/instagram/' + encodeURIComponent(h) + '?fallback=false');
+    if (img.status === 200 && /^image\//.test(img.type)) return img;
+  } catch (e) {}
+  return null;
+}
+function layaniAvatarIg(h, res) {
+  const file = path.join(AVATAR_DIR, h + '.img');
+  const gagal = path.join(AVATAR_DIR, h + '.gagal');
+  const kirim = (buf, type) => { res.writeHead(200, { 'Content-Type': type || 'image/jpeg', 'Cache-Control': 'public, max-age=86400' }); res.end(buf); };
+  try {
+    const st = fs.statSync(file);
+    if (Date.now() - st.mtimeMs < 7 * 864e5) return kirim(fs.readFileSync(file), 'image/jpeg');
+  } catch (e) {}
+  try { if (Date.now() - fs.statSync(gagal).mtimeMs < 6 * 36e5) { res.writeHead(404); return res.end(); } } catch (e) {}
+  if (!igSedang[h]) igSedang[h] = cariFotoIg(h).finally(() => { setTimeout(() => { delete igSedang[h]; }, 1000); });
+  igSedang[h].then(img => {
+    try { fs.mkdirSync(AVATAR_DIR, { recursive: true }); } catch (e) {}
+    if (!img) {
+      try { fs.writeFileSync(gagal, ''); } catch (e) {}
+      console.log('[avatar] foto @' + h + ' tidak bisa diambil (akun privat, tidak ada, atau diblokir Instagram)');
+      try { const lama = fs.readFileSync(file); return kirim(lama, 'image/jpeg'); } catch (e) {}
+      res.writeHead(404); return res.end();
+    }
+    try { fs.writeFileSync(file, img.body); } catch (e) {}
+    kirim(img.body, img.type);
+  }).catch(() => { res.writeHead(404); res.end(); });
+}
+
 function tandaiLunas(d, bayar, sumber) {
   const sudah = bayar.status === 'lunas';
   bayar.status = 'lunas';
   bayar.paidAt = bayar.paidAt || new Date().toISOString();
   const ps = (d.participants || []).filter(x => x.id === bayar.participantId)[0];
-  if (ps) { ps.status = 'aktif'; ps.paidAt = ps.paidAt || bayar.paidAt; }
+  if (ps) { ps.status = 'aktif'; ps.paidAt = ps.paidAt || bayar.paidAt; sebarStatus(ps); }
   if (sudah) return;
   console.log('[bayar] lunas via ' + (sumber || '?') + ' · ' + (bayar.ref || bayar.xenditId || '') + ' · ' + (ps ? ps.name + ' <' + (ps.email || 'tanpa email') + '>' : 'peserta tidak ditemukan'));
   /* Halaman peserta biasanya mengirim tiket bergambar sendiri. Bila dalam 90 detik
@@ -753,7 +820,14 @@ function handleAction(p) {
         ((d && d.participants) || []).forEach(x => { if (String(x.code || '').toUpperCase() === code) temu.push({ ws: m.id, p: x }); });
       });
       if (!temu.length) return { ok: false, error: 'Kode peserta tidak dikenali. Periksa kembali atau tanyakan ke panitia.' };
-      if (temu.length > 1) return { ok: false, error: 'Kode ini terdaftar di lebih dari satu event. Masuk lewat halaman event-nya.' };
+      if (temu.length > 1) {
+        const sama = temu.every(t => t.p.id === temu[0].p.id);
+        if (!sama) return { ok: false, error: 'Kode ini terdaftar di lebih dari satu event. Masuk lewat halaman event-nya.' };
+        const aktif = temu.filter(t => t.p.status !== 'menunggu' && (store.meta.find(m => m.id === t.ws) || {}).jenis !== 'rangkaian');
+        if (!aktif.length) return { ok: false, error: 'Pendaftaran Anda belum disetujui panitia.' };
+        if (aktif.length === 1) return { ok: true, data: { ws: aktif[0].ws, id: aktif[0].p.id } };
+        return { ok: true, data: { pilih: aktif.map(t => ({ ws: t.ws, id: t.p.id, title: (store.meta.find(m => m.id === t.ws) || {}).title || t.ws })) } };
+      }
       if (temu[0].p.status === 'menunggu') return { ok: false, error: 'Pendaftaran Anda belum disetujui panitia.' };
       return { ok: true, data: { ws: temu[0].ws, id: temu[0].p.id } };
     }
@@ -1378,9 +1452,11 @@ function handleAction(p) {
         const sama = db.participants.filter(x => String(x.email || '').toLowerCase() === email)[0];
         if (sama) return { ok: true, data: { id: sama.id, code: sama.code, status: sama.status || 'aktif', lama: true } };
       }
+      const isiR = m.jenis === 'rangkaian' ? (m.items || []).filter(id => store.data[id] && id !== wid) : [];
+      const dipakai = k => [db].concat(isiR.map(id => store.data[id])).some(d => (d.participants || []).some(x => String(x.code).toUpperCase() === k));
       let kode;
-      do { kode = 'WS-' + Math.random().toString(36).toUpperCase().slice(2, 6); }
-      while (db.participants.some(x => String(x.code).toUpperCase() === kode));
+      do { kode = (isiR.length ? 'RG-' : 'WS-') + Math.random().toString(36).toUpperCase().slice(2, 6); }
+      while (dipakai(kode));
       const DONASI_MIN = 2000;
       const nominal = m.donasi ? Math.max(0, Math.round(Number(p.donasi) || 0)) : 0;
       if (m.donasi) {
@@ -1394,8 +1470,20 @@ function handleAction(p) {
         id: pid, name: nama, code: kode,
         group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
         status: perlu ? 'menunggu' : 'aktif', registeredAt: new Date().toISOString(),
-        donasi: m.donasi ? nominal : undefined
+        donasi: m.donasi ? nominal : undefined,
+        bundleItems: isiR.length ? isiR : undefined
       });
+      if (isiR.length) {
+        const asli = db.participants[db.participants.length - 1];
+        isiR.forEach(id => {
+          const d = store.data[id];
+          d.participants = d.participants || [];
+          d.participants.push({
+            id: asli.id, name: asli.name, code: asli.code, org: asli.org, phone: asli.phone, email: asli.email,
+            group: d.useGroups === false ? '' : '', status: asli.status, registeredAt: asli.registeredAt, viaBundle: wid
+          });
+        });
+      }
       touch();
       return { ok: true, data: { id: pid, code: kode, status: perlu ? 'menunggu' : 'aktif' } };
     }
@@ -1490,6 +1578,7 @@ function handleAction(p) {
       if (!peserta) return { ok: false, error: 'Peserta tidak ditemukan.' };
       peserta.status = 'aktif';
       peserta.paidAt = new Date().toISOString();
+      sebarStatus(peserta);
       peserta.paidBy = siapa.name || 'panitia';
       touch();
       return { ok: true };
@@ -1723,6 +1812,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true });
     } catch (e) { return json(res, { ok: false, error: e.message }, 400); }
   }
+
+  /* Foto profil Instagram fasilitator: diambil sekali, disimpan, lalu dilayani dari domain sendiri. */
+  const igM = url.match(/^\/api\/ig-avatar\/([A-Za-z0-9._]{1,30})(?:\?.*)?$/);
+  if (igM && req.method === 'GET') return layaniAvatarIg(igM[1].toLowerCase(), res);
 
   /* Data publik untuk halaman embed. */
   if (url.startsWith('/api/embed') && req.method === 'GET') {
