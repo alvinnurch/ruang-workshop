@@ -1372,12 +1372,20 @@ function handleAction(p) {
       let kode;
       do { kode = 'WS-' + Math.random().toString(36).toUpperCase().slice(2, 6); }
       while (db.participants.some(x => String(x.code).toUpperCase() === kode));
-      const perlu = m.registration === 'mandiri-setuju' || (m.price > 0);
+      const DONASI_MIN = 2000;
+      const nominal = m.donasi ? Math.max(0, Math.round(Number(p.donasi) || 0)) : 0;
+      if (m.donasi) {
+        if (nominal > 0 && nominal < DONASI_MIN) return { ok: false, error: 'Nominal donasi minimal Rp ' + DONASI_MIN.toLocaleString('id-ID') + '.' };
+        if (!nominal && !m.donasiOpsional) return { ok: false, error: 'Event ini meminta donasi, berapa pun nominalnya.' };
+      }
+      const bayar = m.donasi ? nominal > 0 : m.price > 0;
+      const perlu = (m.registration === 'mandiri-setuju' && !m.donasi) || bayar;
       const pid = 'p' + Date.now().toString(36);
       db.participants.push({
         id: pid, name: nama, code: kode,
         group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
-        status: perlu ? 'menunggu' : 'aktif', registeredAt: new Date().toISOString()
+        status: perlu ? 'menunggu' : 'aktif', registeredAt: new Date().toISOString(),
+        donasi: m.donasi ? nominal : undefined
       });
       touch();
       return { ok: true, data: { id: pid, code: kode, status: perlu ? 'menunggu' : 'aktif' } };
@@ -1386,7 +1394,14 @@ function handleAction(p) {
     case 'payQris': {
       const m = store.meta.filter(x => x.id === wid)[0];
       if (!m) return { ok: false, error: 'Workshop tidak ditemukan.' };
-      if (!(m.price > 0)) return { ok: false, error: 'Workshop ini tidak berbiaya.' };
+      if (!(m.price > 0) && !m.donasi) return { ok: false, error: 'Workshop ini tidak berbiaya.' };
+      const pesertaD = db.participants.filter(x => x.id === p.id)[0];
+      /* Donasi: nominal dari peserta (atau yang tercatat saat mendaftar), minimal Rp 2.000. */
+      const tagihan = m.donasi
+        ? Math.round(Number(p.amount) || Number(pesertaD && pesertaD.donasi) || 0)
+        : Math.round(Number(m.price));
+      if (m.donasi && tagihan < 2000) return { ok: false, error: 'Nominal donasi minimal Rp 2.000.' };
+      if (m.donasi && pesertaD) pesertaD.donasi = tagihan;
       const via = penyedia();
       if (via === 'manual') return { ok: false, error: 'Pembayaran daring belum diaktifkan. Hubungi panitia untuk pembayaran manual.' };
       const peserta = db.participants.filter(x => x.id === p.id)[0];
@@ -1395,18 +1410,18 @@ function handleAction(p) {
       const ref = 'ws-' + wid + '-' + peserta.id;
       if (via === 'midtrans') {
         const lama = Object.values(db.payments || {}).filter(x => x.provider === 'midtrans' && x.participantId === peserta.id && x.status === 'menunggu' && x.expiresAt > Date.now())[0];
-        if (lama && lama.redirectUrl) return { ok: true, data: { provider: 'midtrans', redirectUrl: lama.redirectUrl, ref: lama.ref, amount: lama.amount } };
+        if (lama && lama.redirectUrl && lama.amount === tagihan) return { ok: true, data: { provider: 'midtrans', redirectUrl: lama.redirectUrl, ref: lama.ref, amount: lama.amount } };
         /* Midtrans tidak menerima order_id yang sama dua kali, jadi tiap percobaan diberi akhiran. */
         const orderId = (ref + '-' + Date.now().toString(36)).slice(0, 50);
-        const harga = Math.round(Number(m.price));
+        const harga = tagihan;
         return midtrans('POST', snapHost(), '/snap/v1/transactions', {
           transaction_details: { order_id: orderId, gross_amount: harga },
-          item_details: [{ id: String(wid).slice(0, 50), price: harga, quantity: 1, name: String(m.title || 'Pendaftaran').slice(0, 50) }],
+          item_details: [{ id: String(wid).slice(0, 50), price: harga, quantity: 1, name: String((m.donasi ? 'Donasi · ' : '') + (m.title || 'Pendaftaran')).slice(0, 50) }],
           customer_details: { first_name: String(peserta.name || 'Peserta').slice(0, 60), email: peserta.email || undefined, phone: peserta.phone || undefined },
           expiry: { unit: 'minutes', duration: 60 }
         }).then(j => {
           bayarSlot(db)[orderId] = {
-            ref: orderId, provider: 'midtrans', participantId: peserta.id, amount: harga,
+            ref: orderId, provider: 'midtrans', participantId: peserta.id, amount: harga, donasi: !!m.donasi,
             token: j.token || '', redirectUrl: j.redirect_url || '', status: 'menunggu',
             expiresAt: Date.now() + 3600000, createdAt: new Date().toISOString()
           };
@@ -1415,20 +1430,21 @@ function handleAction(p) {
         }).catch(e => ({ ok: false, error: 'Gagal membuat tagihan Midtrans: ' + e.message }));
       }
       const adaLama = (db.payments || {})[ref];
-      if (adaLama && adaLama.qr && adaLama.status === 'menunggu' && adaLama.expiresAt > Date.now()) {
+      if (adaLama && adaLama.qr && adaLama.status === 'menunggu' && adaLama.expiresAt > Date.now() && adaLama.amount === tagihan) {
         return { ok: true, data: { provider: 'xendit', qr: adaLama.qr, ref, amount: adaLama.amount, expiresAt: adaLama.expiresAt } };
       }
+      const refQ = adaLama && adaLama.amount !== tagihan ? (ref + '-' + Date.now().toString(36)).slice(0, 60) : ref;
       return xendit('/qr_codes', {
-        reference_id: ref, type: 'DYNAMIC', currency: 'IDR',
-        amount: Number(m.price), expires_at: new Date(Date.now() + 3600000).toISOString()
+        reference_id: refQ, type: 'DYNAMIC', currency: 'IDR',
+        amount: tagihan, expires_at: new Date(Date.now() + 3600000).toISOString()
       }).then(j => {
-        bayarSlot(db)[ref] = {
-          ref, participantId: peserta.id, amount: Number(m.price), qr: j.qr_string || '',
+        bayarSlot(db)[refQ] = {
+          ref: refQ, participantId: peserta.id, amount: tagihan, donasi: !!m.donasi, qr: j.qr_string || '',
           provider: 'xendit', xenditId: j.id || '', status: 'menunggu', expiresAt: Date.now() + 3600000,
           createdAt: new Date().toISOString()
         };
         touch();
-        return { ok: true, data: { provider: 'xendit', qr: j.qr_string || '', ref, amount: Number(m.price), expiresAt: Date.now() + 3600000 } };
+        return { ok: true, data: { provider: 'xendit', qr: j.qr_string || '', ref: refQ, amount: tagihan, expiresAt: Date.now() + 3600000 } };
       }).catch(e => ({ ok: false, error: 'Gagal membuat QRIS: ' + e.message }));
     }
 
@@ -1489,7 +1505,7 @@ function handleAction(p) {
           const b = d.payments[ref];
           const ps = (d.participants || []).filter(x => x.id === b.participantId)[0];
           bayar.push({
-            ref, wsId: wid, wsTitle: m.title || wid, amount: b.amount || 0, status: b.status || 'menunggu',
+            ref, wsId: wid, wsTitle: m.title || wid, amount: b.amount || 0, donasi: !!b.donasi, status: b.status || 'menunggu',
             name: ps ? ps.name : '—', code: ps ? ps.code : '', createdAt: b.createdAt || '', paidAt: b.paidAt || ''
           });
         });
