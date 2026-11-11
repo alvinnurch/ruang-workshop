@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruang islami.co</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; font: 15px/1.55 'IBM Plex Sans', system-ui, sans-serif; color: #1B1714; }
+  .card { background: #FFF; border: 1px solid #EAD9C6; border-radius: 22px; overflow: hidden; max-width: 720px; margin: 0 auto; }
+  .cover { aspect-ratio: 16 / 9; background: linear-gradient(135deg,#FDBB6E,#E08A2E) center/cover no-repeat; position: relative; }
+  .tag { position: absolute; top: 14px; left: 14px; font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: .08em; text-transform: uppercase; background: #B31F24; color: #FFF7EE; border-radius: 100px; padding: 5px 12px; }
+  .body { padding: clamp(16px, 4vw, 24px); display: grid; gap: 12px; }
+  .org { display: flex; gap: 10px; align-items: center; font-size: 13px; color: #6B6168; font-weight: 600; }
+  .org img { height: 26px; width: auto; max-width: 90px; object-fit: contain; }
+  h1 { font: 800 clamp(19px, 3.6vw, 25px)/1.25 'Plus Jakarta Sans', sans-serif; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
+  .ring { font-size: 14px; color: #5C534B; margin: 0; text-wrap: pretty; }
+  .info { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .info div { background: #FFF7EE; border-radius: 12px; padding: 9px 12px; }
+  .info small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #9B1B20; }
+  .info b { font-size: 13.5px; color: #3B3238; }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-top: 1px solid #F3E8DC; padding-top: 14px; }
+  .harga { font: 800 22px 'Plus Jakarta Sans', sans-serif; color: #B31F24; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { background: #B31F24; color: #FFF7EE; border: none; border-radius: 100px; padding: 12px 22px; font: 700 14.5px 'Plus Jakarta Sans', sans-serif; cursor: pointer; text-decoration: none; }
+  .btn:hover { background: #8E171C; }
+  .ghost { background: #FFF7EE; color: #4A3F46; border: 1px solid #EAD9C6; }
+  .ghost:hover { background: #FDECEC; }
+  .foot { font-size: 11.5px; color: #8C8078; display: flex; justify-content: space-between; align-items: center; }
+  .foot img { height: 18px; }
+  .msg { padding: 24px; text-align: center; color: #7A6F76; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="card" id="app"><div class="msg">Memuat…</div></div>
+<script>
+(function () {
+  var id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
+  var app = document.getElementById('app');
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function slug(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'workshop'; }
+  function tinggi() { try { parent.postMessage({ ruangEmbed: true, height: Math.ceil(document.documentElement.scrollHeight) }, '*'); } catch (e) {} }
+  if (window.ResizeObserver) new ResizeObserver(tinggi).observe(document.body);
+  var FORMAT = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
+  var JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', rangkaian: 'Rangkaian' };
+  fetch('/api/embed-event?ws=' + encodeURIComponent(id), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (o) {
+    if (!o.ok) { app.innerHTML = '<div class="msg">' + esc(o.error || 'Event tidak tersedia.') + '</div>'; return tinggi(); }
+    var m = o.data, s = m.slug || slug(m.title), asal = location.origin;
+    var harga = m.donasi ? 'Donasi sukarela' : (Number(m.price) > 0 ? 'Rp' + Number(m.price).toLocaleString('id-ID') : 'Gratis');
+    var bisaDaftar = m.registration && m.registration !== 'panitia';
+    var lokasi = m.format === 'online' ? 'Online' : (m.place || '');
+    app.innerHTML =
+      '<div class="cover" style="' + (m.flyer ? 'background-image:url(&quot;' + esc(m.flyer) + '&quot;)' : '') + '"><span class="tag">' + esc(JENIS[m.jenis || 'workshop'] || 'Event') + ' · ' + esc(FORMAT[m.format || 'online'] || '') + '</span></div>' +
+      '<div class="body">' +
+        (m.partnerName || m.partnerLogo ? '<div class="org">' + (m.partnerLogo ? '<img src="' + esc(m.partnerLogo) + '" alt="">' : '') + esc(m.partnerName || '') + '</div>' : '') +
+        '<h1>' + esc(m.title) + '</h1>' +
+        (m.ringkasan ? '<p class="ring">' + esc(m.ringkasan) + '</p>' : '') +
+        '<div class="info">' +
+          '<div><small>Tanggal</small><b>' + esc(m.dateLabel || 'Menyusul') + '</b></div>' +
+          '<div><small>Lokasi</small><b>' + esc(lokasi || 'Menyusul') + '</b></div>' +
+          '<div><small>Kuota</small><b>' + (m.quota ? esc(m.quota) + ' kursi' : 'Terbuka') + '</b></div>' +
+        '</div>' +
+        '<div class="row"><span class="harga">' + esc(harga) + '</span><div class="btns">' +
+          '<a class="btn ghost" href="' + asal + '/#/workshop/' + esc(s) + '" target="_blank" rel="noopener">Lihat detail</a>' +
+          (bisaDaftar ? '<a class="btn" href="' + asal + '/#/workshop/' + esc(s) + '/daftar" target="_blank" rel="noopener">' + (m.donasi ? 'Daftar &amp; Donasi' : Number(m.price) > 0 ? 'Daftar &amp; Bayar' : 'Daftar sekarang') + '</a>' : '') +
+        '</div></div>' +
+        '<div class="foot"><span>Pendaftaran dibuka di tab baru</span><a href="' + asal + '" target="_blank" rel="noopener"><img src="/assets/ruang-logo.png" alt="Ruang islami.co"></a></div>' +
+      '</div>';
+    tinggi();
+  }).catch(function () { app.innerHTML = '<div class="msg">Tidak bisa tersambung ke Ruang.</div>'; tinggi(); });
+})();
+</script>
+</body>
+</html>

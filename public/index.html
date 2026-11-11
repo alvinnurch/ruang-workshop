@@ -1228,25 +1228,26 @@
       <!-- Bahan belajar: bahan bacaan & video dari semua sesi, tetap ada meski sesinya tidak aktif -->
       <sc-if value="{{ libShow }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top:34px">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
-            <div>
-              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:19px;font-weight:700;margin:0 0 4px;letter-spacing:-.01em">Bahan belajar</h3>
-              <div style="font-size:13px;color:#7A6F66;line-height:1.5">Bahan bacaan dan video dari seluruh sesi — bisa dibuka kapan saja, juga setelah sesinya selesai.</div>
-            </div>
-            <span style="font-size:12.5px;color:#8C8078;font-weight:600">{{ libCount }}</span>
-          </div>
-          <div style="display:grid;gap:18px">
+          <button onClick="{{ libToggle }}" style="display:flex;justify-content:space-between;gap:12px;align-items:center;width:100%;background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:13px 16px;cursor:pointer;font:inherit;color:inherit;text-align:left" style-hover="border-color:#D6C9BB">
+            <span style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+              <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700">Bahan belajar</span>
+              <span style="font-size:12.5px;color:#8C8078;font-weight:600">{{ libCount }}</span>
+            </span>
+            <span style="font-size:12.5px;font-weight:700;color:#A5121C">{{ libToggleLabel }}</span>
+          </button>
+          <sc-if value="{{ libOpenAll }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;gap:12px;margin-top:10px">
             <sc-for list="{{ libGroups }}" as="g" hint-placeholder-count="2">
-              <div>
-                <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8C8078;margin-bottom:9px">{{ g.title }}</div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px">
+              <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;overflow:hidden">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8C8078;padding:10px 16px 8px;background:#FAF6F0">{{ g.title }}</div>
+                <div style="display:grid">
                   <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
                     <div style="{{ it.cardStyle }}">
                       <button onClick="{{ it.toggle }}" style="display:flex;gap:13px;align-items:center;width:100%;background:none;border:none;padding:0;text-align:left;cursor:pointer;color:inherit;font:inherit">
                         <span style="{{ it.iconStyle }}">{{ it.icon }}</span>
                         <span style="flex:1;min-width:0">
                           <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A5121C">{{ it.kind }}</span>
-                          <span style="display:block;font-size:15px;font-weight:700;line-height:1.3;margin-top:2px">{{ it.title }}</span>
+                          <span style="display:block;font-size:14px;font-weight:700;line-height:1.3;margin-top:1px">{{ it.title }}</span>
                           <span style="display:block;font-size:12.5px;color:#8C8078;margin-top:2px">{{ it.meta }}</span>
                         </span>
                         <span style="{{ it.chevStyle }}">›</span>
@@ -1271,6 +1272,7 @@
               </div>
             </sc-for>
           </div>
+          </sc-if>
         </div>
       </sc-if>
     </div>
@@ -2849,6 +2851,25 @@
                       <span style="font-size:11.5px;color:#8C8078;line-height:1.45">Diatur super admin. Ajukan perubahan lewat kotak di bawah.</span>
                     </sc-if>
                   </label>
+                  <div style="grid-column:1/-1;background:#F5F8FD;border:1px solid #D6E1F2;border-radius:11px;padding:14px 16px;display:grid;gap:11px">
+                    <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+                      <div style="flex:1 1 240px">
+                        <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;font-weight:700">Kartu promosi untuk situs lain</div>
+                        <div style="font-size:12.5px;color:#7A6F66;line-height:1.5;margin-top:2px;text-wrap:pretty">Kartu event (flyer, jadwal, biaya, tombol Daftar) yang bisa ditempel di WordPress atau situs mitra. Tombol Daftar membuka formulir pendaftaran Ruang di tab baru, lengkap dengan pembayaran.</div>
+                      </div>
+                      <button onClick="{{ w.togglePromo }}" style="{{ w.promoBtnStyle }}">{{ w.promoLabel }}</button>
+                    </div>
+                    <sc-if value="{{ w.promoOn }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:grid;gap:8px">
+                        <textarea readonly="" value="{{ w.promoCode }}" rows="3" style="width:100%;box-sizing:border-box;border:1px solid #D6E1F2;border-radius:8px;padding:9px 11px;font:12px/1.5 ui-monospace,Menlo,monospace;background:#FFF;color:#3B342E;resize:vertical"></textarea>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                          <button onClick="{{ w.copyPromo }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:700" style-hover="background:#1B1714">{{ w.copyPromoLabel }}</button>
+                          <a href="{{ w.promoUrl }}" target="_blank" rel="noopener" style="background:#FFF;border:1px solid #D6E1F2;color:#3B342E;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;text-decoration:none">Lihat kartu ↗</a>
+                          <span style="font-size:12px;color:#7A6F66">Tempel lewat blok Custom HTML. Kartu hanya tampil bila event terbit.</span>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
                   <div style="grid-column:1/-1;background:#FFFBF4;border:1px solid #EAD9C6;border-radius:11px;padding:14px 16px;display:grid;gap:12px">
                     <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
                       <div style="flex:1 1 240px">
@@ -3859,6 +3880,7 @@ class Component extends DCLogic {
     adminRole: 'penuh', adminName: '', adminId: null,
     wsId: (() => { try { return localStorage.getItem('ws_pilihan_v1') || ''; } catch (e) { return ''; } })(), wsMeta: [],
     lbJudul: '', lbFormat: 'online', lbKategori: '', lbWaktu: '', lbLokasi: '', lbSesi: '', lbKuota: '', lbBiaya: '', lbNarsum: '', lbRingkasan: '', lbCapaian: '',
+    libHide: (() => { try { return !!localStorage.getItem('ruang_lib_hide'); } catch (e) { return false; } })(),
     wsMsg: '', heroImg: '', fee: 0, adminWsTitle: '', soloMode: false, fmtFilter: 'semua', cari: '', lbNama: '', lbPic: '', lbEmail: '', lbPhone: '', lbKota: '', lbSitus: '', lbRencana: '', lembagaErr: '', lembagaOk: false, regName: '', regOrg: '', regPhone: '', regEmail: '', regCode: '', regErr: '',
     regPid: null, regStatus: '', payQr: '', payRef: '', payProvider: '', payUrl: '', payStatus: '', payErr: '', payChecking: false,
     newAdminName: '', newAdminUser: '', newAdminPass: '', newAdminRole: 'wsadmin', adminMsg: '',
@@ -6293,9 +6315,9 @@ class Component extends DCLogic {
                 kind: 'Rekaman Zoom', title: b.title || 'Rekaman Zoom',
                 meta: [tgl, b.recDur ? b.recDur + ' menit' : '', b.recPass ? 'Passcode: ' + b.recPass : ''].filter(Boolean).join(' · '),
                 icon: '●',
-                iconStyle: { width: '40px', height: '40px', flex: 'none', borderRadius: '11px', display: 'grid', placeItems: 'center', fontSize: '13px', background: '#E8EFFB', color: '#2D6CDF' },
+                iconStyle: { width: '30px', height: '30px', flex: 'none', borderRadius: '8px', display: 'grid', placeItems: 'center', fontSize: '12px', background: '#E8EFFB', color: '#2D6CDF' },
                 chevStyle: { fontSize: '22px', color: '#B5A99D', flex: 'none', transition: 'transform .2s', transform: buka ? 'rotate(90deg)' : 'none' },
-                cardStyle: { background: '#FFF', border: '1px solid ' + (buka ? '#A5121C' : '#E6DFD6'), borderRadius: '13px', padding: '14px 16px', gridColumn: 'auto' },
+                cardStyle: { padding: '10px 16px', borderTop: '1px solid #F1EBE3', background: buka ? '#FFFBF6' : 'transparent' },
                 open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: b.desc || '',
                 hasVideo: false, video: null, kosong: false,
                 url: b.recUrl, linkLabel: 'Tonton rekaman ↗',
@@ -6310,9 +6332,9 @@ class Component extends DCLogic {
               kind: this.KINDS[b.type], title: b.title || this.KINDS[b.type],
               meta: [b.presenter, vid ? (ytOk ? 'YouTube' : 'tautan belum dipasang') : (adaUrl ? (b.fileName || '') : 'berkas belum dipasang')].map(x => String(x || '').trim()).filter(Boolean).join(' · '),
               icon: vid ? '▶' : '▤',
-              iconStyle: { width: '40px', height: '40px', flex: 'none', borderRadius: '11px', display: 'grid', placeItems: 'center', fontSize: '15px', background: vid ? '#FBEFEF' : '#F3EDE5', color: vid ? '#A5121C' : '#5C534B' },
+              iconStyle: { width: '30px', height: '30px', flex: 'none', borderRadius: '8px', display: 'grid', placeItems: 'center', fontSize: '12px', background: vid ? '#FBEFEF' : '#F3EDE5', color: vid ? '#A5121C' : '#5C534B' },
               chevStyle: { fontSize: '22px', color: '#B5A99D', flex: 'none', transition: 'transform .2s', transform: buka ? 'rotate(90deg)' : 'none' },
-              cardStyle: { background: '#FFF', border: '1px solid ' + (buka ? '#A5121C' : '#E6DFD6'), borderRadius: '13px', padding: '14px 16px', gridColumn: buka && vid ? '1 / -1' : 'auto' },
+              cardStyle: { padding: '10px 16px', borderTop: '1px solid #F1EBE3', background: buka ? '#FFFBF6' : 'transparent' },
               open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: b.desc || '',
               hasVideo: buka && ytOk, video: buka && ytOk ? this.ytFrame(b.url) : null,
               kosong: buka && (vid ? !ytOk : !adaUrl),
@@ -6330,6 +6352,9 @@ class Component extends DCLogic {
       v.libGroups = grup;
       v.libShow = grup.length > 0;
       v.libCount = jml + ' bahan';
+      v.libOpenAll = !st.libHide;
+      v.libToggleLabel = st.libHide ? 'Tampilkan ▾' : 'Sembunyikan ▴';
+      v.libToggle = () => { const h = !st.libHide; try { localStorage.setItem('ruang_lib_hide', h ? '1' : ''); } catch (e) {} this.setState({ libHide: h }); };
     }
     {
       const wsT = this.wsNow();
@@ -7290,6 +7315,24 @@ class Component extends DCLogic {
         onPlace: e => ubah('place', e.target.value),
         onDate: e => ubah('dateLabel', e.target.value),
         onPrice: e => ubah('price', Math.max(0, parseInt(e.target.value, 10) || 0)),
+        promoOn: !!m.embedPromo,
+        promoLabel: m.embedPromo ? 'Aktif' : 'Nonaktif',
+        promoBtnStyle: m.embedPromo
+          ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
+          : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
+        togglePromo: () => ubah('embedPromo', !m.embedPromo),
+        promoUrl: (/^https?:/.test(location.origin) ? location.origin : 'https://ruang.islami.co') + '/embed-event/' + encodeURIComponent(m.id),
+        promoCode: (() => {
+          const asal = /^https?:/.test(location.origin) ? location.origin : 'https://ruang.islami.co';
+          return '<iframe src="' + asal + '/embed-event/' + encodeURIComponent(m.id) + '" style="width:100%;max-width:720px;border:0" height="560" loading="lazy" title="' + String(m.title || 'Event').replace(/"/g, '') + '"></iframe>\n<script src="' + asal + '/embed.js" async></' + 'script>';
+        })(),
+        copyPromoLabel: st.promoCopied === m.id ? 'Tersalin ✓' : 'Salin kode',
+        copyPromo: () => {
+          const asal = /^https?:/.test(location.origin) ? location.origin : 'https://ruang.islami.co';
+          const kode = '<iframe src="' + asal + '/embed-event/' + encodeURIComponent(m.id) + '" style="width:100%;max-width:720px;border:0" height="560" loading="lazy" title="' + String(m.title || 'Event').replace(/"/g, '') + '"></iframe>\n<script src="' + asal + '/embed.js" async></' + 'script>';
+          const ok = () => { this.setState({ promoCopied: m.id }); setTimeout(() => this.setState({ promoCopied: null }), 2200); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(kode).then(ok, ok); else ok();
+        },
         donasi: !!m.donasi,
         donasiLabel: m.donasi ? 'Aktif' : 'Nonaktif',
         donasiBtnStyle: m.donasi
