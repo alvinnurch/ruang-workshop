@@ -780,6 +780,15 @@ function handleAction(p) {
       return { ok: true };
     }
 
+    /* Saklar pembagian kelompok: langsung tersimpan. */
+    case 'setGroups': {
+      if (!siapa || !BOLEH_SUSUN[siapa.role]) return { ok: false, error: 'Hanya admin yang boleh mengatur kelompok.' };
+      db.useGroups = !!p.on;
+      if (db.useGroups && (!Array.isArray(db.groups) || !db.groups.length)) db.groups = ['Kelompok A', 'Kelompok B', 'Kelompok C', 'Kelompok D'];
+      touch();
+      return { ok: true, data: { useGroups: db.useGroups, groups: db.groups } };
+    }
+
     /* Saklar embed langsung tersimpan, tanpa menunggu "Simpan perubahan". */
     case 'setEmbed': {
       if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh mengatur embed.' };
@@ -1556,6 +1565,8 @@ function handleAction(p) {
       db.sessions = incoming.sessions || [];
       db.participants = incoming.participants || [];
       db.groups = Array.isArray(incoming.groups) ? incoming.groups : (db.groups || []);
+      if (typeof incoming.useGroups === 'boolean') db.useGroups = incoming.useGroups;
+      if (Array.isArray(incoming.programs)) db.programs = incoming.programs;
       db.activeSessionId = incoming.activeSessionId || (db.sessions[0] ? db.sessions[0].id : null);
       /* Saklar "Semua sesi terbuka" ikut tersimpan saat admin penuh menyimpan susunan. */
       if (typeof incoming.allOpen === 'boolean') db.allOpen = incoming.allOpen;
