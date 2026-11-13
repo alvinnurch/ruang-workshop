@@ -719,7 +719,7 @@ function kirimIndexOg(req, res, slug) {
     ? (String(m.ringkasan || m.subtitle || '').trim() || [m.dateLabel, m.place, m.partnerName].filter(Boolean).join(' · ') || OG_DESK)
     : OG_DESK;
   const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + version;
-  const alamat = asal + (m ? '/workshop/' + slug : '/');
+  const alamat = asal + (m ? '/' + slug : '/');
   const meta = [
     '<base href="/">',
     '<meta name="description" content="' + esc(desk) + '">',
@@ -734,12 +734,21 @@ function kirimIndexOg(req, res, slug) {
     '<meta name="twitter:description" content="' + esc(desk) + '">',
     '<meta name="twitter:image" content="' + esc(gambar) + '">',
     /* Alamat /workshop/<slug> diubah ke rute halaman sebelum aplikasi membacanya. */
-    m ? '<script>if(!location.hash)history.replaceState(null,"","/#/workshop/' + slug + '");</script>' : ''
+    m ? '<script>if(!location.hash)history.replaceState(null,"","/' + slug + '#/workshop/' + slug + '");</script>' : ''
   ].join('\n');
   let html;
   try { html = bacaIndex(); } catch (e) { res.writeHead(500); return res.end('index.html tidak ditemukan'); }
   html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(judul) + '</title>');
   html = html.replace(/<head([^>]*)>/i, '<head$1>\n' + meta);
+  /* Data awal disisipkan langsung ke halaman, agar beranda & profil tampil tanpa menunggu /api. */
+  try {
+    const boot = {
+      meta: metaPublik(), hero: store.hero || '', fee: Number(store.fee) || 0,
+      footer: Array.isArray(store.footer) ? store.footer : null, version
+    };
+    const js = JSON.stringify(boot).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    html = html.replace(/<head([^>]*)>/i, (_, attr) => '<head' + attr + '>\n<script>window.__RUANG_BOOT=' + js + ';</scr' + 'ipt>');
+  } catch (e) { console.error('[boot] gagal menyisipkan data awal:', e.message); }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
   res.end(html);
 }
@@ -1967,8 +1976,11 @@ const server = http.createServer(async (req, res) => {
         res.end(buf);
       });
     }
-    const ws = jalur.match(/^\/workshop\/([a-z0-9-]+)\/?$/);
-    if (ws) return kirimIndexOg(req, res, ws[1]);
+    /* Alamat event pendek: /<slug>. Alamat lama /workshop/<slug> dialihkan permanen. */
+    const lama = jalur.match(/^\/workshop\/([a-z0-9-]+)\/?$/);
+    if (lama) { res.writeHead(301, { Location: '/' + lama[1] }); return res.end(); }
+    const pendek = jalur.match(/^\/([a-z0-9][a-z0-9-]*)\/?$/);
+    if (pendek && (store.meta || []).some(x => x.published && slugWs(x) === pendek[1])) return kirimIndexOg(req, res, pendek[1]);
   }
   serveStatic(req, res, url);
 });
