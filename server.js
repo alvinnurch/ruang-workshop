@@ -599,6 +599,45 @@ const MIME = {
   '.pdf': 'application/pdf', '.md': 'text/markdown; charset=utf-8',
   '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 };
+/* ── Pustaka gambar: berkas di disk, bukan base64 di data.json ──
+   Nama berkas = sidik isi (sha1), jadi gambar yang sama tidak pernah tersimpan dua kali. */
+const MEDIA_DIR = path.resolve(process.env.MEDIA_DIR || path.join(path.dirname(DATA_FILE), 'media'));
+try { fs.mkdirSync(MEDIA_DIR, { recursive: true }); } catch (e) {}
+const MEDIA_EXT = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/gif': '.gif' };
+function simpanMedia(dataUrl, nama, siapa, wid) {
+  const m = String(dataUrl || '').match(/^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!m) return { ok: false, error: 'Berkas bukan gambar.' };
+  const ext = MEDIA_EXT[m[1].toLowerCase()];
+  if (!ext) return { ok: false, error: 'Format gambar tidak didukung (pakai PNG, JPG, WEBP, atau GIF).' };
+  const buf = Buffer.from(m[2], 'base64');
+  if (buf.length > 8 * 1024 * 1024) return { ok: false, error: 'Gambar maksimal 8 MB.' };
+  const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 20);
+  const file = hash + ext;
+  store.media = Array.isArray(store.media) ? store.media : [];
+  const ada = store.media.find(x => x.file === file);
+  if (ada) return { ok: true, data: Object.assign({ dupe: true }, ada) };
+  fs.writeFileSync(path.join(MEDIA_DIR, file), buf);
+  const item = {
+    file, url: '/media/' + file, name: String(nama || file).slice(0, 120), size: buf.length,
+    at: new Date().toISOString(), by: (siapa && siapa.name) || '', ws: wid || ''
+  };
+  store.media.unshift(item);
+  touch();
+  return { ok: true, data: item };
+}
+function serveMedia(req, res, name) {
+  if (!/^[a-f0-9]{20}\.(png|jpg|webp|gif)$/.test(name)) { res.writeHead(404); return res.end(); }
+  const file = path.join(MEDIA_DIR, name);
+  fs.stat(file, (err, st) => {
+    if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Tidak ditemukan'); }
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
+      /* nama = sidik isi, jadi aman disimpan lama di peramban & Cloudflare */
+      'Cache-Control': 'public, max-age=31536000, immutable', 'Content-Length': st.size
+    });
+    fs.createReadStream(file).pipe(res);
+  });
+}
 function serveStatic(req, res, urlPath) {
   let rel = decodeURIComponent(urlPath.split('?')[0]);
   if (rel === '/' || rel === '') rel = '/index.html';
@@ -695,6 +734,8 @@ function kirimGambarOg(req, res, kunci) {
     return res.end(buf);
   }
   if (/^https?:\/\//i.test(src)) { res.writeHead(302, { Location: src }); return res.end(); }
+  const md = src.match(/^\/?media\/([^/?#]+)/);
+  if (md) return serveMedia(req, res, md[1]);
   const file = path.join(PUBLIC_DIR, path.normalize('/' + src.replace(/^\/+/, '')).replace(/^(\.\.[/\\])+/, ''));
   if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(404); return res.end(); }
   fs.readFile(file, (err, buf) => {
@@ -1684,6 +1725,32 @@ function handleAction(p) {
       return { ok: true, data: Object.assign({}, s, { wsTitle: s.wsId ? namaWs(s.wsId) : '', wsIds: s.wsIds || [] }) };
     }
 
+    case 'mediaUpload': {
+      if (!siapa) return { ok: false, error: 'Masuk sebagai panitia dulu.' };
+      return simpanMedia(p.data, p.name, siapa, wid);
+    }
+    case 'mediaList': {
+      if (!siapa) return { ok: false, error: 'Masuk sebagai panitia dulu.' };
+      const semua = Array.isArray(store.media) ? store.media : [];
+      /* Super admin melihat semua; admin lain: miliknya + event yang ia kelola. */
+      const boleh = siapa.superadmin ? semua : semua.filter(x => !x.ws || x.ws === wid || (siapa.wsIds || []).indexOf(x.ws) >= 0);
+      return { ok: true, data: boleh.slice(0, 300) };
+    }
+    case 'mediaDelete': {
+      if (!siapa || !(siapa.superadmin || BOLEH_SUSUN[siapa.role])) return { ok: false, error: 'Tidak diizinkan.' };
+      const list = Array.isArray(store.media) ? store.media : [];
+      const i = list.findIndex(x => x.file === p.file);
+      if (i < 0) return { ok: false, error: 'Gambar tidak ditemukan.' };
+      if (!siapa.superadmin && list[i].ws && list[i].ws !== wid) return { ok: false, error: 'Gambar milik event lain.' };
+      const url = list[i].url;
+      const dipakai = JSON.stringify(store.meta || []).indexOf(url) >= 0 || String(store.hero || '').indexOf(url) >= 0;
+      if (dipakai && !p.force) return { ok: false, error: 'Gambar masih dipakai di event atau beranda.', dipakai: true };
+      list.splice(i, 1);
+      try { fs.unlinkSync(path.join(MEDIA_DIR, p.file)); } catch (e) {}
+      touch();
+      return { ok: true };
+    }
+
     /* Ringkasan seluruh platform — hanya super admin. */
     case 'platform': {
       if (!siapa || !siapa.superadmin) return { ok: false, error: 'Hanya super admin.' };
@@ -1958,6 +2025,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' || req.method === 'HEAD') {
     const jalur = decodeURIComponent(url.split('?')[0]);
+    const md = jalur.match(/^\/media\/([^/]+)$/);
+    if (md) return serveMedia(req, res, md[1]);
     const og = jalur.match(/^\/og\/(home|ws\/([^/.]+))\.img$/);
     if (og) return kirimGambarOg(req, res, og[1] === 'home' ? 'home' : og[2]);
     if (jalur === '/' || jalur === '/index.html') return kirimIndexOg(req, res, '');
