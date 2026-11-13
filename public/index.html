@@ -1905,7 +1905,7 @@
               <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
                 <div style="{{ heroPreviewStyle }}"></div>
                 <div style="display:flex;gap:9px;flex-wrap:wrap">
-                  <button onClick="{{ pickHero }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah ilustrasi</button>
+                  <button onClick="{{ pickHero }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ upHero }}" style="display:none" /></label>
                   <button onClick="{{ hapusHero }}" style="{{ hapusHeroStyle }}">Hapus</button>
                 </div>
               </div>
@@ -2902,9 +2902,9 @@
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Logo mitra</span>
-                    <div style="display:flex;gap:8px">
-                      <input value="{{ w.partnerLogo }}" onChange="{{ w.onLogo }}" placeholder="assets/logo.png atau URL" style="flex:1;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
-                      <button onClick="{{ w.pickLogo }}" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Pilih / unggah</button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                      <input value="{{ w.partnerLogo }}" onChange="{{ w.onLogo }}" placeholder="assets/logo.png atau URL" style="flex:1 1 100%;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                      <button onClick="{{ w.pickLogo }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ w.upLogo }}" style="display:none" /></label>
                     </div>
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
@@ -3095,7 +3095,7 @@
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil workshop</span>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                       <div style="{{ w.flyerPreviewStyle }}"></div>
-                      <button onClick="{{ w.pickFlyer }}" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Pilih / unggah flyer</button>
+                      <button onClick="{{ w.pickFlyer }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ w.upFlyer }}" style="display:none" /></label>
                       <button onClick="{{ w.hapusFlyer }}" style="{{ w.hapusFlyerStyle }}">Hapus flyer</button>
                     </div>
                   </label>
@@ -3146,7 +3146,7 @@
                 <div style="{{ certQrPreviewStyle }}"></div>
               </div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
-                <button onClick="{{ pickCert }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah template</button>
+                <button onClick="{{ pickCert }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ upCert }}" style="display:none" /></label>
                 <button onClick="{{ certHapus }}" style="{{ certHapusStyle }}">Hapus template</button>
                 <button onClick="{{ certToggleOpen }}" style="{{ certOpenStyle }}">{{ certOpenLabel }}</button>
                 <button onClick="{{ certTogglePage2 }}" style="{{ certPage2Style }}">{{ certPage2Label }}</button>
@@ -3274,7 +3274,7 @@
               <div style="flex:1.5 1 380px;min-width:min(100%,280px)">
                 <div style="{{ tiketPrevStyle }}"></div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-                  <button onClick="{{ pickTiket }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah template</button>
+                  <button onClick="{{ pickTiket }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ upTiket }}" style="display:none" /></label>
                   <button onClick="{{ tiketHapus }}" style="{{ tiketHapusStyle }}">Pakai desain bawaan</button>
                   <button onClick="{{ tiketUnduhContoh }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Unduh contoh</button>
                 </div>
@@ -3924,6 +3924,14 @@ class Component extends DCLogic {
     this.setState({ mediaOpen: true, mediaLabel: label || 'Pilih gambar', mediaMsg: '', mediaLink: '', mediaCari: '' });
     this.muatMedia();
   }
+  /* Unggah langsung dari kolomnya: tetap lewat pustaka (tersimpan & tidak dobel), tanpa membuka jendela. */
+  unggahLangsung(e, cb) {
+    const f = e && e.target && e.target.files && e.target.files[0];
+    if (e && e.target) e.target.value = '';
+    if (!f) return;
+    this._mediaCb = cb;
+    this.unggahMedia(f);
+  }
   tutupMedia() { this._mediaCb = null; this.setState({ mediaOpen: false, mediaBusy: false }); }
   pakaiMedia(url) {
     const cb = this._mediaCb;
@@ -3959,7 +3967,11 @@ class Component extends DCLogic {
         return this.pakaiMedia(data);
       }
       const out = await this.apiPost({ action: 'mediaUpload', password: this._pw || '', user: this._user || '', name: file.name, data });
-      if (!out || !out.ok) return this.setState({ mediaBusy: false, mediaMsg: (out && out.error) || 'Unggahan gagal.', mediaBad: true });
+      if (!out || !out.ok) {
+        const pesan = (out && out.error) || 'Unggahan gagal.';
+        if (!this.state.mediaOpen) this.setState({ apiError: pesan });
+        return this.setState({ mediaBusy: false, mediaMsg: pesan, mediaBad: true });
+      }
       this.setState({ mediaBusy: false });
       this.pakaiMedia(out.data.url);
     };
@@ -6112,6 +6124,7 @@ class Component extends DCLogic {
     const simpanHero = url => this.apiPost({ action: 'putHero', password: this._pw || '', hero: url })
       .then(() => { this.setState({ heroImg: url }); this.muatPlatform(); });
     v.pickHero = () => this.bukaMedia('Ilustrasi beranda', url => simpanHero(url));
+    v.upHero = e => this.unggahLangsung(e, url => simpanHero(url));
     v.onHeroFile = e => {
       const f = e.target.files && e.target.files[0];
       e.target.value = '';
@@ -7938,6 +7951,8 @@ class Component extends DCLogic {
           : { width: '128px', height: '72px', borderRadius: '10px', border: '1px dashed #DCD3C8', background: '#FAF6F0', flex: 'none' },
         pickFlyer: () => this.bukaMedia('Flyer — ' + (m.title || 'event'), url => ubah('flyer', url)),
         pickLogo: () => this.bukaMedia('Logo mitra — ' + (m.title || 'event'), url => ubah('partnerLogo', url)),
+        upFlyer: e => this.unggahLangsung(e, url => ubah('flyer', url)),
+        upLogo: e => this.unggahLangsung(e, url => ubah('partnerLogo', url)),
         onFlyerFile: e => {
           const f = e.target.files && e.target.files[0];
           e.target.value = '';
@@ -8020,6 +8035,14 @@ class Component extends DCLogic {
       v.tiketHapusStyle = curWs.ticketTpl ? { background: '#FFF', border: '1px solid #E0D8CE', color: '#5C534B', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600 } : { display: 'none' };
       v.tiketHapus = () => ubahWs('ticketTpl', '');
       v.tiketTplMsg = st.tiketTplMsg || '';
+      const pasangTiket = url => {
+        this.muatGambar(url).then(im => {
+          const rasio = im.width / im.height;
+          this.setState({ tiketTplMsg: Math.abs(rasio - 3) > .25 ? 'Perbandingan gambar ' + rasio.toFixed(2) + ':1 — tiket 15 × 5 cm idealnya 3:1, jadi sebagian akan terpotong.' : '' });
+          ubahWs('ticketTpl', url);
+        }, () => this.setState({ tiketTplMsg: 'Gambar tidak bisa dibuka.' }));
+      };
+      v.upTiket = e => this.unggahLangsung(e, pasangTiket);
       v.pickTiket = () => this.bukaMedia('Template tiket (15 × 5 cm)', url => {
         this.muatGambar(url).then(im => {
           const rasio = im.width / im.height;
@@ -8132,7 +8155,9 @@ class Component extends DCLogic {
           bottom: v.certQrPos === 'kanan-atas' ? 'auto' : '7%', top: v.certQrPos === 'kanan-atas' ? '7%' : 'auto',
           left: v.certQrPos === 'kiri-bawah' ? '6%' : 'auto', right: v.certQrPos === 'kiri-bawah' ? 'auto' : '6%' }
       : { display: 'none' };
-    v.pickCert = () => this.bukaMedia('Template sertifikat', url => { ubahWs('certTemplate', url); this.setState({ certMsg: 'Template sertifikat dipasang.' }); });
+    const pasangCert = url => { ubahWs('certTemplate', url); this.setState({ certMsg: 'Template sertifikat dipasang.' }); };
+    v.pickCert = () => this.bukaMedia('Template sertifikat', pasangCert);
+    v.upCert = e => this.unggahLangsung(e, pasangCert);
     v.onCertFile = e => {
       const f = e.target.files && e.target.files[0];
       e.target.value = '';
