@@ -256,6 +256,16 @@ function voucherDaftar(wid) {
   if (!Array.isArray(store.vouchers[wid])) store.vouchers[wid] = [];
   return store.vouchers[wid];
 }
+/* Diskon langsung (tanpa kode), mis. harga early bird sampai tanggal tertentu. */
+function hargaDasar(m) {
+  const harga = Math.round(Number(m && m.price) || 0);
+  const d = m && m.diskon;
+  if (!harga || !d || !d.on) return harga;
+  if (d.until && Date.parse(d.until + 'T23:59:59+07:00') < Date.now()) return harga;
+  const nilai = Math.max(0, Number(d.value) || 0);
+  const pot = Math.min(harga, Math.round(d.type === 'nominal' ? nilai : harga * Math.min(100, nilai) / 100));
+  return harga - pot;
+}
 function hitungVoucher(wid, kode, harga) {
   const k = String(kode || '').trim().toUpperCase();
   if (!k) return { ok: true, potongan: 0, harga };
@@ -1498,7 +1508,7 @@ function handleAction(p) {
     case 'checkVoucher': {
       const m = store.meta.filter(x => x.id === wid)[0];
       if (!m || m.donasi || !(m.price > 0)) return { ok: false, error: 'Voucher hanya berlaku untuk event berbayar.' };
-      const h = hitungVoucher(wid, p.code, Math.round(Number(m.price)));
+      const h = hitungVoucher(wid, p.code, hargaDasar(m));
       if (!h.ok) return h;
       return { ok: true, data: { code: h.code, label: h.label, potongan: h.potongan, harga: h.harga } };
     }
@@ -1526,7 +1536,7 @@ function handleAction(p) {
         if (nominal > 0 && nominal < DONASI_MIN) return { ok: false, error: 'Nominal donasi minimal Rp ' + DONASI_MIN.toLocaleString('id-ID') + '.' };
         if (!nominal && !m.donasiOpsional) return { ok: false, error: 'Event ini meminta donasi, berapa pun nominalnya.' };
       }
-      let hargaAkhir = m.donasi ? 0 : Math.round(Number(m.price) || 0), vch = null;
+      let hargaAkhir = m.donasi ? 0 : hargaDasar(m), vch = null;
       if (!m.donasi && hargaAkhir > 0 && String(p.voucher || '').trim()) {
         const h = hitungVoucher(wid, p.voucher, hargaAkhir);
         if (!h.ok) return h;
@@ -1568,7 +1578,7 @@ function handleAction(p) {
       /* Donasi: nominal dari peserta (atau yang tercatat saat mendaftar), minimal Rp 2.000. */
       const tagihan = m.donasi
         ? Math.round(Number(p.amount) || Number(pesertaD && pesertaD.donasi) || 0)
-        : (pesertaD && pesertaD.harga != null ? Math.round(pesertaD.harga) : Math.round(Number(m.price)));
+        : (pesertaD && pesertaD.harga != null ? Math.round(pesertaD.harga) : hargaDasar(m));
       if (!m.donasi && tagihan <= 0) { if (pesertaD) { pesertaD.status = 'aktif'; sebarStatus(pesertaD); touch(); } return { ok: true, data: { paid: true } }; }
       if (m.donasi && tagihan < 2000) return { ok: false, error: 'Nominal donasi minimal Rp 2.000.' };
       if (m.donasi && pesertaD) pesertaD.donasi = tagihan;
