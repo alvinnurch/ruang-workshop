@@ -3874,6 +3874,10 @@ class Component extends DCLogic {
   async muatPlatform() {
     if (!this.api()) return this.platformLokal();
     const out = await this.apiPost({ action: 'platform', password: this._pw || '' });
+    if (out && out.ok) {
+      clearTimeout(this._platT);
+      this._platT = setTimeout(() => { try { localStorage.setItem('ruang_plat_v1', JSON.stringify(out.data)); } catch (e) {} }, 300);
+    }
     if (out && out.ok) this.setState({ platform: out.data, wsMeta: out.data.meta || this.state.wsMeta, heroImg: out.data.hero || this.state.heroImg });
     else this.platformLokal();
   }
@@ -3962,7 +3966,7 @@ class Component extends DCLogic {
   }
   cdBlok(s) { return ((s && s.blocks) || []).filter(b => b.type === 'countdown' && b.open)[0] || null; }
   remember(x) { try { localStorage.setItem(this.SESSKEY, JSON.stringify(x)); } catch (e) {} }
-  forget() { try { localStorage.removeItem(this.SESSKEY); } catch (e) {} }
+  forget() { try { localStorage.removeItem(this.SESSKEY); localStorage.removeItem('ruang_plat_v1'); } catch (e) {} }
   mmss(ms) {
     const t = Math.max(0, Math.round(ms / 1000));
     return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
@@ -4092,7 +4096,8 @@ class Component extends DCLogic {
     db: this.bootDb(), adminSessionId: null, narrow: typeof window !== 'undefined' && window.innerWidth < 820,
     sideOpen: false, role: 'login', panel: null, projFrom: 'login', projPick: null,
     formCode: '', loginError: '',
-    adminPin: '', adminUser: '', adminError: '', tab: 'control', isSuper: false, platform: null, platTab: 'workshops',
+    adminPin: '', adminUser: '', adminError: '', tab: 'control', isSuper: false,
+    platform: (() => { try { return JSON.parse(localStorage.getItem('ruang_plat_v1') || 'null'); } catch (e) { return null; } })(), platTab: 'workshops',
     adminRole: 'penuh', adminName: '', adminId: null,
     wsId: (() => { try { return localStorage.getItem('ws_pilihan_v1') || ''; } catch (e) { return ''; } })(),
     wsMeta: ((this.bootInfo() || {}).meta) || [],
@@ -5677,7 +5682,8 @@ class Component extends DCLogic {
       ? { background: 'none', border: 'none', color: '#3E6B22', fontSize: '12.5px', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px', cursor: 'pointer', padding: 0 }
       : { display: 'none' };
     /* ── Dasbor super admin ── */
-    const P = st.platform || { meta: [], payments: [], admins: [], xendit: {}, superUser: 'superadmin' };
+    /* Sebelum ringkasan platform tiba, pakai daftar event yang sudah ada di halaman. */
+    const P = st.platform || { meta: st.wsMeta || [], payments: [], admins: [], xendit: {}, superUser: 'superadmin' };
     const rupiah = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
     const lunas = (P.payments || []).filter(x => x.status === 'lunas');
     v.superKpis = [
