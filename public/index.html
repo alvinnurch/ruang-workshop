@@ -188,9 +188,14 @@
                     </div>
                   </sc-if>
                 </div>
-                <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px">
-                  <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700;color:#B31F24">{{ w.harga }}</span>
-                  <button onClick="{{ w.open }}" style="background:#FFF7EE;border:1px solid #EAD9C6;color:#4A3F46;border-radius:100px;padding:10px 17px;font-size:13px;font-weight:700" style-hover="background:#FDECEC;border-color:#F0C9CC">Lihat Profil</button>
+                <div style="display:flex;gap:8px 12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-top:auto;padding-top:6px">
+                  <span style="display:grid;gap:2px;min-width:0;flex:1 1 auto">
+                    <sc-if value="{{ w.diskonOn }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><s style="font-size:12px;color:#9B8F96">{{ w.hargaAsli }}</s><span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;color:#2C4D18;background:#EEF5E9;border-radius:100px;padding:2px 8px;white-space:nowrap">{{ w.diskonBadge }}</span></span>
+                    </sc-if>
+                    <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700;color:#B31F24;white-space:nowrap">{{ w.harga }}</span>
+                  </span>
+                  <button onClick="{{ w.open }}" style="background:#FFF7EE;border:1px solid #EAD9C6;color:#4A3F46;border-radius:100px;padding:10px 17px;font-size:13px;font-weight:700;white-space:nowrap;flex:none" style-hover="background:#FDECEC;border-color:#F0C9CC">Lihat Profil</button>
                 </div>
               </div>
             </div>
@@ -541,7 +546,10 @@
         <div style="flex:1 1 300px;min-width:min(100%,280px);display:grid;gap:16px">
           <div style="background:#FFF;border-radius:min(5vw,36px);padding:min(4vw,30px);box-shadow:0 18px 40px -26px rgba(139,79,40,.55)">
             <div style="font-size:12px;color:#7A6F76;letter-spacing:.06em;text-transform:uppercase;font-weight:700">Biaya pendaftaran</div>
-            <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(28px,3.6vw,38px);font-weight:700;color:#B31F24;margin:6px 0 18px;line-height:1">{{ profilHarga }}</div>
+            <sc-if value="{{ profilDiskonOn }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><s style="font-size:14px;color:#9B8F96">{{ profilHargaAsli }}</s><span style="font-size:11.5px;font-weight:700;color:#2C4D18;background:#EEF5E9;border-radius:100px;padding:3px 10px">{{ profilDiskonBadge }}</span></div>
+            </sc-if>
+            <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(28px,3.6vw,38px);font-weight:700;color:#B31F24;margin:6px 0 18px;line-height:1;white-space:nowrap">{{ profilHarga }}</div>
             <sc-if value="{{ profilDonasi }}" hint-placeholder-val="{{ false }}">
               <div style="background:#FFF7EE;border-radius:16px;padding:14px 16px;margin:-6px 0 18px">
                 <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B1B20">Donasi Anda digunakan untuk</div>
@@ -3358,6 +3366,78 @@
         </div>
       </sc-if>
 
+      <!-- ── TAB: VOUCHER & DISKON ── -->
+      <sc-if value="{{ tabVoucher }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;gap:18px;max-width:980px">
+          <div>
+            <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 5px;font-weight:700">Voucher &amp; diskon</h2>
+            <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:72ch;text-wrap:pretty">Untuk {{ vdTitle }}. Diskon langsung berlaku untuk semua pendaftar; voucher hanya untuk yang memasukkan kodenya. Keduanya bisa digabung: voucher dihitung dari harga setelah diskon.</p>
+          </div>
+          <sc-if value="{{ vdGratis }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#FBF3E4;border:1px solid #EBD3A5;border-radius:11px;padding:13px 16px;font-size:13.5px;color:#6B4A10;line-height:1.6;text-wrap:pretty">{{ vdGratisNote }}</div>
+          </sc-if>
+
+          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:20px 22px;display:grid;gap:14px">
+            <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+              <div>
+                <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 3px;font-weight:700">Diskon langsung</h3>
+                <div style="font-size:12.5px;color:#7A6F66;line-height:1.5">Tanpa kode, mis. harga early bird. Tampil di kartu beranda dan profil event.</div>
+              </div>
+              <button onClick="{{ vdToggle }}" style="{{ vdToggleStyle }}">{{ vdToggleLabel }}</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
+              <label style="display:grid;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Nama diskon</span><input value="{{ vdLabel }}" onChange="{{ vdOnLabel }}" placeholder="mis. Early bird" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" /></label>
+              <label style="display:grid;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Jenis</span>
+                <select value="{{ vdType }}" onChange="{{ vdOnType }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0"><option value="persen">Persen (%)</option><option value="nominal">Nominal (Rp)</option></select>
+              </label>
+              <label style="display:grid;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Potongan</span><input value="{{ vdValue }}" onChange="{{ vdOnValue }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" /></label>
+              <label style="display:grid;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Berlaku sampai</span><input value="{{ vdUntil }}" onChange="{{ vdOnUntil }}" type="date" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" /></label>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid #F1EBE3;padding-top:12px">
+              <span style="font-size:13px;color:#3B342E">Harga tampil: <b>{{ vdPreview }}</b></span>
+              <span style="flex:1"></span>
+              <span style="font-size:12.5px;color:#7A6F66">{{ vdMsg }}</span>
+              <button onClick="{{ vdSave }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">Simpan diskon</button>
+            </div>
+          </div>
+
+          <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:13px;padding:20px 22px;display:grid;gap:12px">
+            <div>
+              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 3px;font-weight:700">Kode voucher</h3>
+              <div style="font-size:12.5px;color:#7A6F66;line-height:1.5;text-wrap:pretty">Bagikan kodenya ke mitra, alumni, atau komunitas tertentu. Kode tidak pernah tampil di halaman publik.</div>
+            </div>
+            <div style="display:grid;gap:8px">
+              <sc-for list="{{ vdVouchers }}" as="vc" hint-placeholder-count="1">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;align-items:end;background:#FCFAF7;border:1px solid #EFE4D6;border-radius:10px;padding:11px 13px">
+                  <label style="display:grid;gap:4px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Kode</span><input value="{{ vc.code }}" onChange="{{ vc.onCode }}" placeholder="HEMAT50" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0;font-weight:700;letter-spacing:.05em;text-transform:uppercase" /></label>
+                  <label style="display:grid;gap:4px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Jenis</span>
+                    <select value="{{ vc.type }}" onChange="{{ vc.onType }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0"><option value="persen">Persen (%)</option><option value="nominal">Nominal (Rp)</option></select>
+                  </label>
+                  <label style="display:grid;gap:4px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Potongan</span><input value="{{ vc.value }}" onChange="{{ vc.onValue }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" /></label>
+                  <label style="display:grid;gap:4px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Kuota (0 = bebas)</span><input value="{{ vc.quota }}" onChange="{{ vc.onQuota }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" /></label>
+                  <label style="display:grid;gap:4px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F66">Berlaku s.d.</span><input value="{{ vc.expires }}" onChange="{{ vc.onExpires }}" type="date" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" /></label>
+                  <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+                    <span style="font-size:12px;color:#7A6F66;font-weight:600">{{ vc.usedLabel }}</span>
+                    <span style="display:flex;gap:6px">
+                      <button onClick="{{ vc.toggle }}" style="{{ vc.toggleStyle }}">{{ vc.toggleLabel }}</button>
+                      <button onClick="{{ vc.remove }}" title="Hapus" style="background:#FFF;border:1px solid #F0C9CC;color:#A5121C;border-radius:7px;width:32px;height:32px">×</button>
+                    </span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ vdVoucherEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#8C8078;background:#FCFAF7;border:1px dashed #E0D8CE;border-radius:10px;padding:16px;text-align:center">Belum ada voucher. Tekan Tambah voucher untuk membuat kode pertama.</div>
+              </sc-if>
+            </div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+              <button onClick="{{ vdVoucherAdd }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">+ Tambah voucher</button>
+              <button onClick="{{ vdVoucherSave }}" style="background:#A5121C;color:#FFF;border:none;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">Simpan voucher</button>
+              <span style="font-size:12.5px;color:#7A6F66">{{ vdVoucherMsg }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
       <!-- ── TAB: AKUN ADMIN ── -->
       <sc-if value="{{ tabAdmins }}" hint-placeholder-val="{{ false }}">
         <div>
@@ -3823,10 +3903,10 @@ class Component extends DCLogic {
     this.setState({ embedMsg: { id: blockId, text: out && out.ok ? 'Tersimpan.' : ((out && out.error) || 'Gagal menyimpan.') } });
   }
   /* Editor voucher per event — dimuat sekali saat kartunya pertama kali terlihat. */
-  voucherRows(m) {
+  voucherRows(m, paksa) {
     const st = this.state;
     const tampil = !m.donasi && Number(m.price) > 0;
-    if (!tampil) return { voucherShow: false, vouchers: [], voucherEmpty: true };
+    if (!tampil && !paksa) return { voucherShow: false, vouchers: [], voucherEmpty: true };
     const all = st.vouchers || {};
     if (!all[m.id] && this.api() && !(this._vLoad || {})[m.id]) {
       this._vLoad = Object.assign({}, this._vLoad, { [m.id]: true });
@@ -4371,7 +4451,29 @@ class Component extends DCLogic {
     const out = await this.apiPost({ action: 'revenue', password: this._pw || '' });
     if (out && out.ok) this.setState({ revenue: out.data });
   }
-  hargaLabel(n, m) { if (m && m.donasi) return 'Donasi sukarela'; return Number(n) > 0 ? 'Rp' + Number(n).toLocaleString('id-ID') : 'Gratis'; }
+  /* Harga setelah diskon langsung yang masih berlaku. */
+  hargaDiskon(m) {
+    const harga = Math.round(Number(m && m.price) || 0), d = m && m.diskon;
+    if (!harga || !d || !d.on) return { harga, asli: harga, aktif: false };
+    if (d.until && Date.parse(d.until + 'T23:59:59+07:00') < Date.now()) return { harga, asli: harga, aktif: false };
+    const nilai = Math.max(0, Number(d.value) || 0);
+    const pot = Math.min(harga, Math.round(d.type === 'nominal' ? nilai : harga * Math.min(100, nilai) / 100));
+    return { harga: harga - pot, asli: harga, aktif: pot > 0, label: String(d.label || '').trim() || 'Diskon' };
+  }
+  hargaLabel(n, m) {
+    if (m && m.donasi) return 'Donasi sukarela';
+    const h = m ? this.hargaDiskon(m) : { harga: Number(n) || 0, aktif: false };
+    if (!(h.harga > 0) && !h.aktif) return Number(n) > 0 ? 'Rp' + Number(n).toLocaleString('id-ID') : 'Gratis';
+    const nilai = h.harga > 0 ? 'Rp' + h.harga.toLocaleString('id-ID') : 'Gratis';
+    return nilai;
+  }
+  /* Keterangan diskon untuk baris terpisah di bawah/atas harga. */
+  diskonInfo(m) {
+    const h = m && !m.donasi ? this.hargaDiskon(m) : { aktif: false };
+    if (!h.aktif) return { on: false, asli: '', badge: '' };
+    const pct = Math.round((h.asli - h.harga) / h.asli * 100);
+    return { on: true, asli: 'Rp' + h.asli.toLocaleString('id-ID'), badge: h.label + ' −' + pct + '%' };
+  }
   DONASI_SARAN = [25000, 50000, 100000];
   DONASI_MIN = 2000;
   rp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
@@ -6002,6 +6104,7 @@ class Component extends DCLogic {
           : this.jenisOf(m)) + (String(m.kategori || '').trim() ? ' · ' + String(m.kategori).trim() : ''),
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
         lokasi: lokasiOf(m), harga: this.hargaLabel(m.price, m),
+        diskonOn: this.diskonInfo(m).on, hargaAsli: this.diskonInfo(m).asli, diskonBadge: this.diskonInfo(m).badge,
         pendaftar: this.pendaftarLabel(m), hasPendaftar: !!this.pendaftarLabel(m),
         pendaftarBar: { height: '100%', borderRadius: '100px', background: m.quota && (m.participantCount || 0) >= m.quota ? '#7A6F76' : '#B31F24',
           width: (m.quota ? Math.min(100, Math.round((m.participantCount || 0) / m.quota * 100)) : Math.min(100, 8 + (m.participantCount || 0))) + '%' },
@@ -6088,6 +6191,7 @@ class Component extends DCLogic {
       v.profilNarsum = narsum;
       v.profilHasNarsum = !!narsum.length && !bundel;
       v.profilHarga = this.hargaLabel(m.price, m);
+      { const di = this.diskonInfo(m); v.profilDiskonOn = di.on; v.profilHargaAsli = di.asli; v.profilDiskonBadge = di.badge; }
       v.profilDonasi = !!m.donasi;
       v.profilDonasiTujuan = String(m.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.';
       v.profilInfo = [
@@ -6304,7 +6408,7 @@ class Component extends DCLogic {
     v.regForm = !st.regCode;
     v.regMailNote = st.regMailed ? 'Tiket dan kode juga sudah dikirim ke ' + (st.regEmail || 'email Anda') + '.' : '';
     v.regMailShow = !!st.regMailed;
-    v.payAmount = donasiOn ? (st.regBayarNominal ? this.rp(st.regBayarNominal) : '') : (st.regHarga != null ? this.rp(st.regHarga) : (wsAktif && wsAktif.price > 0 ? this.rp(wsAktif.price) : ''));
+    v.payAmount = donasiOn ? (st.regBayarNominal ? this.rp(st.regBayarNominal) : '') : (st.regHarga != null ? this.rp(st.regHarga) : (wsAktif && wsAktif.price > 0 ? this.rp(this.hargaDiskon(wsAktif).harga) : ''));
     const viaLink = st.payProvider === 'midtrans';
     v.payIsLink = viaLink && !!st.payUrl;
     v.payIsQr = !viaLink;
@@ -6376,7 +6480,7 @@ class Component extends DCLogic {
     v.onRegPhone = e => this.setState({ regPhone: e.target.value });
     v.onRegEmail = e => this.setState({ regEmail: e.target.value, regErr: '' });
     {
-      const harga = wsAktif && !wsAktif.donasi ? Number(wsAktif.price) || 0 : 0;
+      const harga = wsAktif && !wsAktif.donasi ? this.hargaDiskon(wsAktif).harga : 0;
       const info = st.regVoucherInfo;
       v.regVoucherShow = harga > 0 && !st.regCode;
       v.regVoucher = st.regVoucher || '';
@@ -6416,7 +6520,7 @@ class Component extends DCLogic {
         if (!(st.regDonasi > 0) && !wsAktif.donasiOpsional) return this.setState({ regErr: 'Event ini meminta donasi, berapa pun nominalnya.' });
       }
       const vInfo = !donasiOn ? st.regVoucherInfo : null;
-      const bayar = vInfo ? vInfo.harga > 0 : this.perluBayarWs(wsAktif, nominal);
+      const bayar = vInfo ? vInfo.harga > 0 : (donasiOn ? this.perluBayarWs(wsAktif, nominal) : this.hargaDiskon(wsAktif).harga > 0);
       this.setState({ regBayarNominal: donasiOn ? nominal : 0, regHarga: vInfo ? vInfo.harga : null });
       if (!this.api()) {
         const kode = 'WS-' + Math.random().toString(36).toUpperCase().slice(2, 6);
@@ -7226,18 +7330,19 @@ class Component extends DCLogic {
     v.roleBadgeStyle = { display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, color: bolehPlatform ? '#8E1018' : '#5C534B', background: bolehPlatform ? '#FBEFEF' : '#F1EBE3', border: '1px solid ' + (bolehPlatform ? '#F0C9CC' : '#E0D8CE'), borderRadius: '100px', padding: '6px 13px', marginBottom: '6px' };
     v.roleNote = bolehPlatform ? '' : this.ROLE_NOTE[peran] || '';
     v.showRoleNote = !bolehPlatform;
-    const daftarTab = [['workshops', 'Event'], ['control', 'Sesi & materi'], ['results', 'Hasil & rekap'], ['people', 'Peserta & kode'], ['hereg', 'Heregistrasi'], ['cert', 'Sertifikat'], ['pendapatan', 'Pendapatan'], ['admins', 'Akun admin']]
+    const daftarTab = [['workshops', 'Event'], ['control', 'Sesi & materi'], ['results', 'Hasil & rekap'], ['people', 'Peserta & kode'], ['hereg', 'Heregistrasi'], ['cert', 'Sertifikat'], ['voucher', 'Voucher & diskon'], ['pendapatan', 'Pendapatan'], ['admins', 'Akun admin']]
       .filter(([id]) => {
         if (id === 'workshops') return bolehPlatform || st.isSuper || (st.adminWsIds || []).length > 1 || ['wsadmin', 'fasilitator'].indexOf(st.adminRole) >= 0;
         if (id === 'admins') return bolehPlatform;
         if (id === 'people' || id === 'cert') return bolehSusun;
-        if (id === 'pendapatan') return bolehSusun;
+        if (id === 'pendapatan' || id === 'voucher') return bolehSusun;
         if (id === 'control' || id === 'hereg') return bolehJalan;
         return true;
       });
     const tabAktif = daftarTab.some(([id]) => id === st.tab) ? st.tab : daftarTab[0][0];
     v.tabControl = tabAktif === 'control'; v.tabResults = tabAktif === 'results';
     v.tabPeople = tabAktif === 'people'; v.tabAdmins = tabAktif === 'admins'; v.tabWorkshops = tabAktif === 'workshops';
+    v.tabVoucher = tabAktif === 'voucher';
     v.tabCert = tabAktif === 'cert'; v.tabPendapatan = tabAktif === 'pendapatan'; v.tabHereg = tabAktif === 'hereg';
     if (tabAktif !== 'hereg' && this._heregCam) { this._heregCam = false; this.stopCam(); }
     if (tabAktif === 'hereg') {
@@ -7461,6 +7566,39 @@ class Component extends DCLogic {
     v.wsBulkShow = !v.wsCompact && !fokus && metaAdmin.length > 1;
     v.wsOpenAll = () => this.setState({ wsOpen: metaAdmin.reduce((o, m) => { o[m.id] = true; return o; }, {}) });
     v.wsCloseAll = () => this.setState({ wsOpen: {} });
+    {
+      const mv = this.wsNow() || metaAdmin.find(x => x.id === st.wsId) || {};
+      const d = Object.assign({ on: false, type: 'persen', value: 20, until: '', label: 'Early bird' }, mv.diskon || {}, st.diskonDraft && st.diskonDraft.ws === mv.id ? st.diskonDraft.d : {});
+      const setD = (k, val) => this.setState({ diskonDraft: { ws: mv.id, d: Object.assign({}, d, { [k]: val }) }, diskonMsg: 'Belum disimpan.' });
+      v.vdTitle = mv.title || 'event ini';
+      const gratis = !(Number(mv.price) > 0) || !!mv.donasi;
+      v.vdGratis = gratis;
+      v.vdGratisNote = mv.donasi
+        ? 'Event ini memakai donasi sukarela, jadi diskon dan voucher tidak berlaku. Anda tetap bisa menyiapkannya untuk dipakai bila event diubah menjadi berbayar.'
+        : 'Event ini masih gratis. Diskon dan voucher baru berlaku setelah biaya pendaftaran diisi' + (bolehPlatform ? ' di tab Event.' : ' (biaya diatur oleh super admin — ajukan lewat tab Event).');
+      v.vdLabel = d.label || ''; v.vdType = d.type || 'persen'; v.vdValue = d.value || 0; v.vdUntil = d.until || '';
+      v.vdOnLabel = e => setD('label', e.target.value);
+      v.vdOnType = e => setD('type', e.target.value);
+      v.vdOnValue = e => setD('value', Math.max(0, parseInt(e.target.value, 10) || 0));
+      v.vdOnUntil = e => setD('until', e.target.value);
+      v.vdToggleLabel = d.on ? 'Aktif' : 'Nonaktif';
+      v.vdToggleStyle = d.on
+        ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }
+        : { background: '#FFF', border: '1px solid #E0D8CE', color: '#8C8078', borderRadius: '100px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' };
+      v.vdToggle = () => setD('on', !d.on);
+      v.vdPreview = gratis ? (mv.donasi ? 'Donasi sukarela' : 'Gratis') : (() => { const mm = Object.assign({}, mv, { diskon: d }), di = this.diskonInfo(mm); return this.hargaLabel(mv.price, mm) + (di.on ? ' (' + di.badge + ', dari ' + di.asli + ')' : ''); })();
+      v.vdMsg = st.diskonMsg || '';
+      v.vdSave = () => {
+        if (d.type === 'persen' && d.value > 100) return this.setState({ diskonMsg: 'Potongan persen maksimal 100.' });
+        if (!mv.id) return;
+        simpanMeta(list => { const x = list.find(y => y.id === mv.id); if (x) x.diskon = { on: !!d.on, type: d.type, value: d.value, until: d.until, label: d.label }; });
+        this.setState({ diskonDraft: null, diskonMsg: 'Tersimpan.' });
+      };
+      const vr = mv.id ? this.voucherRows(mv, true) : { vouchers: [], voucherEmpty: true };
+      v.vdVouchers = vr.vouchers || []; v.vdVoucherEmpty = !!vr.voucherEmpty;
+      v.vdVoucherAdd = vr.voucherAdd || (() => {}); v.vdVoucherSave = vr.voucherSave || (() => {});
+      v.vdVoucherMsg = vr.voucherMsg || '';
+    }
     v.wsRows = metaAdmin.filter(m => (!wsMilik || wsMilik.indexOf(m.id) >= 0) && (!fokus || m.id === fokus)).map(m => {
       const ubah = (k, val) => simpanMeta(list => { const x = list.find(y => y.id === m.id); if (x) x[k] = val; });
       const dipilih = m.id === st.wsId;
