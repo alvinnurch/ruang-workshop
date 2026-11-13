@@ -68,6 +68,51 @@
     </div>
     </sc-if>
   </header>
+  <sc-if value="{{ mediaOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ mediaClose }}" style="position:fixed;inset:0;background:rgba(27,23,20,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:min(4vw,28px)">
+      <div onClick="{{ mediaStop }}" role="dialog" aria-label="Pustaka gambar" style="background:#FFF;border-radius:16px;width:100%;max-width:880px;max-height:min(86vh,760px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px -30px rgba(0,0,0,.5)">
+        <div style="padding:18px 22px;border-bottom:1px solid #EFE7DD;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A5121C">Pustaka gambar</div>
+            <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:18px;margin:3px 0 0;font-weight:700;line-height:1.3">{{ mediaLabel }}</h3>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="background:#A5121C;color:#FFF;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#8A0F17">{{ mediaUploadLabel }}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ mediaUpload }}" style="display:none" /></label>
+            <button onClick="{{ mediaClose }}" aria-label="Tutup" style="background:#F3EDE5;border:none;border-radius:9px;width:38px;height:38px;font-size:19px;color:#5C534B;cursor:pointer">×</button>
+          </div>
+        </div>
+        <div style="padding:14px 22px;border-bottom:1px solid #EFE7DD;display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+          <input value="{{ mediaCari }}" onChange="{{ onMediaCari }}" placeholder="Cari nama berkas" style="flex:1 1 200px;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:9px 12px;font-size:13.5px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+          <input value="{{ mediaLink }}" onChange="{{ onMediaLink }}" placeholder="…atau tempel tautan gambar (https://…)" style="flex:2 1 260px;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:9px 12px;font-size:13.5px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+          <button onClick="{{ mediaPakaiLink }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700;white-space:nowrap" style-hover="background:#1B1714">Pakai tautan</button>
+        </div>
+        <sc-if value="{{ mediaMsg }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ mediaMsgStyle }}">{{ mediaMsg }}</div>
+        </sc-if>
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:16px 22px 22px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+            <sc-for list="{{ mediaItems }}" as="m" hint-placeholder-count="6">
+              <div style="{{ m.cardStyle }}">
+                <button onClick="{{ m.pick }}" title="{{ m.name }}" style="display:block;width:100%;border:none;padding:0;background:#F6F1EA;cursor:pointer">
+                  <div style="{{ m.thumbStyle }}"></div>
+                </button>
+                <div style="padding:8px 10px 9px;display:flex;gap:6px;align-items:center">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:600;color:#3B342E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.name }}</div>
+                    <div style="font-size:11px;color:#8C8078">{{ m.meta }}</div>
+                  </div>
+                  <button onClick="{{ m.remove }}" title="Hapus dari pustaka" style="{{ m.removeStyle }}">×</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ mediaKosong }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px dashed #DCD3C8;border-radius:12px;padding:34px 20px;text-align:center;font-size:13.5px;color:#8C8078;line-height:1.6">{{ mediaKosongTeks }}</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 
   <!-- ══════════ ETALASE WORKSHOP ══════════ -->
   <sc-if value="{{ isPickWs }}" hint-placeholder-val="{{ false }}">
@@ -1860,7 +1905,7 @@
               <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
                 <div style="{{ heroPreviewStyle }}"></div>
                 <div style="display:flex;gap:9px;flex-wrap:wrap">
-                  <label style="background:#3B342E;color:#FFF;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Unggah ilustrasi<input type="file" accept="image/*" onChange="{{ onHeroFile }}" style="display:none" /></label>
+                  <button onClick="{{ pickHero }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah ilustrasi</button>
                   <button onClick="{{ hapusHero }}" style="{{ hapusHeroStyle }}">Hapus</button>
                 </div>
               </div>
@@ -2012,6 +2057,7 @@
                   </div>
                   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                     <input value="{{ annImgLink }}" onChange="{{ onAnnImgLink }}" placeholder="Link gambar (opsional)" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;min-width:0;flex:1 1 200px" />
+                    <button onClick="{{ pickAnn }}" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Pustaka gambar</button>
                     <sc-if value="{{ annHasImg }}" hint-placeholder-val="{{ false }}">
                       <span style="{{ annImgPreview }}"></span>
                     </sc-if>
@@ -2858,7 +2904,7 @@
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Logo mitra</span>
                     <div style="display:flex;gap:8px">
                       <input value="{{ w.partnerLogo }}" onChange="{{ w.onLogo }}" placeholder="assets/logo.png atau URL" style="flex:1;min-width:0;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
-                      <label style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Unggah<input type="file" accept="image/*" onChange="{{ w.onLogoFile }}" style="display:none" /></label>
+                      <button onClick="{{ w.pickLogo }}" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Pilih / unggah</button>
                     </div>
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
@@ -3049,7 +3095,7 @@
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil workshop</span>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                       <div style="{{ w.flyerPreviewStyle }}"></div>
-                      <label style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Unggah flyer<input type="file" accept="image/*" onChange="{{ w.onFlyerFile }}" style="display:none" /></label>
+                      <button onClick="{{ w.pickFlyer }}" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#EBE3D8">Pilih / unggah flyer</button>
                       <button onClick="{{ w.hapusFlyer }}" style="{{ w.hapusFlyerStyle }}">Hapus flyer</button>
                     </div>
                   </label>
@@ -3100,7 +3146,7 @@
                 <div style="{{ certQrPreviewStyle }}"></div>
               </div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
-                <label style="background:#3B342E;color:#FFF;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Unggah template<input type="file" accept="image/*" onChange="{{ onCertFile }}" style="display:none" /></label>
+                <button onClick="{{ pickCert }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah template</button>
                 <button onClick="{{ certHapus }}" style="{{ certHapusStyle }}">Hapus template</button>
                 <button onClick="{{ certToggleOpen }}" style="{{ certOpenStyle }}">{{ certOpenLabel }}</button>
                 <button onClick="{{ certTogglePage2 }}" style="{{ certPage2Style }}">{{ certPage2Label }}</button>
@@ -3228,7 +3274,7 @@
               <div style="flex:1.5 1 380px;min-width:min(100%,280px)">
                 <div style="{{ tiketPrevStyle }}"></div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-                  <label style="background:#3B342E;color:#FFF;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:700;cursor:pointer" style-hover="background:#1B1714">Unggah template<input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ onTiketFile }}" style="display:none" /></label>
+                  <button onClick="{{ pickTiket }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#1B1714">Pilih / unggah template</button>
                   <button onClick="{{ tiketHapus }}" style="{{ tiketHapusStyle }}">Pakai desain bawaan</button>
                   <button onClick="{{ tiketUnduhContoh }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Unduh contoh</button>
                 </div>
@@ -3871,6 +3917,69 @@ class Component extends DCLogic {
     const a = this.akunSaya();
     return (a && a.sessionIds) || [];
   }
+  /* ── Pustaka gambar: unggah sekali, pakai di mana saja ── */
+  DEMO_MEDIA = 'ruang_media_demo_v1';
+  bukaMedia(label, cb) {
+    this._mediaCb = cb;
+    this.setState({ mediaOpen: true, mediaLabel: label || 'Pilih gambar', mediaMsg: '', mediaLink: '', mediaCari: '' });
+    this.muatMedia();
+  }
+  tutupMedia() { this._mediaCb = null; this.setState({ mediaOpen: false, mediaBusy: false }); }
+  pakaiMedia(url) {
+    const cb = this._mediaCb;
+    this.tutupMedia();
+    if (cb && url) cb(url);
+  }
+  async muatMedia() {
+    if (!this.api()) {
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem(this.DEMO_MEDIA) || '[]'); } catch (e) {}
+      return this.setState({ mediaList: list });
+    }
+    const out = await this.apiPost({ action: 'mediaList', password: this._pw || '', user: this._user || '' });
+    if (out && out.ok) this.setState({ mediaList: out.data || [] });
+    else this.setState({ mediaMsg: (out && out.error) || 'Pustaka tidak bisa dimuat.', mediaBad: true });
+  }
+  unggahMedia(file) {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) return this.setState({ mediaMsg: 'Pakai gambar PNG, JPG, WEBP, atau GIF.', mediaBad: true });
+    if (file.size > 8 * 1024 * 1024) return this.setState({ mediaMsg: 'Gambar maksimal 8 MB.', mediaBad: true });
+    this.setState({ mediaBusy: true, mediaMsg: 'Mengunggah ' + file.name + '…', mediaBad: false });
+    const rd = new FileReader();
+    rd.onload = async () => {
+      const data = String(rd.result || '');
+      if (!this.api()) {
+        /* Pratinjau: simpan di peramban (batasi 12 berkas agar penyimpanan tidak penuh). */
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem(this.DEMO_MEDIA) || '[]'); } catch (e) {}
+        const ada = list.find(x => x.url === data);
+        if (!ada) { list.unshift({ file: 'demo-' + Date.now(), url: data, name: file.name, size: file.size, at: new Date().toISOString() }); list = list.slice(0, 12); }
+        try { localStorage.setItem(this.DEMO_MEDIA, JSON.stringify(list)); } catch (e) {}
+        this.setState({ mediaList: list, mediaBusy: false });
+        return this.pakaiMedia(data);
+      }
+      const out = await this.apiPost({ action: 'mediaUpload', password: this._pw || '', user: this._user || '', name: file.name, data });
+      if (!out || !out.ok) return this.setState({ mediaBusy: false, mediaMsg: (out && out.error) || 'Unggahan gagal.', mediaBad: true });
+      this.setState({ mediaBusy: false });
+      this.pakaiMedia(out.data.url);
+    };
+    rd.readAsDataURL(file);
+  }
+  async hapusMedia(it) {
+    if (!window.confirm('Hapus “' + (it.name || 'gambar') + '” dari pustaka?')) return;
+    if (!this.api()) {
+      let list = (this.state.mediaList || []).filter(x => x.file !== it.file);
+      try { localStorage.setItem(this.DEMO_MEDIA, JSON.stringify(list)); } catch (e) {}
+      return this.setState({ mediaList: list });
+    }
+    let out = await this.apiPost({ action: 'mediaDelete', password: this._pw || '', user: this._user || '', file: it.file });
+    if (out && !out.ok && out.dipakai) {
+      if (!window.confirm('Gambar ini masih dipakai di event atau beranda. Tetap hapus? Tempat yang memakainya akan kosong.')) return;
+      out = await this.apiPost({ action: 'mediaDelete', password: this._pw || '', user: this._user || '', file: it.file, force: true });
+    }
+    if (out && out.ok) { this.setState({ mediaMsg: 'Dihapus.', mediaBad: false }); this.muatMedia(); }
+    else this.setState({ mediaMsg: (out && out.error) || 'Gagal menghapus.', mediaBad: true });
+  }
   async muatPlatform() {
     if (!this.api()) return this.platformLokal();
     const out = await this.apiPost({ action: 'platform', password: this._pw || '' });
@@ -4236,8 +4345,16 @@ class Component extends DCLogic {
     if (!u) return '';
     const drive = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
     if (drive) return 'https://lh3.googleusercontent.com/d/' + drive[1];
+    /* Tanpa skema (mis. "contoh.com/a.jpg") boleh; skema lain (ftp:, javascript:, data:) ditolak. */
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u) && !/^https?:\/\//i.test(u)) return '';
     if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
-    return u;
+    return this.linkSah(u) ? u : '';
+  }
+  linkSah(u) {
+    try {
+      const x = new URL(u);
+      return (x.protocol === 'https:' || x.protocol === 'http:') && /^[^.\s]+(\.[^.\s]+)+$/.test(x.hostname) && !/\s/.test(u);
+    } catch (e) { return false; }
   }
   fotoNarsum(nama) { const f = (this.state.db || {}).narsumFoto || {}; return f[String(nama || '').trim().toLowerCase()] || ''; }
   kecilkanFoto(file) {
@@ -5681,6 +5798,44 @@ class Component extends DCLogic {
     v.wsRegisterStyle = bolehDaftar
       ? { background: 'none', border: 'none', color: '#3E6B22', fontSize: '12.5px', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px', cursor: 'pointer', padding: 0 }
       : { display: 'none' };
+    /* ── Pustaka gambar ── */
+    v.mediaOpen = !!st.mediaOpen;
+    v.mediaLabel = st.mediaLabel || '';
+    v.mediaClose = () => this.tutupMedia();
+    v.mediaStop = e => e.stopPropagation();
+    v.mediaUploadLabel = st.mediaBusy ? 'Mengunggah…' : '+ Unggah gambar baru';
+    v.mediaUpload = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.unggahMedia(f); };
+    v.mediaCari = st.mediaCari || '';
+    v.onMediaCari = e => this.setState({ mediaCari: e.target.value });
+    v.mediaLink = st.mediaLink || '';
+    v.onMediaLink = e => this.setState({ mediaLink: e.target.value, mediaMsg: '' });
+    v.mediaPakaiLink = () => {
+      const mentah = String(st.mediaLink || '').trim();
+      if (!mentah) return this.setState({ mediaMsg: 'Tempel tautan gambar dulu.', mediaBad: true });
+      const u = this.linkGambar(mentah);
+      if (!u) return this.setState({ mediaMsg: 'Tautan tidak sah. Pakai alamat gambar yang diawali https:// — contoh https://situs.com/gambar.jpg', mediaBad: true });
+      this.pakaiMedia(u);
+    };
+    v.mediaMsg = st.mediaMsg || '';
+    v.mediaMsgStyle = { padding: '10px 22px', fontSize: '12.5px', fontWeight: 600, background: st.mediaBad ? '#FCEDEE' : '#EEF5E9', color: st.mediaBad ? '#8E1018' : '#2C4D18', borderBottom: '1px solid #EFE7DD' };
+    {
+      const q = String(st.mediaCari || '').trim().toLowerCase();
+      const semua = st.mediaList || [];
+      const tampil = semua.filter(x => !q || String(x.name || '').toLowerCase().indexOf(q) >= 0);
+      const ukuran = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+      const bolehHapus = st.isSuper || (st.adminRole || 'penuh') === 'penuh' || st.adminRole === 'wsadmin';
+      v.mediaItems = tampil.map(it => ({
+        name: it.name || it.file,
+        meta: [it.size ? ukuran(it.size) : '', it.at ? new Date(it.at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }) : ''].filter(Boolean).join(' · '),
+        cardStyle: { border: '1px solid #E6DFD6', borderRadius: '11px', overflow: 'hidden', background: '#FFF' },
+        thumbStyle: { aspectRatio: '4 / 3', width: '100%', backgroundImage: 'url("' + it.url + '")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' },
+        pick: () => this.pakaiMedia(it.url),
+        remove: () => this.hapusMedia(it),
+        removeStyle: bolehHapus ? { background: 'none', border: 'none', color: '#A5968A', fontSize: '17px', width: '26px', height: '26px', borderRadius: '6px', cursor: 'pointer', flex: 'none' } : { display: 'none' }
+      }));
+      v.mediaKosong = !tampil.length;
+      v.mediaKosongTeks = semua.length ? 'Tidak ada gambar yang cocok dengan pencarian.' : 'Belum ada gambar. Unggah sekali di sini, lalu gambar yang sama bisa dipilih lagi untuk event, flyer, logo, sertifikat, atau tiket tanpa mengunggah ulang.';
+    }
     /* ── Dasbor super admin ── */
     /* Sebelum ringkasan platform tiba, pakai daftar event yang sudah ada di halaman. */
     const P = st.platform || { meta: st.wsMeta || [], payments: [], admins: [], xendit: {}, superUser: 'superadmin' };
@@ -5956,6 +6111,7 @@ class Component extends DCLogic {
       : { width: '150px', height: '150px', borderRadius: '50%', border: '1px dashed #DCD3C8', background: '#FAF6F0', flex: 'none' };
     const simpanHero = url => this.apiPost({ action: 'putHero', password: this._pw || '', hero: url })
       .then(() => { this.setState({ heroImg: url }); this.muatPlatform(); });
+    v.pickHero = () => this.bukaMedia('Ilustrasi beranda', url => simpanHero(url));
     v.onHeroFile = e => {
       const f = e.target.files && e.target.files[0];
       e.target.value = '';
@@ -7780,6 +7936,8 @@ class Component extends DCLogic {
         flyerPreviewStyle: m.flyer
           ? { width: '128px', height: '72px', borderRadius: '10px', border: '1px solid #E0D8CE', backgroundImage: 'url("' + m.flyer + '")', backgroundSize: 'cover', backgroundPosition: 'center', flex: 'none' }
           : { width: '128px', height: '72px', borderRadius: '10px', border: '1px dashed #DCD3C8', background: '#FAF6F0', flex: 'none' },
+        pickFlyer: () => this.bukaMedia('Flyer — ' + (m.title || 'event'), url => ubah('flyer', url)),
+        pickLogo: () => this.bukaMedia('Logo mitra — ' + (m.title || 'event'), url => ubah('partnerLogo', url)),
         onFlyerFile: e => {
           const f = e.target.files && e.target.files[0];
           e.target.value = '';
@@ -7862,6 +8020,13 @@ class Component extends DCLogic {
       v.tiketHapusStyle = curWs.ticketTpl ? { background: '#FFF', border: '1px solid #E0D8CE', color: '#5C534B', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600 } : { display: 'none' };
       v.tiketHapus = () => ubahWs('ticketTpl', '');
       v.tiketTplMsg = st.tiketTplMsg || '';
+      v.pickTiket = () => this.bukaMedia('Template tiket (15 × 5 cm)', url => {
+        this.muatGambar(url).then(im => {
+          const rasio = im.width / im.height;
+          this.setState({ tiketTplMsg: Math.abs(rasio - 3) > .25 ? 'Perbandingan gambar ' + rasio.toFixed(2) + ':1 — tiket 15 × 5 cm idealnya 3:1, jadi sebagian akan terpotong.' : '' });
+          ubahWs('ticketTpl', url);
+        }, () => this.setState({ tiketTplMsg: 'Gambar tidak bisa dibuka.' }));
+      });
       v.onTiketFile = e => {
         const f = e.target.files && e.target.files[0]; e.target.value = '';
         if (!f) return;
@@ -7967,6 +8132,7 @@ class Component extends DCLogic {
           bottom: v.certQrPos === 'kanan-atas' ? 'auto' : '7%', top: v.certQrPos === 'kanan-atas' ? '7%' : 'auto',
           left: v.certQrPos === 'kiri-bawah' ? '6%' : 'auto', right: v.certQrPos === 'kiri-bawah' ? 'auto' : '6%' }
       : { display: 'none' };
+    v.pickCert = () => this.bukaMedia('Template sertifikat', url => { ubahWs('certTemplate', url); this.setState({ certMsg: 'Template sertifikat dipasang.' }); });
     v.onCertFile = e => {
       const f = e.target.files && e.target.files[0];
       e.target.value = '';
@@ -8287,6 +8453,7 @@ class Component extends DCLogic {
         v.onAnnImgLink = e => { const t = e.target.value; this.setState({ annImgTxt: t, annImg: this.linkGambar(t) }); };
         v.annImgPreview = { width: '44px', height: '44px', borderRadius: '8px', backgroundImage: 'url("' + (st.annImg || '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid #E0D8CE' };
         v.annClearImg = () => this.setState({ annImg: '' });
+        v.pickAnn = () => this.bukaMedia('Gambar pengumuman', url => this.setState({ annImg: url, annImgTxt: url }));
         v.onAnnImg = e => {
           const f = e.target.files && e.target.files[0]; e.target.value = '';
           if (!f) return;
