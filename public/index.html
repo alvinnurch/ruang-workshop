@@ -4064,8 +4064,24 @@ class Component extends DCLogic {
       responses: { [id]: { checkins: {}, quiz: {}, words: [], feedback: {}, forms: {} } }
     };
   }
+  /* Data awal: disisipkan server (window.__RUANG_BOOT) + salinan terakhir di perangkat. */
+  bootInfo() {
+    if (this._boot !== undefined) return this._boot;
+    let b = null;
+    try { b = (typeof window !== 'undefined' && window.__RUANG_BOOT) || null; } catch (e) {}
+    if (!b) { try { b = JSON.parse(localStorage.getItem('ruang_boot_v1') || 'null'); } catch (e) {} }
+    return (this._boot = b);
+  }
+  cacheKey(ws) { return 'ruang_db_v1_' + (ws || '_'); }
   bootDb() {
-    if (typeof window !== 'undefined' && window.WORKSHOP_API) return this.blank();
+    if (typeof window !== 'undefined' && window.WORKSHOP_API) {
+      try {
+        const ws = localStorage.getItem('ws_pilihan_v1') || '';
+        const db = JSON.parse(localStorage.getItem(this.cacheKey(ws)) || 'null');
+        if (db && db.sessions) return db;
+      } catch (e) {}
+      return this.blank();
+    }
     try {
       const raw = localStorage.getItem(this.KEY);
       if (raw) { const db = JSON.parse(raw); if (db && db.sessions) return db; }
@@ -4078,12 +4094,14 @@ class Component extends DCLogic {
     formCode: '', loginError: '',
     adminPin: '', adminUser: '', adminError: '', tab: 'control', isSuper: false, platform: null, platTab: 'workshops',
     adminRole: 'penuh', adminName: '', adminId: null,
-    wsId: (() => { try { return localStorage.getItem('ws_pilihan_v1') || ''; } catch (e) { return ''; } })(), wsMeta: [],
+    wsId: (() => { try { return localStorage.getItem('ws_pilihan_v1') || ''; } catch (e) { return ''; } })(),
+    wsMeta: ((this.bootInfo() || {}).meta) || [],
+    footer: ((this.bootInfo() || {}).footer) || null,
     lbJudul: '', lbFormat: 'online', lbKategori: '', lbWaktu: '', lbLokasi: '', lbSesi: '', lbKuota: '', lbBiaya: '', lbNarsum: '', lbRingkasan: '', lbCapaian: '',
     vouchers: { 'rg-damai': [{ code: 'HEMAT50', type: 'persen', value: 50, quota: 20, expires: '', active: true, used: 3 }] }, voucherMsg: {},
     regVoucher: '', regVoucherInfo: null, regVoucherErr: '', regHarga: null,
     libHide: (() => { try { return !!localStorage.getItem('ruang_lib_hide'); } catch (e) { return false; } })(),
-    wsMsg: '', heroImg: '', fee: 0, adminWsTitle: '', soloMode: false, fmtFilter: 'semua', cari: '', lbNama: '', lbPic: '', lbEmail: '', lbPhone: '', lbKota: '', lbSitus: '', lbRencana: '', lembagaErr: '', lembagaOk: false, regName: '', regOrg: '', regPhone: '', regEmail: '', regCode: '', regErr: '',
+    wsMsg: '', heroImg: ((this.bootInfo() || {}).hero) || '', fee: Number((this.bootInfo() || {}).fee) || 0, adminWsTitle: '', soloMode: false, fmtFilter: 'semua', cari: '', lbNama: '', lbPic: '', lbEmail: '', lbPhone: '', lbKota: '', lbSitus: '', lbRencana: '', lembagaErr: '', lembagaOk: false, regName: '', regOrg: '', regPhone: '', regEmail: '', regCode: '', regErr: '',
     regPid: null, regStatus: '', payQr: '', payRef: '', payProvider: '', payUrl: '', payStatus: '', payErr: '', payChecking: false,
     newAdminName: '', newAdminUser: '', newAdminPass: '', newAdminRole: 'wsadmin', adminMsg: '',
     revenue: null, certMsg: '', feeInput: null, feeMsg: '', verifKode: '',
@@ -4102,11 +4120,13 @@ class Component extends DCLogic {
   WSKEY = 'ws_pilihan_v1';
   _hashAwal = (typeof location === 'undefined') ? ''
     : location.hash ? location.hash
-    : (/^\/workshop\/[a-z0-9-]+\/?$/.test(location.pathname) ? '#' + location.pathname.replace(/\/+$/, '') : '');
+    : (/^\/workshop\/[a-z0-9-]+\/?$/.test(location.pathname) ? '#' + location.pathname.replace(/\/+$/, '')
+      : /^\/[a-z0-9][a-z0-9-]*\/?$/.test(location.pathname) ? '#/workshop' + location.pathname.replace(/\/+$/, '') : '');
   VERIF_RE = /^#\/workshop\/[^/]+\/sertifikat\//;
   wsNow() { return (this.state.wsMeta || []).filter(m => m.id === this.state.wsId)[0] || null; }
   pilihWs(id, tujuan) {
     this.setState({ regVoucher: '', regVoucherInfo: null, regVoucherErr: '', regHarga: null });
+    if (this.api()) { try { const c = JSON.parse(localStorage.getItem(this.cacheKey(id)) || 'null'); this.setState({ db: c && c.sessions ? c : this.blank() }); } catch (e) {} }
     try { localStorage.setItem(this.WSKEY, id); } catch (e) {}
     this._dirty = false; this._draftDb = null;
     this.setState({ wsId: id, loginGlobal: false, role: tujuan || 'login', userId: null, panel: null, adminSessionId: null, draftPending: false }, () => { if (this.api()) this.apiGet(true).catch(() => {}); });
@@ -4139,13 +4159,13 @@ class Component extends DCLogic {
     if (!r || typeof location === 'undefined') return;
     /* Beranda = alamat bersih, tanpa #/ di belakang domain. */
     if (typeof history === 'undefined') return;
-    /* Di server sendiri: beranda "/" dan profil "/workshop/<slug>" memakai alamat bersih
+    /* Di server sendiri: beranda "/" dan profil "/<slug>" memakai alamat bersih
        (tanpa #) agar pratinjau tautan saat dibagikan menampilkan gambar yang tepat. */
     if (this.api()) {
       const st = this.state, m = this.wsNow();
       let tujuan;
       if (r === 'ROOT') { this._rute = ''; tujuan = '/'; }
-      else if (st.role === 'profil' && m) { this._rute = ''; tujuan = '/workshop/' + this.slugWs(m); }
+      else if (st.role === 'profil' && m) { this._rute = ''; tujuan = '/' + this.slugWs(m); }
       else { this._rute = r; tujuan = '/' + r; }
       if (location.pathname + location.hash !== tujuan) history.replaceState(null, '', tujuan);
       return;
@@ -4599,6 +4619,15 @@ class Component extends DCLogic {
       this.setState({ wsMeta: sedangMengetik ? this.state.wsMeta : out.meta, wsId: sah ? this.state.wsId : '' }, () => {
         if (this._rutePending) { const b = this._rutePending; this._rutePending = null; location.hash = '#/' + b.join('/'); this.bacaRute(); }
       });
+    }
+    if (out && out.ok) {
+      clearTimeout(this._cacheT);
+      this._cacheT = setTimeout(() => {
+        try {
+          if (out.meta) localStorage.setItem('ruang_boot_v1', JSON.stringify({ meta: out.meta, hero: out.hero || '', fee: out.fee || 0, footer: out.footer || null }));
+          if (out.data && out.data.sessions) localStorage.setItem(this.cacheKey(this.state.wsId), JSON.stringify(out.data));
+        } catch (e) { /* kuota penyimpanan penuh — abaikan, data tetap dari server */ }
+      }, 400);
     }
     if (out && out.ok && out.data && out.data.sessions) {
       if (this._draftDb) { this._draftDb = null; this.setState({ syncAt: Date.now() }); return; }
