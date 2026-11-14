@@ -3607,6 +3607,49 @@
               <button onClick="{{ waCopyNums }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">{{ waCopyLabel }}</button>
               <button onClick="{{ waReset }}" style="background:none;border:none;color:#7A6F66;font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ulangi tanda terkirim</button>
             </div>
+            <div style="background:#F4FBF6;border:1px solid #CDEBD6;border-radius:11px;padding:14px 16px;margin-bottom:14px;display:grid;gap:12px">
+              <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+                <div>
+                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;font-weight:700;color:#14532D">Antrean kirim aman</div>
+                  <div style="font-size:12.5px;color:#3F6B4E;line-height:1.5;margin-top:2px;text-wrap:pretty">Satu tombol untuk semua: kirim, kembali ke tab ini, tombol berikutnya menyala setelah jeda acak. Berhenti sendiri saat batas tercapai.</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <label style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:#3F6B4E;font-weight:600">Jeda
+                    <select value="{{ waJeda }}" onChange="{{ onWaJeda }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;font-size:13px;padding:7px 9px">
+                      <option value="15">15–30 dtk</option>
+                      <option value="30">30–60 dtk (disarankan)</option>
+                      <option value="60">60–120 dtk (paling aman)</option>
+                    </select>
+                  </label>
+                  <label style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:#3F6B4E;font-weight:600">Batas
+                    <select value="{{ waBatas }}" onChange="{{ onWaBatas }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;font-size:13px;padding:7px 9px">
+                      <option value="20">20 pesan</option>
+                      <option value="40">40 pesan</option>
+                      <option value="80">80 pesan</option>
+                      <option value="150">150 pesan</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <button onClick="{{ waNext }}" style="{{ waNextStyle }}">{{ waNextLabel }}</button>
+                <div style="flex:1 1 220px;min-width:0">
+                  <div style="height:8px;background:#DCEFE2;border-radius:100px;overflow:hidden"><div style="{{ waBarStyle }}"></div></div>
+                  <div style="font-size:12px;color:#3F6B4E;margin-top:5px">{{ waQueueNote }}</div>
+                </div>
+              </div>
+              <details style="font-size:12.5px;color:#3F6B4E;line-height:1.6">
+                <summary style="cursor:pointer;font-weight:700">Berapa banyak yang aman?</summary>
+                <div style="margin-top:8px;display:grid;gap:6px;text-wrap:pretty">
+                  <div>WhatsApp tidak menerbitkan angka pasti. Pegangan yang umum dipakai:</div>
+                  <div>• <b>Nomor baru / jarang dipakai:</b> maksimal 20–30 pesan per hari, naikkan perlahan selama 1–2 minggu.</div>
+                  <div>• <b>Nomor lama yang aktif:</b> sekitar 100–200 per hari, dibagi beberapa gelombang (mis. 40 per jam).</div>
+                  <div>• Beri jeda acak minimal 30 detik antarpesan, dan hindari pesan yang persis sama — {nama} dan {kode} sudah membuat tiap pesan berbeda.</div>
+                  <div>• Risiko terbesar justru <b>dilaporkan sebagai spam</b>. Kirim hanya ke peserta yang mendaftar, dan minta mereka menyimpan nomor panitia.</div>
+                  <div>• Untuk ratusan peserta sekaligus, <b>Daftar Siaran</b> lebih aman — tapi hanya sampai ke yang menyimpan nomor Anda. Sisanya kirim lewat antrean ini.</div>
+                </div>
+              </details>
+            </div>
             <div style="display:grid;gap:7px;max-height:420px;overflow-y:auto;padding-right:4px">
               <sc-for list="{{ waRows }}" as="w" hint-placeholder-count="3">
                 <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid #EFE7DD;border-radius:9px;padding:9px 12px;flex-wrap:wrap">
@@ -4074,7 +4117,14 @@ class Component extends DCLogic {
     if (!pw) { try { const x = JSON.parse(localStorage.getItem(this.SESSKEY) || 'null'); if (x && x.pw) { pw = x.pw; user = x.user || ''; } } catch (e) {} }
     this._anonHold = { id: blockId, anon, until: Date.now() + 6000 };
     const out = await this.apiPost({ action: 'setProjAnon', password: pw, user, blockId, anon });
-    if (!out || !out.ok) { this._anonHold = null; this.setState({ apiError: (out && out.error) || 'Pengaturan anonim tidak tersimpan. Buka proyektor dari dasbor panitia.' }); this.apiGet(true).catch(() => {}); }
+    if (!out || !out.ok) {
+      /* Jangan muat ulang dari server — draf yang belum disimpan (mis. formulir baru) bisa hilang.
+         Cukup kembalikan saklarnya di salinan lokal. */
+      this._anonHold = null;
+      const balik = d => { const s = (d.sessions || []).find(x => x.id === sessionId); const b = s && (s.blocks || []).find(x => x.id === blockId); if (b) b.projAnon = !anon; };
+      this.setState(st => { const db = JSON.parse(JSON.stringify(st.db)); balik(db); return { db, apiError: (out && out.error) || 'Pengaturan anonim tidak tersimpan. Buka proyektor dari dasbor panitia.' }; });
+      if (this._draftDb) balik(this._draftDb);
+    }
   }
   /* Embed: ubah di layar seketika, lalu kirim ke server tanpa menunggu Simpan perubahan. */
   async setEmbed(sessionId, blockId, ubah) {
@@ -8930,7 +8980,9 @@ class Component extends DCLogic {
           isCountdown: b.type === 'countdown',
           anonLabel: b.projAnon ? '🔒 Proyektor: anonim' : 'Proyektor: tampilkan nama',
           anonStyle: { marginLeft: 'auto', background: b.projAnon ? '#EEF5E9' : '#FFF', border: '1px solid ' + (b.projAnon ? '#CFE2C2' : '#E0D8CE'), color: b.projAnon ? '#2C4D18' : '#5C534B', borderRadius: '7px', padding: '7px 11px', fontSize: '12px', fontWeight: 700 },
-          toggleAnon: () => this.setProjAnon(cur.id, b.id, !b.projAnon),
+          toggleAnon: () => (this._dirty || st.draftPending || !this.api())
+            ? mut(b.id, x => { x.projAnon = !x.projAnon; })
+            : this.setProjAnon(cur.id, b.id, !b.projAnon),
           isIce: b.type === 'icebreak',
           pool: b.pool || 'semua',
           poolOpts: [{ id: 'semua', label: 'Semua peserta terdaftar' }, { id: 'hadir', label: 'Hanya yang sudah check in' }]
@@ -9229,7 +9281,41 @@ class Component extends DCLogic {
         const ok = () => { this.setState({ waCopied: true }); clearTimeout(this._waT); this._waT = setTimeout(() => this.setState({ waCopied: false }), 2000); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, ok); else ok();
       };
-      v.waReset = () => { try { localStorage.removeItem(kirimKey); } catch (e) {} this.forceUpdate(); };
+      v.waReset = () => { try { localStorage.removeItem(kirimKey); } catch (e) {} this._waQ = null; this.forceUpdate(); };
+      /* Antrean: tiap klik membuka satu chat (peramban hanya mengizinkan buka tab dari klik), lalu jeda acak. */
+      const jeda = Number(st.waJeda || 30), batas = Number(st.waBatas || 40);
+      v.waJeda = String(jeda); v.waBatas = String(batas);
+      v.onWaJeda = e => this.setState({ waJeda: e.target.value });
+      v.onWaBatas = e => this.setState({ waBatas: e.target.value });
+      const antre = punya.filter(p => !terkirim[p.id] && (filter !== 'belumcheckin' || !hadir[p.id]));
+      const q = this._waQ || (this._waQ = { sent: 0, readyAt: 0 });
+      const sisaDtk = Math.max(0, Math.ceil((q.readyAt - Date.now()) / 1000));
+      const penuh = q.sent >= batas;
+      if (sisaDtk > 0 && !this._waTick) this._waTick = setInterval(() => {
+        if (!this._waQ || Date.now() >= this._waQ.readyAt) { clearInterval(this._waTick); this._waTick = null; }
+        this.forceUpdate();
+      }, 1000);
+      const siap = !penuh && sisaDtk === 0 && antre.length > 0;
+      const berikut = antre[0];
+      v.waNextLabel = !antre.length ? 'Semua sudah dikirimi ✓'
+        : penuh ? 'Batas ' + batas + ' tercapai — lanjut nanti'
+        : sisaDtk > 0 ? 'Tunggu ' + sisaDtk + ' dtk…'
+        : 'Kirim ke ' + (berikut.name || 'berikutnya') + ' →';
+      v.waNextStyle = { background: siap ? '#25D366' : '#CFE3D5', color: siap ? '#FFF' : '#4E6B57', border: 'none', borderRadius: '9px', padding: '11px 16px', fontSize: '13.5px', fontWeight: 700, cursor: siap ? 'pointer' : 'default', whiteSpace: 'nowrap', minWidth: '210px' };
+      const tot = Math.min(batas, q.sent + antre.length) || 1;
+      v.waBarStyle = { height: '100%', width: Math.round(q.sent / tot * 100) + '%', background: '#25D366', transition: 'width .3s' };
+      v.waQueueNote = penuh
+        ? q.sent + ' terkirim di gelombang ini. Istirahat dulu (disarankan ±1 jam), lalu muat ulang halaman untuk memulai gelombang berikutnya — peserta yang sudah dikirimi otomatis dilewati.'
+        : q.sent + ' terkirim gelombang ini · ' + antre.length + ' tersisa · batas ' + batas;
+      v.waNext = () => {
+        if (!siap || !berikut) return;
+        window.open('https://wa.me/' + no(berikut.phone) + '?text=' + encodeURIComponent(isi(berikut)), '_blank', 'noopener');
+        const baru = Object.assign({}, terkirim, { [berikut.id]: Date.now() });
+        try { localStorage.setItem(kirimKey, JSON.stringify(baru)); } catch (e) {}
+        q.sent += 1;
+        q.readyAt = Date.now() + (jeda + Math.floor(Math.random() * (jeda + 1))) * 1000;
+        this.forceUpdate();
+      };
       const tanpa = db.participants.length - punya.length;
       v.waNoPhone = tanpa > 0;
       v.waNoPhoneNote = tanpa + ' peserta belum punya nomor HP yang sah, jadi tidak tampil di daftar ini.';
