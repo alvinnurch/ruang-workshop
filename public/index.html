@@ -971,6 +971,11 @@
               <sc-if value="{{ docNoVideo }}" hint-placeholder-val="{{ false }}">
                 <div style="background:#FAF6F0;border:1px dashed #DCD3C8;border-radius:10px;padding:22px;text-align:center;font-size:13.5px;color:#8C8078;margin-bottom:14px">Tautan video belum dipasang panitia.</div>
               </sc-if>
+              <sc-if value="{{ docHasView }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1px solid #E6DFD6;border-radius:12px;overflow:hidden;background:#F6F1EA;margin-bottom:14px">
+                  <iframe src="{{ docViewSrc }}" title="Bahan bacaan" allow="fullscreen" allowfullscreen="" loading="lazy" style="width:100%;height:min(78vh,720px);border:0;display:block;background:#FFF"></iframe>
+                </div>
+              </sc-if>
               <a href="{{ docUrl }}" target="_blank" rel="noopener" style="{{ docBtnStyle }}">{{ docBtnLabel }}</a>
             </div>
           </sc-if>
@@ -1606,8 +1611,22 @@
             </div>
           </div>
         </sc-if>
+        <sc-if value="{{ projDocView }}" hint-placeholder-val="{{ false }}">
+          <div style="width:100%;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0">
+            <div ref="{{ docFrameRef }}" style="flex:1;min-height:max(320px,calc(100vh - 260px));background:#0F0C0A;border-radius:14px;overflow:hidden;border:1px solid #3A322A">
+              <iframe src="{{ projDocSrc }}" title="Materi" allow="fullscreen" allowfullscreen="" style="width:100%;height:100%;min-height:inherit;border:0;display:block;background:#FFF"></iframe>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:13px;color:#A99C90">{{ projDocKind }} · geser halaman langsung di bingkai, atau tekan tombol panah keyboard</span>
+              <button onClick="{{ projDocFull }}" style="background:#2E2823;border:1px solid #4E4338;color:#F1EBE3;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">⛶ Layar penuh</button>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{ projDoc }}" hint-placeholder-val="{{ false }}">
           <div style="width:100%;max-width:820px;text-align:center">
+            <sc-if value="{{ projDocHasHint }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#2A231D;border:1px solid #4E4338;border-radius:11px;padding:12px 16px;margin-bottom:18px;font-size:14px;color:#E8B84B;line-height:1.55;text-wrap:pretty">{{ projDocHint }}</div>
+            </sc-if>
             <div style="font-size:15px;color:#A99C90;line-height:1.65;margin-bottom:26px;text-wrap:pretty">{{ panelDesc }}</div>
             <div style="display:inline-grid;gap:12px;background:#262019;border:1px solid #3A322A;border-radius:14px;padding:26px 34px;text-align:left">
               <sc-for list="{{ docMeta }}" as="m" hint-placeholder-count="2">
@@ -3975,6 +3994,38 @@ class Component extends DCLogic {
     const m = u.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/);
     if (m) return m[1];
     return /^[A-Za-z0-9_-]{11}$/.test(u) ? u : '';
+  }
+  /* Alamat yang bisa ditanam sebagai iframe untuk PDF/PPT. null = tidak bisa ditampilkan langsung. */
+  docViewer(url, fileName) {
+    let u = String(url || '').trim();
+    if (!u || u === '#') return null;
+    const nama = String(fileName || '').toLowerCase();
+    let m;
+    if (/^data:application\/pdf/i.test(u)) {
+      /* PDF yang diunggah langsung: ubah ke blob agar bisa dibuka peramban. */
+      this._blobs = this._blobs || {};
+      if (!this._blobs[u.length + ':' + u.slice(-40)]) {
+        try {
+          const b64 = u.split(',')[1] || '', bin = atob(b64), arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          this._blobs[u.length + ':' + u.slice(-40)] = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+        } catch (e) { return null; }
+      }
+      return { src: this._blobs[u.length + ':' + u.slice(-40)] + '#view=FitH', kind: 'PDF' };
+    }
+    if (/^data:/i.test(u)) return null;
+    if ((m = u.match(/docs\.google\.com\/presentation\/d\/([\w-]{20,})/))) return { src: 'https://docs.google.com/presentation/d/' + m[1] + '/embed?start=false&loop=false&delayms=60000', kind: 'Google Slides' };
+    if ((m = u.match(/docs\.google\.com\/(document|spreadsheets)\/d\/([\w-]{20,})/))) return { src: 'https://docs.google.com/' + m[1] + '/d/' + m[2] + '/preview', kind: 'Google Docs' };
+    if ((m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/))) return { src: 'https://drive.google.com/file/d/' + m[1] + '/preview', kind: 'Google Drive' };
+    if ((m = u.match(/canva\.com\/design\/([\w-]+)\/([\w-]+)\//))) return { src: 'https://www.canva.com/design/' + m[1] + '/' + m[2] + '/view?embed', kind: 'Canva' };
+    if (!/^https?:\/\//i.test(u) && !/^\//.test(u)) return null;
+    const bersih = u.split(/[?#]/)[0].toLowerCase();
+    const pdf = /\.pdf$/.test(bersih) || /\.pdf$/.test(nama);
+    const office = /\.(pptx?|ppsx?|docx?|xlsx?)$/.test(bersih) || /\.(pptx?|ppsx?|docx?|xlsx?)$/.test(nama);
+    const mutlak = /^\//.test(u) && typeof location !== 'undefined' ? location.origin + u : u;
+    if (pdf) return { src: mutlak + '#view=FitH', kind: 'PDF' };
+    if (office && /^https:\/\//i.test(mutlak) && !/localhost|127\.0\.0\.1/.test(mutlak)) return { src: 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(mutlak), kind: 'PowerPoint' };
+    return null;
   }
   ytFrame(url, radius) {
     const id = this.ytId(url);
@@ -7129,6 +7180,7 @@ class Component extends DCLogic {
 
       if (pb) {
         v.panelKind = this.KINDS[pb.type]; v.panelTitle = pb.title; v.panelDesc = pb.desc;
+        v.docHasView = false; v.docViewSrc = '';
         v.panelPresenter = pb.presenter ? 'Pengisi: ' + pb.presenter : '';
         v.cloudPrompt = pb.prompt || 'Tulis satu kata…';
         if (pb.type === 'zoom' && pb.recUrl) {
@@ -7151,8 +7203,10 @@ class Component extends DCLogic {
             ? { display: 'inline-flex', gap: '9px', alignItems: 'center', background: 'none', color: '#7A6F66', padding: '4px 0', fontSize: '13px', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '3px' }
             : { display: 'none' };
         } else if (pb.type === 'ppt') {
+          const vw = this.docViewer(pb.url, pb.fileName);
+          v.docViewSrc = vw ? vw.src : ''; v.docHasView = !!vw;
           v.docMeta = []; v.docHasMeta = false; v.docUrl = pb.url || '#';
-          v.docBtnLabel = '⬇  ' + (pb.fileName || 'Unduh materi');
+          v.docBtnLabel = vw ? 'Buka di tab baru ↗' : '⬇  ' + (pb.fileName || 'Unduh materi');
           v.docBtnStyle = { display: 'inline-flex', gap: '9px', alignItems: 'center', background: '#F3EDE5', border: '1px solid #E0D8CE', color: '#1B1714', borderRadius: '9px', padding: '12px 18px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' };
         }
 
@@ -7417,7 +7471,20 @@ class Component extends DCLogic {
       v.projFeedback = !!ab && ab.type === 'feedback';
       v.projQuiz = !!ab && ab.type === 'quiz' && !(this.runInfo(ab) && !this.runInfo(ab).finished);
       v.projForm = !!ab && ab.type === 'form';
-      v.projDoc = !!ab && (ab.type === 'ppt' || ab.type === 'zoom');
+      const viewer = ab && ab.type === 'ppt' ? this.docViewer(ab.url, ab.fileName) : null;
+      v.projDocView = !!viewer;
+      v.projDocSrc = viewer ? viewer.src : '';
+      v.projDocKind = viewer ? viewer.kind : '';
+      v.projDocFull = () => {
+        const el = this._docFrame; if (!el) return;
+        (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+      };
+      v.docFrameRef = el => { this._docFrame = el; };
+      v.projDocHint = ab && ab.type === 'ppt' && !viewer
+        ? (/^data:/i.test(String(ab.url || '')) ? 'Berkas PowerPoint yang diunggah langsung tidak bisa ditayangkan di proyektor. Unggah versi PDF-nya, atau tempel tautan Google Slides / Google Drive.' : 'Tautan ini tidak bisa ditayangkan langsung. Pakai PDF, Google Slides, Google Drive, Canva, atau berkas .pptx yang bisa diakses publik.')
+        : '';
+      v.projDocHasHint = !!v.projDocHint;
+      v.projDoc = !!ab && (ab.type === 'zoom' || (ab.type === 'ppt' && !viewer));
       v.projVideo = !!ab && ab.type === 'video';
       v.projVideoEl = v.projVideo ? this.ytFrame(ab.url, '16px') : null;
       v.projVideoMissing = v.projVideo && !v.projVideoEl;
