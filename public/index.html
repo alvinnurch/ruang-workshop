@@ -7458,7 +7458,7 @@ class Component extends DCLogic {
       const shownBlocks = (live.blocks || []).filter(b => b.enabled && b.open && projTypes.indexOf(b.type) >= 0)
         .sort((a, b) => projTypes.indexOf(a.type) - projTypes.indexOf(b.type));
       const picked = st.projPick ? shownBlocks.find(b => b.id === st.projPick) : null;
-      const ab = picked || (live.blocks || []).find(b => b.id === live.active && b.open && b.enabled);
+      const ab = picked || (live.blocks || []).find(b => b.id === live.active && b.enabled && (b.open || this.selalu(b)));
       v.projViews = [{ id: null, label: 'Ikuti fasilitator' }].concat(shownBlocks.map(b => ({ id: b.id, label: this.KINDS[b.type] + (b.type === 'quiz' ? ' · ' + (b.quizKind === 'pre' ? 'pre' : b.quizKind === 'post' ? 'post' : 'mandiri') : '') })))
         .map(o => {
           const on = (o.id || null) === (st.projPick || null);
@@ -8788,7 +8788,7 @@ class Component extends DCLogic {
       });
       const navStyle = on => ({ width: '28px', height: '28px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF', border: '1px solid #E0D8CE', color: on ? '#5C534B' : '#CFC5B8', borderRadius: '7px', padding: 0, fontSize: '12px', fontWeight: 700, cursor: on ? 'pointer' : 'default' });
       v.blockRows = (cur.blocks || []).map((b, bi, arr) => {
-        const shown = cur.active === b.id && b.open;
+        const shown = cur.active === b.id && (b.open || this.selalu(b));
         const filled = b.type === 'checkin' ? Object.keys(R.checkins).length
           : b.type === 'quiz' ? Object.keys(R.quiz[b.id] || {}).length
           : b.type === 'feedback' ? Object.keys(R.feedback[b.id] || {}).length
@@ -8812,10 +8812,17 @@ class Component extends DCLogic {
           stateStyle: { fontSize: '10.5px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '4px 9px', borderRadius: '100px', background: !b.enabled ? '#F1EBE3' : shown ? '#A5121C' : b.open ? '#FBEFEF' : '#F1EBE3', color: !b.enabled ? '#8C8078' : shown ? '#FFF' : b.open ? '#A5121C' : '#8C8078' },
           rowStyle: { background: '#FFF', border: '1px solid ' + (shown ? '#A5121C' : '#E6DFD6'), borderRadius: '12px', padding: '16px 18px' },
           showLabel: shown ? 'Di layar' : 'Tampilkan',
-          showStyle: (b.open && b.enabled && cur.multiOpen !== false)
+          showStyle: (b.enabled && ((b.open && cur.multiOpen !== false) || this.selalu(b)))
             ? { background: shown ? '#A5121C' : '#FFF', border: '1px solid ' + (shown ? '#A5121C' : '#E0D8CE'), color: shown ? '#FFF' : '#5C534B', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: shown ? 'default' : 'pointer' }
             : { display: 'none' },
-          showOnScreen: () => { if (!shown) this.save(d => { d.sessions.find(x => x.id === cur.id).active = b.id; }, null, true); },
+          showOnScreen: () => {
+            const jadi = !shown;
+            this.save(d => {
+              const ss = d.sessions.find(x => x.id === cur.id);
+              /* klik lagi = turunkan dari layar */
+              ss.active = jadi ? b.id : null;
+            }, null, true);
+          },
           enabledLabel: b.enabled ? 'Keluarkan' : 'Pakai',
           canEmbed: !!{ quiz: 1, wordcloud: 1, form: 1, feedback: 1 }[b.type] && (st.adminRole || 'penuh') !== 'pemantau',
           embedOn: !!b.embed && !!embedWid,
