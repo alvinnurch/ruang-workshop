@@ -4141,9 +4141,9 @@ class Component extends DCLogic {
     const tampil = !m.donasi && Number(m.price) > 0;
     if (!tampil && !paksa) return { voucherShow: false, vouchers: [], voucherEmpty: true };
     const all = st.vouchers || {};
-    if (!all[m.id] && this.api() && !(this._vLoad || {})[m.id]) {
+    if (!all[m.id] && this.api() && this._pw && st.role === 'admin' && !(this._vLoad || {})[m.id]) {
       this._vLoad = Object.assign({}, this._vLoad, { [m.id]: true });
-      setTimeout(() => this.apiPost({ action: 'getVouchers', ws: m.id, password: this._pw || '', user: this._user || '' }).then(out => {
+      setTimeout(() => this.apiPost({ diam: true, action: 'getVouchers', ws: m.id, password: this._pw || '', user: this._user || '' }).then(out => {
         if (out && out.ok) this.setState(s => ({ vouchers: Object.assign({}, s.vouchers, { [m.id]: out.data.vouchers }) }));
         else this.setState(s => ({ voucherMsg: Object.assign({}, s.voucherMsg, { [m.id]: (out && out.error) || 'Voucher gagal dimuat.' }) }));
       }), 0);
@@ -4887,14 +4887,15 @@ class Component extends DCLogic {
         body: JSON.stringify(Object.assign({ ws: this.state.wsId || '', user: this._user || '' }, payload))
       }, 25000);
       const out = await res.json();
-      if (out && out.ok === false) this.setState({ apiError: out.error || 'Gagal menyimpan ke spreadsheet.' });
+      if (out && out.ok === false) { if (!payload.diam) this.setState({ apiError: out.error || 'Gagal menyimpan ke server.' }); }
       else this.setState({ syncAt: Date.now() });
       return out;
     } catch (e) {
+      if (payload.diam) return null;
       const aborted = e && e.name === 'AbortError';
       this.setState({ apiError: aborted
-        ? 'Spreadsheet tidak menjawab dalam 25 detik. Perubahan masih tersimpan di peramban — coba Simpan lagi.'
-        : 'Koneksi ke spreadsheet gagal. Periksa jaringan.' });
+        ? 'Server tidak menjawab dalam 25 detik. Perubahan masih tersimpan di peramban — coba Simpan lagi.'
+        : 'Koneksi ke server gagal. Periksa jaringan.' });
       return null;
     }
   }
