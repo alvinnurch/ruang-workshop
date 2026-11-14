@@ -954,6 +954,16 @@ function handleAction(p) {
       return { ok: true, data: { useGroups: db.useGroups, groups: db.groups } };
     }
 
+    /* Proyektor: sembunyikan nama di jawaban formulir — langsung tersimpan. */
+    case 'setProjAnon': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh mengubah tampilan proyektor.' };
+      const hit = cariMateri(p.blockId);
+      if (!hit || hit.b.type !== 'form') return { ok: false, error: 'Formulir tidak ditemukan di server. Simpan perubahan dulu.' };
+      hit.b.projAnon = !!p.anon;
+      touch();
+      return { ok: true, data: { anon: hit.b.projAnon } };
+    }
+
     /* Saklar embed langsung tersimpan, tanpa menunggu "Simpan perubahan". */
     case 'setEmbed': {
       if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh mengatur embed.' };
@@ -1293,9 +1303,16 @@ function handleAction(p) {
     case 'zoomCreate': {
       if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Peran ini tidak boleh membuat rapat Zoom.' };
       if (!ZOOM_AKTIF) return { ok: false, error: 'Zoom belum dipasang di server (ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET).' };
-      const s = (db.sessions || []).find(x => x.id === p.sessionId);
-      const b = blockOf(p.sessionId, p.blockId);
-      if (!s || !b || b.type !== 'zoom') return { ok: false, error: 'Materi Zoom tidak ditemukan.' };
+      let s = (db.sessions || []).find(x => x.id === p.sessionId);
+      let b = blockOf(p.sessionId, p.blockId);
+      /* Materi baru yang belum tersimpan: tambahkan dari salinan yang dikirim halaman. */
+      if (!b && p.block && p.block.type === 'zoom' && p.block.id === p.blockId) {
+        if (!s) { s = { id: p.sessionId, title: String(p.sessionTitle || 'Sesi'), blocks: [] }; db.sessions.push(s); }
+        s.blocks = s.blocks || [];
+        b = Object.assign({}, p.block, { open: false });
+        s.blocks.push(b);
+      }
+      if (!s || !b || b.type !== 'zoom') return { ok: false, error: 'Materi Zoom tidak ditemukan di server. Tekan Simpan perubahan dulu, lalu coba lagi.' };
       const m = store.meta.filter(x => x.id === wid)[0] || {};
       const topik = String(p.topic || '').trim() || [m.title, s.title].filter(Boolean).join(' — ') || 'Sesi workshop';
       const mulai = p.startTime ? new Date(p.startTime) : null;
