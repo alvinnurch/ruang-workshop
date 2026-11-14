@@ -3636,10 +3636,52 @@
               <button onClick="{{ waCopyNums }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">{{ waCopyLabel }}</button>
               <button onClick="{{ waReset }}" style="background:none;border:none;color:#7A6F66;font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ulangi tanda terkirim</button>
             </div>
+            <div style="background:#FFF;border:1.5px solid #25D366;border-radius:11px;padding:14px 16px;margin-bottom:14px;display:grid;gap:12px">
+              <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
+                <div style="flex:1 1 260px;min-width:0">
+                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;font-weight:700;color:#14532D">Kirim otomatis dari nomor panitia</div>
+                  <div style="font-size:12.5px;color:#3F6B4E;line-height:1.55;margin-top:3px;text-wrap:pretty">{{ waAutoNote }}</div>
+                </div>
+                <span style="{{ waAutoBadgeStyle }}">{{ waAutoBadge }}</span>
+              </div>
+              <sc-if value="{{ waAutoQr }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+                  <div style="{{ waQrStyle }}"></div>
+                  <div style="flex:1 1 220px;font-size:13px;color:#3B342E;line-height:1.65;text-wrap:pretty">Di HP pengirim: buka WhatsApp → <b>Perangkat tertaut</b> → <b>Tautkan perangkat</b> → pindai kode ini. Kode berganti tiap ±20 detik.</div>
+                </div>
+              </sc-if>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <sc-if value="{{ waAutoCanConnect }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ waConnect }}" style="background:#25D366;color:#FFF;border:none;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700;cursor:pointer">Sambungkan nomor pengirim</button>
+                </sc-if>
+                <sc-if value="{{ waAutoReady }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ waAutoSend }}" style="{{ waAutoSendStyle }}">{{ waAutoSendLabel }}</button>
+                </sc-if>
+                <sc-if value="{{ waAutoRunning }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ waAutoStop }}" style="background:#FFF;border:1px solid #F0C9CC;color:#A5121C;border-radius:9px;padding:10px 15px;font-size:13px;font-weight:700;cursor:pointer">Hentikan kiriman</button>
+                </sc-if>
+                <sc-if value="{{ waAutoLinked }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ waLogout }}" style="background:none;border:none;color:#7A6F66;font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Putuskan nomor</button>
+                </sc-if>
+              </div>
+              <sc-if value="{{ waAutoHasJob }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <div style="height:8px;background:#DCEFE2;border-radius:100px;overflow:hidden"><div style="{{ waAutoBarStyle }}"></div></div>
+                  <div style="font-size:12px;color:#3F6B4E;margin-top:5px">{{ waAutoJobNote }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ waAutoHasLog }}" hint-placeholder-val="{{ false }}">
+                <details style="font-size:12px;color:#5C534B"><summary style="cursor:pointer;font-weight:700">Catatan kiriman</summary>
+                  <div style="display:grid;gap:3px;margin-top:6px;max-height:160px;overflow-y:auto">
+                    <sc-for list="{{ waAutoLog }}" as="l" hint-placeholder-count="3"><div>{{ l }}</div></sc-for>
+                  </div>
+                </details>
+              </sc-if>
+            </div>
             <div style="background:#F4FBF6;border:1px solid #CDEBD6;border-radius:11px;padding:14px 16px;margin-bottom:14px;display:grid;gap:12px">
               <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
                 <div>
-                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;font-weight:700;color:#14532D">Antrean kirim aman</div>
+                  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;font-weight:700;color:#14532D">Atau kirim manual: antrean aman</div>
                   <div style="font-size:12.5px;color:#3F6B4E;line-height:1.5;margin-top:2px;text-wrap:pretty">Satu tombol untuk semua: kirim, kembali ke tab ini, tombol berikutnya menyala setelah jeda acak. Berhenti sendiri saat batas tercapai.</div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -9454,6 +9496,45 @@ class Component extends DCLogic {
       v.waQueueNote = penuh
         ? q.sent + ' terkirim di gelombang ini. Istirahat dulu (disarankan ±1 jam), lalu muat ulang halaman untuk memulai gelombang berikutnya — peserta yang sudah dikirimi otomatis dilewati.'
         : q.sent + ' terkirim gelombang ini · ' + antre.length + ' tersisa · batas ' + batas;
+      /* ── Kirim otomatis ── */
+      const wa = st.waAuto || {};
+      if (this.api() && st.role === 'admin' && !this._waPoll) {
+        const tarik = () => this.apiPost({ diam: true, action: 'waStatus', password: this._pw || '', user: this._user || '' }).then(o => { if (o && o.ok) this.setState({ waAuto: o.data }); });
+        tarik(); this._waPoll = setInterval(() => { if (this.state.role === 'admin' && this.state.tab === 'people') tarik(); }, 4000);
+      }
+      const stt = wa.status || (this.api() ? 'memuat' : 'pratinjau');
+      const job = wa.job;
+      const jalan = !!(job && !job.done);
+      v.waAutoBadge = { 'tersambung': 'Tersambung · +' + (wa.me || ''), 'pindai-qr': 'Menunggu pindai QR', 'menyambung': 'Menyambung…', 'mati': 'Belum tersambung', 'belum-dipasang': 'Modul belum dipasang', 'galat': 'Galat', 'memuat': 'Memuat…', 'pratinjau': 'Hanya di server' }[stt] || stt;
+      v.waAutoBadgeStyle = { fontSize: '11.5px', fontWeight: 700, padding: '5px 11px', borderRadius: '100px', whiteSpace: 'nowrap', background: stt === 'tersambung' ? '#25D366' : '#F1EBE3', color: stt === 'tersambung' ? '#FFF' : '#5C534B' };
+      v.waAutoNote = stt === 'belum-dipasang'
+        ? 'Pasang modulnya sekali di server (lihat PANDUAN-FITUR.md, bagian WhatsApp otomatis), lalu muat ulang halaman ini.'
+        : stt === 'pratinjau' ? 'Fitur ini hanya berjalan di server Ruang.'
+        : 'Server mengirim sendiri satu per satu dengan jeda acak (sesuai pilihan Jeda di bawah) dan maksimal 40 pesan per jam. Pakai nomor khusus panitia — cara ini tidak resmi dan nomor bisa diblokir WhatsApp.';
+      v.waAutoQr = stt === 'pindai-qr' && !!wa.qr;
+      const svg = v.waAutoQr ? this.qrSvg(wa.qr) : null;
+      v.waQrStyle = { width: '190px', height: '190px', flex: 'none', borderRadius: '8px', background: '#FFF', border: '1px solid #E6DFD6', backgroundImage: svg ? 'url("' + svg + '")' : 'none', backgroundSize: '92%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' };
+      v.waAutoCanConnect = this.api() && (stt === 'mati' || stt === 'galat');
+      v.waAutoReady = stt === 'tersambung' && !jalan;
+      v.waAutoRunning = jalan;
+      v.waAutoLinked = stt === 'tersambung' || stt === 'pindai-qr';
+      v.waConnect = () => this.apiPost({ action: 'waConnect', password: this._pw || '', user: this._user || '' }).then(o => { if (o && o.ok) this.setState({ waAuto: o.data }); });
+      v.waLogout = () => { if (window.confirm('Putuskan nomor pengirim dari Ruang?')) this.apiPost({ action: 'waLogout', password: this._pw || '', user: this._user || '' }).then(o => { if (o && o.ok) this.setState({ waAuto: o.data }); }); };
+      v.waAutoStop = () => this.apiPost({ action: 'waStop', password: this._pw || '', user: this._user || '' });
+      const target = antre;
+      v.waAutoSendLabel = target.length ? 'Kirim otomatis ke ' + target.length + ' peserta' : 'Tidak ada peserta tersisa';
+      v.waAutoSendStyle = { background: target.length ? '#25D366' : '#CFE3D5', color: target.length ? '#FFF' : '#4E6B57', border: 'none', borderRadius: '9px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: target.length ? 'pointer' : 'default' };
+      v.waAutoSend = () => {
+        if (!target.length) return;
+        if (!window.confirm('Kirim otomatis ke ' + target.length + ' peserta?\n\nJeda ' + jeda + '–' + (jeda * 2) + ' detik antarpesan, maksimal 40 per jam. Perkiraan selesai ±' + Math.ceil(target.length * jeda * 1.5 / 60) + ' menit.')) return;
+        this.apiPost({ action: 'waSend', password: this._pw || '', user: this._user || '', ids: target.map(p => p.id), text: teks, origin: location.origin, jedaMin: jeda, jedaMax: jeda * 2, perJam: 40 })
+          .then(o => { if (o && o.ok) { target.forEach(p => { terkirim[p.id] = Date.now(); }); try { localStorage.setItem(kirimKey, JSON.stringify(terkirim)); } catch (e) {} } });
+      };
+      v.waAutoHasJob = !!job;
+      v.waAutoBarStyle = { height: '100%', width: (job && job.total ? Math.round((job.sent + job.failed) / job.total * 100) : 0) + '%', background: '#25D366', transition: 'width .4s' };
+      v.waAutoJobNote = job ? (job.sent + ' terkirim · ' + job.failed + ' gagal · dari ' + job.total + (jalan && job.next ? ' · berikutnya ±' + Math.max(0, Math.round((job.next - Date.now()) / 1000)) + ' dtk' : job.done ? ' · selesai' : '')) : '';
+      v.waAutoLog = (wa.log || []).map(l => new Date(l.at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }) + ' — ' + l.t);
+      v.waAutoHasLog = v.waAutoLog.length > 0;
       v.waNext = () => {
         if (!siap || !berikut) return;
         window.open('https://wa.me/' + no(berikut.phone) + '?text=' + encodeURIComponent(isi(berikut)), '_blank', 'noopener');
