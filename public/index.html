@@ -1567,8 +1567,9 @@
               <div style="font-family:'IBM Plex Sans',sans-serif;font-size:min(4vw,34px);font-weight:700;letter-spacing:.24em;color:#1B1714">{{ checkinToken }}</div>
             </div>
             <div style="flex:1;min-width:280px;max-width:480px">
-              <div style="font-size:min(2vw,17px);color:#A99C90;line-height:1.65;margin-bottom:24px;text-wrap:pretty">Pindai barcode ini dari halaman <strong style="color:#FBF7F1">Check in</strong> di perangkat Anda, atau masukkan kode lima huruf di bawah barcode.</div>
-              <div style="display:grid;gap:14px">
+              <div style="font-size:min(2vw,17px);color:#A99C90;line-height:1.65;margin-bottom:16px;text-wrap:pretty">Pindai barcode ini dari halaman <strong style="color:#FBF7F1">Check in</strong> di perangkat Anda, atau masukkan kode lima huruf di bawah barcode.</div>
+              <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(18px,2vw,24px);font-weight:700;margin-bottom:12px">{{ checkInCount }} sudah check in</div>
+              <div style="display:grid;gap:12px;max-height:max(220px,calc(100vh - 380px));overflow-y:auto;padding-right:10px;scrollbar-width:auto;scrollbar-color:#8C7E70 #2A231D">
                 <sc-for list="{{ checkinFeed }}" as="c" hint-placeholder-count="4">
                   <div style="display:flex;gap:14px;align-items:baseline;border-bottom:1px solid #2E2823;padding-bottom:10px">
                     <span style="color:#9EC07E;font-size:18px;flex:none">✓</span>
@@ -1582,8 +1583,20 @@
         </sc-if>
         <sc-if value="{{ projForm }}" hint-placeholder-val="{{ false }}">
           <div style="width:100%;max-width:980px">
-            <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(22px,2.6vw,32px);font-weight:700;margin-bottom:22px">{{ formFilledCount }} dari {{ totalParticipants }} peserta telah mengisi</div>
-            <div style="display:grid;gap:14px">
+            <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+              <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(22px,2.6vw,32px);font-weight:700">{{ formFilledCount }} dari {{ totalParticipants }} peserta telah mengisi</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <sc-if value="{{ projFieldMany }}" hint-placeholder-val="{{ false }}">
+                  <select value="{{ projFieldId }}" onChange="{{ onProjField }}" aria-label="Isian yang ditampilkan" style="background:#262019;border:1px solid #4E4338;color:#F1EBE3;border-radius:9px;padding:9px 12px;font-size:13.5px;outline:none;max-width:280px">
+                    <sc-for list="{{ projFieldOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+                  </select>
+                </sc-if>
+                <sc-if value="{{ projAnonShow }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ toggleProjAnon }}" style="{{ projAnonStyle }}">{{ projAnonLabel }}</button>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:grid;gap:14px;max-height:max(240px,calc(100vh - 330px));overflow-y:auto;padding-right:10px;scrollbar-width:auto;scrollbar-color:#8C7E70 #2A231D">
               <sc-for list="{{ projFormHighlights }}" as="h" hint-placeholder-count="4">
                 <div style="background:#262019;border:1px solid #3A322A;border-radius:12px;padding:18px 22px">
                   <div style="font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#A99C90;margin-bottom:6px">{{ h.who }}</div>
@@ -2502,6 +2515,7 @@
                           <div style="background:#FAF6F0;border:1px solid #EDE6DD;border-radius:10px;padding:16px">
                             <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
                               <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Isian formulir ({{ b.fieldCount }})</div>
+                              <button onClick="{{ b.toggleAnon }}" style="{{ b.anonStyle }}">{{ b.anonLabel }}</button>
                               <button onClick="{{ b.addField }}" style="background:#A5121C;color:#FFF;border:none;border-radius:7px;padding:8px 12px;font-size:12.5px;font-weight:700" style-hover="background:#8A0F17">+ Isian</button>
                             </div>
                             <div style="display:grid;gap:10px">
@@ -3577,6 +3591,38 @@
             <button onClick="{{ exportCodes }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:11px 16px;font-size:13px;font-weight:600" style-hover="background:#F6F1EA">Unduh daftar kode</button>
           </div>
 
+          <details style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px;margin-bottom:18px">
+            <summary style="cursor:pointer;list-style:none;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+              <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700">Kirim pesan WhatsApp ke peserta</span>
+              <span style="font-size:12.5px;color:#7A6F66">{{ waSummary }}</span>
+            </summary>
+            <p style="font-size:13px;color:#7A6F66;margin:12px 0 14px;line-height:1.6;text-wrap:pretty">Gratis, tanpa langganan: setiap tombol membuka WhatsApp dengan pesan yang sudah terisi — tinggal tekan kirim. Pakai <b>{nama}</b>, <b>{kode}</b>, <b>{event}</b>, dan <b>{tautan}</b>; otomatis diganti per peserta. Untuk ratusan peserta, salin nomornya ke <b>Daftar Siaran</b> WhatsApp.</p>
+            <textarea value="{{ waText }}" onChange="{{ onWaText }}" rows="5" style="width:100%;box-sizing:border-box;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.6;resize:vertical" style-focus="border-color:#A5121C;background:#FFF"></textarea>
+            <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:12px 0 14px">
+              <select value="{{ waFilter }}" onChange="{{ onWaFilter }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;font-size:13px">
+                <option value="semua">Semua yang punya nomor</option>
+                <option value="belum">Belum dikirimi</option>
+                <option value="belumcheckin">Belum check in di sesi aktif</option>
+              </select>
+              <button onClick="{{ waCopyNums }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:10px 14px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">{{ waCopyLabel }}</button>
+              <button onClick="{{ waReset }}" style="background:none;border:none;color:#7A6F66;font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ulangi tanda terkirim</button>
+            </div>
+            <div style="display:grid;gap:7px;max-height:420px;overflow-y:auto;padding-right:4px">
+              <sc-for list="{{ waRows }}" as="w" hint-placeholder-count="3">
+                <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid #EFE7DD;border-radius:9px;padding:9px 12px;flex-wrap:wrap">
+                  <div style="min-width:0;flex:1 1 200px">
+                    <div style="font-size:13.5px;font-weight:600">{{ w.name }}</div>
+                    <div style="font-size:12px;color:#8C8078">{{ w.phone }}</div>
+                  </div>
+                  <button onClick="{{ w.send }}" style="{{ w.style }}">{{ w.label }}</button>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ waNoPhone }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12.5px;color:#8E1018;margin-top:10px;line-height:1.5">{{ waNoPhoneNote }}</div>
+            </sc-if>
+          </details>
+
           <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:20px 22px;margin-bottom:18px">
             <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 4px;font-weight:700">Impor peserta sekaligus</h3>
             <p style="font-size:13px;color:#8C8078;margin:0 0 14px;line-height:1.6;text-wrap:pretty">Unggah berkas CSV atau tempel langsung dari Excel — satu peserta per baris, kolom berurutan: Nama, Kode, Kelompok, Instansi, No HP, Email. Baris berjudul otomatis dilewati, kode yang sudah ada tidak diduplikasi, dan kelompok baru dibuat sendiri.</p>
@@ -4017,6 +4063,18 @@ class Component extends DCLogic {
     });
     const admins = (db.admins || []).map(a => ({ id: a.id, name: a.name, user: a.user || '', role: a.role, wsId: wid, wsTitle: (meta[0] && meta[0].title) || '' }));
     this.setState({ platform: { meta, payments, admins, xendit: { aktif: false, callback: false }, superUser: 'superadmin' } });
+  }
+  /* Anonim proyektor: ubah seketika, lalu simpan ke server (sandi panitia dari sesi tersimpan). */
+  async setProjAnon(sessionId, blockId, anon) {
+    const terap = d => { const s = (d.sessions || []).find(x => x.id === sessionId); const b = s && (s.blocks || []).find(x => x.id === blockId); if (b) b.projAnon = anon; };
+    this.setState(st => { const db = JSON.parse(JSON.stringify(st.db)); terap(db); return { db }; });
+    if (this._draftDb) terap(this._draftDb);
+    if (!this.api()) return;
+    let pw = this._pw || '', user = this._user || '';
+    if (!pw) { try { const x = JSON.parse(localStorage.getItem(this.SESSKEY) || 'null'); if (x && x.pw) { pw = x.pw; user = x.user || ''; } } catch (e) {} }
+    this._anonHold = { id: blockId, anon, until: Date.now() + 6000 };
+    const out = await this.apiPost({ action: 'setProjAnon', password: pw, user, blockId, anon });
+    if (!out || !out.ok) { this._anonHold = null; this.setState({ apiError: (out && out.error) || 'Pengaturan anonim tidak tersimpan. Buka proyektor dari dasbor panitia.' }); this.apiGet(true).catch(() => {}); }
   }
   /* Embed: ubah di layar seketika, lalu kirim ke server tanpa menunggu Simpan perubahan. */
   async setEmbed(sessionId, blockId, ubah) {
@@ -7407,7 +7465,7 @@ class Component extends DCLogic {
         const uri = this.qrSvg('WS-CHECKIN:' + live.id.toUpperCase() + ':' + tok);
         if (!uri && !this._qrRetry) { this._qrRetry = true; setTimeout(() => this.forceUpdate(), 600); }
         v.qrStyle = { width: 'min(46vw, 380px)', height: 'min(46vw, 380px)', borderRadius: '6px', backgroundColor: '#FBF7F1', backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundImage: uri ? 'url("' + uri + '")' : 'none' };
-        v.checkinFeed = Object.entries(R.checkins).slice(-6).reverse().map(([pid, t]) => {
+        v.checkinFeed = Object.entries(R.checkins).reverse().map(([pid, t]) => {
           const p = db.participants.find(x => x.id === pid);
           return { name: p ? p.name : pid, time: t };
         });
@@ -7502,10 +7560,27 @@ class Component extends DCLogic {
       if (ab && ab.type === 'form') {
         const entries = Object.entries(R.forms[ab.id] || {});
         v.formFilledCount = entries.length;
-        const firstText = (ab.fields || []).filter(f => f.type === 'short' || f.type === 'long')[0];
-        v.projFormHighlights = entries.slice().reverse().map(([pid, ans]) => {
+        const teks = (ab.fields || []).filter(f => f.type !== 'image');
+        const pilihId = (st.projField || {})[ab.id];
+        const tampil = teks.find(f => f.id === pilihId) || teks.find(f => f.type === 'short' || f.type === 'long') || teks[0];
+        const tahan = this._anonHold && this._anonHold.id === ab.id && this._anonHold.until > Date.now() ? this._anonHold : null;
+        const anon = tahan ? tahan.anon : !!ab.projAnon;
+        v.projAnonShow = !this.api() || !!this._pw || (() => { try { const x = JSON.parse(localStorage.getItem(this.SESSKEY) || 'null'); return !!(x && x.pw); } catch (e) { return false; } })();
+        v.projFieldMany = teks.length > 1;
+        v.projFieldId = tampil ? tampil.id : '';
+        v.projFieldOpts = teks.map(f => ({ id: f.id, label: f.label || 'Isian' }));
+        v.onProjField = e => { const val = e.target.value; this.setState(p => ({ projField: Object.assign({}, p.projField, { [ab.id]: val }) })); };
+        v.projAnonLabel = anon ? '🔒 Nama disembunyikan' : 'Sembunyikan nama';
+        v.projAnonStyle = { background: anon ? '#3E6B22' : '#262019', border: '1px solid ' + (anon ? '#3E6B22' : '#4E4338'), color: '#F1EBE3', borderRadius: '9px', padding: '9px 13px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' };
+        v.toggleProjAnon = () => this.setProjAnon(live.id, ab.id, !anon);
+        const nTotal = entries.length;
+        v.projFormHighlights = entries.slice().reverse().map(([pid, ans], i) => {
           const p = db.participants.find(x => x.id === pid);
-          return { who: p ? p.name + ' · ' + p.group : 'Peserta', text: firstText ? String(ans[firstText.id] || '—') : '—' };
+          const isi = tampil ? ans[tampil.id] : '';
+          return {
+            who: anon ? 'Jawaban ' + (nTotal - i) : (p ? p.name + (p.group ? ' · ' + p.group : '') : 'Peserta'),
+            text: isi == null || isi === '' ? '—' : String(isi)
+          };
         });
       }
     } else {
@@ -8828,8 +8903,10 @@ class Component extends DCLogic {
             if (st.zoomBusy) return;
             paksa = paksa === true;
             const f = (st.zoomForm || {})[b.id] || {};
-            this.setState({ zoomBusy: b.id, zoomMsg: { id: b.id, text: 'Menghubungi Zoom…' } });
-            const out = await this.apiPost({ action: 'zoomCreate', password: this._pw || '', hostMode: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim() ? 'klaim' : (f.hostMode || b.zoomHostMode || 'utama'), claimer: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim(), recordMode: f.recMode || b.zoomRecMode || (f.rec === false ? 'none' : 'local'), host: '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
+            this.setState({ zoomBusy: b.id, zoomMsg: { id: b.id, text: this._dirty ? 'Menyimpan perubahan dulu…' : 'Menghubungi Zoom…' } });
+            /* Materi yang baru dibuat belum ada di server: simpan draf dulu. */
+            if (this._dirty) { try { await this.flushDraft(); } catch (e) {} this.setState({ zoomMsg: { id: b.id, text: 'Menghubungi Zoom…' } }); }
+            const out = await this.apiPost({ block: JSON.parse(JSON.stringify(b)), sessionTitle: cur.title || '', action: 'zoomCreate', password: this._pw || '', hostMode: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim() ? 'klaim' : (f.hostMode || b.zoomHostMode || 'utama'), claimer: String((f.host != null ? f.host : (b.zoomClaimer || '')) || '').trim(), recordMode: f.recMode || b.zoomRecMode || (f.rec === false ? 'none' : 'local'), host: '', force: paksa, record: !(f && f.rec === false), passcode: b.zoomId ? '' : (b.passcode || ''), sessionId: cur.id, blockId: b.id, startTime: f.start ? new Date(f.start).toISOString() : '', duration: Number(f.dur) || 120 });
             if (out && !out.ok && Array.isArray(out.clash)) return this.setState({ zoomBusy: null, zoomClash: { id: b.id, host: out.host, list: out.clash }, zoomMsg: { id: b.id, text: out.error } });
             if (!out || !out.ok) return this.setState({ zoomBusy: null, zoomMsg: { id: b.id, text: (out && out.error) || 'Gagal membuat rapat.' } });
             this.setState({ zoomClash: null });
@@ -8851,6 +8928,9 @@ class Component extends DCLogic {
           onPrompt: e => { const val = e.target.value; this.markDraft(); mut(b.id, x => { x.prompt = val; }); },
           isPpt: b.type === 'ppt', isZoom: b.type === 'zoom', isQuiz: b.type === 'quiz', isCloud: b.type === 'wordcloud', isForm: b.type === 'form', isCheckin: b.type === 'checkin',
           isCountdown: b.type === 'countdown',
+          anonLabel: b.projAnon ? '🔒 Proyektor: anonim' : 'Proyektor: tampilkan nama',
+          anonStyle: { marginLeft: 'auto', background: b.projAnon ? '#EEF5E9' : '#FFF', border: '1px solid ' + (b.projAnon ? '#CFE2C2' : '#E0D8CE'), color: b.projAnon ? '#2C4D18' : '#5C534B', borderRadius: '7px', padding: '7px 11px', fontSize: '12px', fontWeight: 700 },
+          toggleAnon: () => this.setProjAnon(cur.id, b.id, !b.projAnon),
           isIce: b.type === 'icebreak',
           pool: b.pool || 'semua',
           poolOpts: [{ id: 'semua', label: 'Semua peserta terdaftar' }, { id: 'hadir', label: 'Hanya yang sudah check in' }]
@@ -9109,6 +9189,51 @@ class Component extends DCLogic {
       });
       this.setState({ newName: '', newOrg: '', newPhone: '', newEmail: '' });
     };
+    {
+      const mw = this.wsNow() || {};
+      const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
+      const tautan = asal + '/' + (mw.id ? this.slugWs(mw) : '');
+      const bawaan = 'Assalamualaikum {nama},\n\nTerima kasih telah mendaftar {event}. Kode peserta Anda: *{kode}*\nMasuk di: {tautan}\n\nSampai jumpa!';
+      const teks = st.waText != null ? st.waText : bawaan;
+      const kirimKey = 'ruang_wa_sent_' + (st.wsId || '');
+      let terkirim = {}; try { terkirim = JSON.parse(localStorage.getItem(kirimKey) || '{}'); } catch (e) {}
+      const no = h => { let d = String(h || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d; return d.length >= 10 ? d : ''; };
+      const live = db.sessions.find(x => x.id === db.activeSessionId);
+      const hadir = (live && ((db.responses || {})[live.id] || {}).checkins) || {};
+      const filter = st.waFilter || 'semua';
+      const punya = db.participants.filter(p => no(p.phone));
+      const daftar = punya.filter(p => filter === 'belum' ? !terkirim[p.id] : filter === 'belumcheckin' ? !hadir[p.id] : true);
+      const isi = p => teks.replace(/\{nama\}/g, p.name || '').replace(/\{kode\}/g, p.code || '').replace(/\{event\}/g, mw.title || 'acara ini').replace(/\{tautan\}/g, tautan);
+      v.waText = teks;
+      v.onWaText = e => this.setState({ waText: e.target.value });
+      v.waFilter = filter;
+      v.onWaFilter = e => this.setState({ waFilter: e.target.value });
+      v.waSummary = Object.keys(terkirim).filter(id => punya.some(p => p.id === id)).length + ' / ' + punya.length + ' sudah dikirimi';
+      v.waRows = daftar.map(p => {
+        const sudah = !!terkirim[p.id];
+        return {
+          name: p.name, phone: '+' + no(p.phone),
+          label: sudah ? 'Terkirim ✓ — kirim lagi' : 'Kirim WA',
+          style: { background: sudah ? '#EEF5E9' : '#25D366', color: sudah ? '#2C4D18' : '#FFF', border: sudah ? '1px solid #CFE2C2' : 'none', borderRadius: '8px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer' },
+          send: () => {
+            window.open('https://wa.me/' + no(p.phone) + '?text=' + encodeURIComponent(isi(p)), '_blank', 'noopener');
+            const baru = Object.assign({}, terkirim, { [p.id]: Date.now() });
+            try { localStorage.setItem(kirimKey, JSON.stringify(baru)); } catch (e) {}
+            this.forceUpdate();
+          }
+        };
+      });
+      v.waCopyLabel = st.waCopied ? 'Tersalin ✓' : 'Salin ' + daftar.length + ' nomor';
+      v.waCopyNums = () => {
+        const t = daftar.map(p => '+' + no(p.phone)).join('\n');
+        const ok = () => { this.setState({ waCopied: true }); clearTimeout(this._waT); this._waT = setTimeout(() => this.setState({ waCopied: false }), 2000); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, ok); else ok();
+      };
+      v.waReset = () => { try { localStorage.removeItem(kirimKey); } catch (e) {} this.forceUpdate(); };
+      const tanpa = db.participants.length - punya.length;
+      v.waNoPhone = tanpa > 0;
+      v.waNoPhoneNote = tanpa + ' peserta belum punya nomor HP yang sah, jadi tidak tampil di daftar ini.';
+    }
     v.importText = st.importText || '';
     v.importNote = st.importNote || '';
     v.importNoteStyle = { fontSize: '12.5px', fontWeight: 600, color: st.importBad ? '#A5121C' : '#3E6B22', lineHeight: 1.5 };
