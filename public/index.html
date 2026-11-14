@@ -432,7 +432,7 @@
           </div>
         </sc-if>
       </div>
-      <div style="max-width:820px;margin:0 auto;padding:26px 8px 34px;font-size:12.5px;color:#7A6F76">ruang islami.co</div>
+      <div style="width:100%;box-sizing:border-box;max-width:820px;margin:0 auto;padding:26px 8px 34px;font-size:12.5px;color:#7A6F76">ruang islami.co</div>
     </div>
   </sc-if>
 
@@ -622,7 +622,7 @@
         </div>
       </div>
 
-      <div style="max-width:1200px;margin:0 auto;padding:26px 8px 34px;font-size:12.5px;color:#7A6F76">ruang islami.co</div>
+      <div style="width:100%;box-sizing:border-box;max-width:1200px;margin:0 auto;padding:26px 8px 34px;font-size:12.5px;color:#7A6F76">ruang islami.co</div>
     </div>
   </sc-if>
 
@@ -781,7 +781,7 @@
 
   <!-- ══════════ PESERTA ══════════ -->
   <sc-if value="{{ isPeserta }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1180px;margin:0 auto;padding:26px 20px 80px">
+    <div style="width:100%;box-sizing:border-box;max-width:1180px;margin:0 auto;padding:26px min(5vw,20px) 80px;align-self:center">
       <sc-if value="{{ pengHas }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;gap:12px;margin-bottom:22px">
           <sc-for list="{{ pengList }}" as="a" hint-placeholder-count="1">
@@ -1656,7 +1656,7 @@
         </div>
       </div>
 
-      <div style="max-width:1240px;margin:0 auto;padding:24px 20px 80px">
+      <div style="width:100%;box-sizing:border-box;max-width:1240px;margin:0 auto;padding:24px 20px 80px">
         <div style="display:flex;gap:8px;border-bottom:1px solid #E6DFD6;margin-bottom:20px;flex-wrap:wrap">
           <sc-for list="{{ platTabs }}" as="t" hint-placeholder-count="3">
             <button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button>
@@ -1967,7 +1967,7 @@
 
   <!-- ══════════ ADMIN LOGIN ══════════ -->
   <sc-if value="{{ isAdminLogin }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:420px;margin:0 auto;padding:min(12vw,90px) 20px">
+    <div style="width:100%;box-sizing:border-box;max-width:420px;margin:0 auto;padding:min(12vw,90px) 20px">
       <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:26px;margin:0 0 6px;font-weight:700">Masuk admin</h2>
       <p style="font-size:13.5px;color:#7A6F66;margin:0 0 22px;line-height:1.55">Akses pengelolaan sesi, materi, kode peserta, dan rekap hasil.</p>
       <div style="display:grid;gap:14px">
@@ -1985,7 +1985,7 @@
 
   <!-- ══════════ ADMIN ══════════ -->
   <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1240px;margin:0 auto;padding:24px 20px 80px">
+    <div style="width:100%;box-sizing:border-box;max-width:1240px;margin:0 auto;padding:24px 20px 80px">
       <div style="display:flex;gap:8px;border-bottom:1px solid #E6DFD6;margin-bottom:18px;flex-wrap:wrap;align-items:center">
         <sc-for list="{{ adminTabs }}" as="t" hint-placeholder-count="3">
           <button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button>
