@@ -964,6 +964,32 @@ function handleAction(p) {
       return { ok: true, data: { anon: hit.b.projAnon } };
     }
 
+    /* Uraikan tautan pendek (canva.link dsb.) ke alamat aslinya agar bisa ditayangkan. */
+    case 'resolveLink': {
+      const awal = String(p.url || '').trim();
+      if (!/^https:\/\/(canva\.link|bit\.ly|s\.id|tinyurl\.com|t\.ly|rebrand\.ly|cutt\.ly)\//i.test(awal)) return { ok: false, error: 'Tautan tidak didukung.' };
+      return new Promise(selesai => {
+        const ikuti = (u, sisa) => {
+          let r;
+          try {
+            r = https.get(u, { method: 'GET', headers: { 'User-Agent': 'Mozilla/5.0 (RuangLinkResolver)' }, timeout: 6000 }, res => {
+              res.resume();
+              const lok = res.headers.location;
+              if (res.statusCode >= 300 && res.statusCode < 400 && lok && sisa > 0) {
+                const berikut = new URL(lok, u).toString();
+                if (!/^https:\/\//i.test(berikut)) return selesai({ ok: true, data: { url: u } });
+                return ikuti(berikut, sisa - 1);
+              }
+              selesai({ ok: true, data: { url: u } });
+            });
+          } catch (e) { return selesai({ ok: false, error: 'Tautan tidak bisa dibuka.' }); }
+          r.on('timeout', () => { r.destroy(); selesai({ ok: false, error: 'Tautan tidak menjawab.' }); });
+          r.on('error', () => selesai({ ok: false, error: 'Tautan tidak bisa dibuka.' }));
+        };
+        ikuti(awal, 5);
+      });
+    }
+
     /* Saklar embed langsung tersimpan, tanpa menunggu "Simpan perubahan". */
     case 'setEmbed': {
       if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh mengatur embed.' };
