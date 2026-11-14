@@ -4017,6 +4017,18 @@ class Component extends DCLogic {
     if ((m = u.match(/docs\.google\.com\/presentation\/d\/([\w-]{20,})/))) return { src: 'https://docs.google.com/presentation/d/' + m[1] + '/embed?start=false&loop=false&delayms=60000', kind: 'Google Slides' };
     if ((m = u.match(/docs\.google\.com\/(document|spreadsheets)\/d\/([\w-]{20,})/))) return { src: 'https://docs.google.com/' + m[1] + '/d/' + m[2] + '/preview', kind: 'Google Docs' };
     if ((m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/))) return { src: 'https://drive.google.com/file/d/' + m[1] + '/preview', kind: 'Google Drive' };
+    if (/^https?:\/\/(canva\.link|bit\.ly|s\.id|tinyurl\.com|t\.ly|rebrand\.ly|cutt\.ly)\//i.test(u)) {
+      const urai = (this._urai = this._urai || {})[u];
+      if (urai && urai !== 'menunggu' && urai !== 'gagal') return this.docViewer(urai, fileName);
+      if (!urai && this.api()) {
+        this._urai[u] = 'menunggu';
+        this.apiPost({ diam: true, action: 'resolveLink', url: u }).then(out => {
+          this._urai[u] = out && out.ok && out.data && out.data.url ? out.data.url : 'gagal';
+          this.forceUpdate();
+        });
+      }
+      return null;
+    }
     if ((m = u.match(/canva\.com\/design\/([\w-]+)\/([\w-]+)\//))) return { src: 'https://www.canva.com/design/' + m[1] + '/' + m[2] + '/view?embed', kind: 'Canva' };
     if (!/^https?:\/\//i.test(u) && !/^\//.test(u)) return null;
     const bersih = u.split(/[?#]/)[0].toLowerCase();
@@ -7481,7 +7493,8 @@ class Component extends DCLogic {
       };
       v.docFrameRef = el => { this._docFrame = el; };
       v.projDocHint = ab && ab.type === 'ppt' && !viewer
-        ? (/^data:/i.test(String(ab.url || '')) ? 'Berkas PowerPoint yang diunggah langsung tidak bisa ditayangkan di proyektor. Unggah versi PDF-nya, atau tempel tautan Google Slides / Google Drive.' : 'Tautan ini tidak bisa ditayangkan langsung. Pakai PDF, Google Slides, Google Drive, Canva, atau berkas .pptx yang bisa diakses publik.')
+        ? (!ab.url || ab.url === '#' ? 'Belum ada berkas atau tautan yang dipasang pada bahan bacaan ini. Tambahkan lewat tombol Ubah di dasbor.'
+          : /^data:/i.test(String(ab.url || '')) ? 'Berkas PowerPoint yang diunggah langsung tidak bisa ditayangkan di proyektor. Unggah versi PDF-nya, atau tempel tautan Google Slides / Google Drive.' : 'Tautan ini tidak bisa ditayangkan langsung. Pakai PDF, Google Slides, Google Drive, Canva, atau berkas .pptx yang bisa diakses publik.')
         : '';
       v.projDocHasHint = !!v.projDocHint;
       v.projDoc = !!ab && (ab.type === 'zoom' || (ab.type === 'ppt' && !viewer));
@@ -8788,7 +8801,7 @@ class Component extends DCLogic {
       });
       const navStyle = on => ({ width: '28px', height: '28px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF', border: '1px solid #E0D8CE', color: on ? '#5C534B' : '#CFC5B8', borderRadius: '7px', padding: 0, fontSize: '12px', fontWeight: 700, cursor: on ? 'pointer' : 'default' });
       v.blockRows = (cur.blocks || []).map((b, bi, arr) => {
-        const shown = cur.active === b.id && (b.open || this.selalu(b));
+        const shown = db.activeSessionId === cur.id && cur.active === b.id && (b.open || this.selalu(b));
         const filled = b.type === 'checkin' ? Object.keys(R.checkins).length
           : b.type === 'quiz' ? Object.keys(R.quiz[b.id] || {}).length
           : b.type === 'feedback' ? Object.keys(R.feedback[b.id] || {}).length
@@ -8808,10 +8821,10 @@ class Component extends DCLogic {
           upStyle: navStyle(bi > 0), downStyle: navStyle(bi < arr.length - 1),
           editing: st.editBlock === b.id, editLabel: st.editBlock === b.id ? 'Selesai' : 'Ubah',
           edit: () => this.setState({ editBlock: st.editBlock === b.id ? null : b.id }),
-          stateLabel: !b.enabled ? 'Tidak dipakai' : shown ? 'Di layar' : b.open ? 'Terbuka' : 'Terkunci',
-          stateStyle: { fontSize: '10.5px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '4px 9px', borderRadius: '100px', background: !b.enabled ? '#F1EBE3' : shown ? '#A5121C' : b.open ? '#FBEFEF' : '#F1EBE3', color: !b.enabled ? '#8C8078' : shown ? '#FFF' : b.open ? '#A5121C' : '#8C8078' },
+          stateLabel: !b.enabled ? 'Tidak dipakai' : shown ? 'Di layar' : (b.open || this.selalu(b)) ? (this.selalu(b) ? 'Selalu tampil' : 'Terbuka') : 'Terkunci',
+          stateStyle: { fontSize: '10.5px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '4px 9px', borderRadius: '100px', background: !b.enabled ? '#F1EBE3' : shown ? '#A5121C' : (b.open || this.selalu(b)) ? '#FBEFEF' : '#F1EBE3', color: !b.enabled ? '#8C8078' : shown ? '#FFF' : (b.open || this.selalu(b)) ? '#A5121C' : '#8C8078' },
           rowStyle: { background: '#FFF', border: '1px solid ' + (shown ? '#A5121C' : '#E6DFD6'), borderRadius: '12px', padding: '16px 18px' },
-          showLabel: shown ? 'Di layar' : 'Tampilkan',
+          showLabel: shown ? 'Di layar' : (db.activeSessionId !== cur.id ? 'Tampilkan (pindahkan proyektor ke sesi ini)' : 'Tampilkan'),
           showStyle: (b.enabled && ((b.open && cur.multiOpen !== false) || this.selalu(b)))
             ? { background: shown ? '#A5121C' : '#FFF', border: '1px solid ' + (shown ? '#A5121C' : '#E0D8CE'), color: shown ? '#FFF' : '#5C534B', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: shown ? 'default' : 'pointer' }
             : { display: 'none' },
@@ -8821,6 +8834,8 @@ class Component extends DCLogic {
               const ss = d.sessions.find(x => x.id === cur.id);
               /* klik lagi = turunkan dari layar */
               ss.active = jadi ? b.id : null;
+              /* "Tampilkan" memindahkan proyektor ke sesi ini, agar yang tertulis "Di layar" memang tayang. */
+              if (jadi) d.activeSessionId = cur.id;
             }, null, true);
           },
           enabledLabel: b.enabled ? 'Keluarkan' : 'Pakai',
