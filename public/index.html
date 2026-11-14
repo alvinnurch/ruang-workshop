@@ -1612,13 +1612,22 @@
           </div>
         </sc-if>
         <sc-if value="{{ projDocView }}" hint-placeholder-val="{{ false }}">
-          <div style="width:100%;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0">
-            <div ref="{{ docFrameRef }}" style="flex:1;min-height:max(320px,calc(100vh - 260px));background:#0F0C0A;border-radius:14px;overflow:hidden;border:1px solid #3A322A">
-              <iframe src="{{ projDocSrc }}" title="Materi" allow="fullscreen" allowfullscreen="" style="width:100%;height:100%;min-height:inherit;border:0;display:block;background:#FFF"></iframe>
+          <div style="width:100%;display:flex;flex-direction:column;gap:12px">
+            <div ref="{{ docFrameRef }}" style="{{ docBoxStyle }}">
+              <div style="{{ docInnerStyle }}">
+                <iframe src="{{ projDocSrc }}" title="Materi" allow="fullscreen" allowfullscreen="" style="width:100%;height:100%;border:0;display:block;background:#FFF"></iframe>
+              </div>
             </div>
             <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:13px;color:#A99C90">{{ projDocKind }} · geser halaman langsung di bingkai, atau tekan tombol panah keyboard</span>
-              <button onClick="{{ projDocFull }}" style="background:#2E2823;border:1px solid #4E4338;color:#F1EBE3;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">⛶ Layar penuh</button>
+              <span style="font-size:13px;color:#A99C90">{{ projDocKind }} · geser halaman di dalam bingkai</span>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;background:#2E2823;border:1px solid #4E4338;border-radius:10px;overflow:hidden">
+                  <button onClick="{{ docZoomOut }}" title="Perkecil" style="background:none;border:none;color:#F1EBE3;width:44px;height:40px;font-size:20px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">−</button>
+                  <button onClick="{{ docZoomReset }}" title="Pas layar" style="background:none;border:none;border-left:1px solid #4E4338;border-right:1px solid #4E4338;color:#F1EBE3;min-width:66px;height:40px;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">{{ docZoomLabel }}</button>
+                  <button onClick="{{ docZoomIn }}" title="Perbesar" style="background:none;border:none;color:#F1EBE3;width:44px;height:40px;font-size:20px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">+</button>
+                </div>
+                <button onClick="{{ projDocFull }}" style="background:#2E2823;border:1px solid #4E4338;color:#F1EBE3;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#3F362D">⛶ Layar penuh</button>
+              </div>
             </div>
           </div>
         </sc-if>
@@ -7492,6 +7501,18 @@ class Component extends DCLogic {
         (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
       };
       v.docFrameRef = el => { this._docFrame = el; };
+      /* Slide (16:9) dipaskan utuh ke ruang yang tersedia; PDF memakai tinggi penuh. Zoom memperbesar bingkai, sisanya bisa digulir. */
+      const z = Math.max(.5, Math.min(2.5, Number(st.docZoom) || 1));
+      const lebar = viewer && viewer.kind !== 'PDF' && viewer.kind !== 'Google Docs';
+      const tinggiMuat = 'calc(100vh - 290px)';
+      v.docBoxStyle = { width: '100%', height: tinggiMuat, minHeight: '280px', overflow: z > 1 ? 'auto' : 'hidden', display: 'flex', alignItems: z > 1 ? 'flex-start' : 'center', justifyContent: z > 1 ? 'flex-start' : 'center', background: '#0F0C0A', borderRadius: '14px', border: '1px solid #3A322A', scrollbarColor: '#8C7E70 #2A231D' };
+      v.docInnerStyle = lebar
+        ? { flex: 'none', aspectRatio: '16 / 9', width: 'calc(min(100%, (100vh - 290px) * 16 / 9) * ' + z + ')', margin: z > 1 ? '0' : 'auto' }
+        : { flex: 'none', width: 'calc(100% * ' + z + ')', height: 'calc((100vh - 290px) * ' + z + ')', minHeight: '280px' };
+      v.docZoomLabel = Math.round(z * 100) + '%';
+      v.docZoomIn = () => this.setState({ docZoom: Math.min(2.5, Math.round((z + .25) * 100) / 100) });
+      v.docZoomOut = () => this.setState({ docZoom: Math.max(.5, Math.round((z - .25) * 100) / 100) });
+      v.docZoomReset = () => this.setState({ docZoom: 1 });
       v.projDocHint = ab && ab.type === 'ppt' && !viewer
         ? (!ab.url || ab.url === '#' ? 'Belum ada berkas atau tautan yang dipasang pada bahan bacaan ini. Tambahkan lewat tombol Ubah di dasbor.'
           : /^data:/i.test(String(ab.url || '')) ? 'Berkas PowerPoint yang diunggah langsung tidak bisa ditayangkan di proyektor. Unggah versi PDF-nya, atau tempel tautan Google Slides / Google Drive.' : 'Tautan ini tidak bisa ditayangkan langsung. Pakai PDF, Google Slides, Google Drive, Canva, atau berkas .pptx yang bisa diakses publik.')
