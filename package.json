@@ -1,6 +1,6 @@
 {
   "name": "ruang-workshop",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Ruang Workshop islami.co — platform event & workshop terintegrasi",
   "main": "server.js",
@@ -9,6 +9,10 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "pino": "^9.0.0"
   },
   "license": "UNLICENSED"
 }

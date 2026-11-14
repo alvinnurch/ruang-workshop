@@ -33,6 +33,7 @@ const path = require('path');
   } catch (e) {}
 })();
 const crypto = require('crypto');
+let WA = null; try { WA = require('./wa-gateway'); } catch (e) { WA = null; }
 const https = require('https');
 
 const PORT = Number(process.env.PORT || 8080);
@@ -175,6 +176,12 @@ const BOLEH_SUSUN_WS = { penuh: true, wsadmin: true, fasilitator: true };
 let db = null;
 let version = 1;
 store = load();
+setTimeout(() => {
+  try {
+    const dir = process.env.WA_AUTH_DIR || path.join(path.dirname(DATA_FILE), 'wa-auth');
+    if (WA && WA.tersedia() && fs.existsSync(path.join(dir, 'creds.json'))) WA.mulai(dir);
+  } catch (e) {}
+}, 1500);
 db = store.data[wsIdSah(null)] || JSON.parse(JSON.stringify(EMPTY));
 let writeTimer = null;
 
@@ -987,6 +994,49 @@ function handleAction(p) {
           r.on('error', () => selesai({ ok: false, error: 'Tautan tidak bisa dibuka.' }));
         };
         ikuti(awal, 5);
+      });
+    }
+
+    /* ── WhatsApp otomatis (nomor pengirim panitia) ── */
+    case 'waStatus': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia.' };
+      if (!WA) return { ok: true, data: { available: false, status: 'belum-dipasang' } };
+      return { ok: true, data: WA.ringkas() };
+    }
+    case 'waConnect': {
+      if (!siapa || !(siapa.superadmin || BOLEH_SUSUN_WS[siapa.role])) return { ok: false, error: 'Hanya admin event yang boleh menyambungkan nomor.' };
+      if (!WA || !WA.tersedia()) return { ok: false, error: 'Modul WhatsApp belum dipasang di server. Jalankan: npm install @whiskeysockets/baileys@6 pino' };
+      WA.mulai(process.env.WA_AUTH_DIR || path.join(path.dirname(DATA_FILE), 'wa-auth'));
+      return { ok: true, data: WA.ringkas() };
+    }
+    case 'waLogout': {
+      if (!siapa || !(siapa.superadmin || BOLEH_SUSUN_WS[siapa.role])) return { ok: false, error: 'Tidak diizinkan.' };
+      if (!WA) return { ok: true, data: {} };
+      return WA.keluar().then(() => ({ ok: true, data: WA.ringkas() }));
+    }
+    case 'waStop': {
+      if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia.' };
+      if (WA) WA.hentikan();
+      return { ok: true };
+    }
+    case 'waSend': {
+      if (!siapa || !(siapa.superadmin || BOLEH_SUSUN_WS[siapa.role])) return { ok: false, error: 'Hanya admin event yang boleh mengirim.' };
+      if (!WA) return { ok: false, error: 'Modul WhatsApp belum dipasang di server.' };
+      const ids = Array.isArray(p.ids) ? p.ids : [];
+      const mw = (store.meta || []).find(x => x.id === wid) || {};
+      const asal = String(p.origin || '').replace(/\/+$/, '') || 'https://ruang.islami.co';
+      const tautan = asal + '/' + slugWs(mw);
+      const teks = String(p.text || '').slice(0, 2000);
+      if (!teks.trim()) return { ok: false, error: 'Pesan masih kosong.' };
+      const items = (db.participants || []).filter(x => ids.indexOf(x.id) >= 0).map(x => ({
+        id: x.id, name: x.name, phone: x.phone,
+        text: teks.replace(/\{nama\}/g, x.name || '').replace(/\{kode\}/g, x.code || '').replace(/\{event\}/g, mw.title || 'acara ini').replace(/\{tautan\}/g, tautan)
+      }));
+      const dbRef = db;
+      return WA.kirimSemua(items, { jedaMin: p.jedaMin, jedaMax: p.jedaMax, perJam: p.perJam, ws: wid }, (pid, ok) => {
+        if (!ok) return;
+        const ps = (dbRef.participants || []).find(x => x.id === pid);
+        if (ps) { ps.waSentAt = new Date().toISOString(); touch(); }
       });
     }
 
@@ -2101,6 +2151,7 @@ server.listen(PORT, () => {
   console.log('┌───────────────────────────────────────────────');
   console.log('│ Platform Workshop Terintegrasi');
   console.log('│ Berjalan di   : http://localhost:' + PORT);
+  console.log('│ WhatsApp      : ' + (WA && WA.tersedia() ? 'modul terpasang — sambungkan dari dasbor' : 'nonaktif (npm install @whiskeysockets/baileys@6 pino)'));
   console.log('│ Data          : ' + DATA_FILE + '  (' + store.meta.length + ' workshop)');
   console.log('│ Midtrans      : ' + (MIDTRANS_KEY ? 'aktif (' + (MIDTRANS_PROD ? 'produksi' : 'sandbox') + ')' : 'nonaktif'));
   console.log('│ Pembayaran    : ' + penyedia());
