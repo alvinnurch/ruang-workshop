@@ -176,6 +176,15 @@ const BOLEH_SUSUN_WS = { penuh: true, wsadmin: true, fasilitator: true };
 let db = null;
 let version = 1;
 store = load();
+setInterval(() => {
+  const batas = Date.now() - 3 * 864e5; let ubah = false;
+  Object.values(store.data || {}).forEach(d => {
+    const n = (d.pendaftar || []).length;
+    d.pendaftar = (d.pendaftar || []).filter(x => Date.parse(x.registeredAt || 0) > batas);
+    if (d.pendaftar.length !== n) ubah = true;
+  });
+  if (ubah) touch();
+}, 6 * 3600e3);
 setTimeout(() => {
   try {
     const dir = process.env.WA_AUTH_DIR || path.join(path.dirname(DATA_FILE), 'wa-auth');
@@ -228,6 +237,7 @@ function pakai(id) {
 }
 function normalize(d) {
   d.sessions = d.sessions || [];
+  d.pendaftar = Array.isArray(d.pendaftar) ? d.pendaftar : [];
   d.guests = d.guests && typeof d.guests === 'object' ? d.guests : {};
   d.participants = d.participants || [];
   d.groups = Array.isArray(d.groups) ? d.groups : [];
@@ -488,12 +498,38 @@ function layaniAvatarIg(h, res) {
   }).catch(() => { res.writeHead(404); res.end(); });
 }
 
+function sahkanPendaftar(d, pid) {
+  d.pendaftar = d.pendaftar || [];
+  const i = d.pendaftar.findIndex(x => x.id === pid);
+  if (i < 0) return null;
+  const rec = d.pendaftar.splice(i, 1)[0];
+  const isiR = Array.isArray(rec.bundleItems) ? rec.bundleItems.filter(id => store.data[id]) : [];
+  const dipakai = k => [d].concat(isiR.map(id => store.data[id])).some(x => (x.participants || []).some(y => String(y.code).toUpperCase() === k));
+  let kode;
+  do { kode = (isiR.length ? 'RG-' : 'WS-') + Math.random().toString(36).toUpperCase().slice(2, 6); } while (dipakai(kode));
+  const ps = Object.assign({}, rec, { code: kode, status: 'aktif', paidAt: rec.paidAt || new Date().toISOString() });
+  delete ps.antre;
+  d.participants = d.participants || [];
+  d.participants.push(ps);
+  isiR.forEach(id => {
+    const dd = store.data[id]; dd.participants = dd.participants || [];
+    if (!dd.participants.some(x => x.id === ps.id)) dd.participants.push({
+      id: ps.id, name: ps.name, code: ps.code, org: ps.org, phone: ps.phone, email: ps.email,
+      group: '', status: 'aktif', registeredAt: ps.registeredAt, paidAt: ps.paidAt, viaBundle: rec.bundleOf || ''
+    });
+  });
+  return ps;
+}
+function cariPeserta(d, pid) {
+  return (d.participants || []).find(x => x.id === pid) || (d.pendaftar || []).find(x => x.id === pid) || null;
+}
 function tandaiLunas(d, bayar, sumber) {
   const sudah = bayar.status === 'lunas';
   bayar.status = 'lunas';
   bayar.paidAt = bayar.paidAt || new Date().toISOString();
-  const ps = (d.participants || []).filter(x => x.id === bayar.participantId)[0];
-  if (ps) { ps.status = 'aktif'; ps.paidAt = ps.paidAt || bayar.paidAt; sebarStatus(ps); }
+  let ps = (d.participants || []).filter(x => x.id === bayar.participantId)[0];
+  if (!ps) ps = sahkanPendaftar(d, bayar.participantId);
+  else { ps.status = 'aktif'; ps.paidAt = ps.paidAt || bayar.paidAt; sebarStatus(ps); }
   if (sudah) return;
   console.log('[bayar] lunas via ' + (sumber || '?') + ' · ' + (bayar.ref || bayar.xenditId || '') + ' · ' + (ps ? ps.name + ' <' + (ps.email || 'tanpa email') + '>' : 'peserta tidak ditemukan'));
   /* Halaman peserta biasanya mengirim tiket bergambar sendiri. Bila dalam 90 detik
@@ -774,7 +810,7 @@ function kirimIndexOg(req, res, slug) {
     '<meta property="og:type" content="website">',
     '<meta property="og:site_name" content="Ruang Islami.co">',
     '<meta property="og:title" content="' + esc(judul) + '">',
-    '<meta property="og:description" content="' + esc(desk) + '">',
+    '<meta property="og:description" content="' + esc(String(desk || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) + '">',
     '<meta property="og:image" content="' + esc(gambar) + '">',
     '<meta property="og:url" content="' + esc(alamat) + '">',
     '<meta name="twitter:card" content="summary_large_image">',
@@ -1667,6 +1703,9 @@ function handleAction(p) {
       if (email) {
         const sama = db.participants.filter(x => String(x.email || '').toLowerCase() === email)[0];
         if (sama) return { ok: true, data: { id: sama.id, code: sama.code, status: sama.status || 'aktif', lama: true } };
+        /* Sudah pernah mengisi tapi belum membayar: pakai antrean yang sama, kode belum terbit. */
+        const antre = (db.pendaftar || []).filter(x => String(x.email || '').toLowerCase() === email)[0];
+        if (antre) return { ok: true, data: { id: antre.id, code: '', status: 'belum-bayar', lama: true, harga: antre.harga || 0 } };
       }
       const isiR = m.jenis === 'rangkaian' ? (m.items || []).filter(id => store.data[id] && id !== wid) : [];
       const dipakai = k => [db].concat(isiR.map(id => store.data[id])).some(d => (d.participants || []).some(x => String(x.code).toUpperCase() === k));
@@ -1688,6 +1727,21 @@ function handleAction(p) {
       const bayar = m.donasi ? nominal > 0 : hargaAkhir > 0;
       const perlu = (m.registration === 'mandiri-setuju' && !m.donasi) || bayar;
       const pid = 'p' + Date.now().toString(36);
+      if (bayar) {
+        /* Belum sah: tidak diberi kode, tidak masuk daftar peserta sampai lunas. */
+        db.pendaftar = db.pendaftar || [];
+        db.pendaftar.push({
+          id: pid, name: nama, code: '', antre: true,
+          group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
+          status: 'belum-bayar', registeredAt: new Date().toISOString(),
+          donasi: m.donasi ? nominal : undefined,
+          harga: !m.donasi && m.price > 0 ? hargaAkhir : undefined,
+          voucher: vch ? vch.code : undefined, potongan: vch ? vch.potongan : undefined,
+          bundleItems: isiR.length ? isiR : undefined, bundleOf: isiR.length ? wid : undefined
+        });
+        touch();
+        return { ok: true, data: { id: pid, code: '', status: 'belum-bayar', harga: hargaAkhir, potongan: vch ? vch.potongan : 0 } };
+      }
       db.participants.push({
         id: pid, name: nama, code: kode,
         group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
@@ -1717,19 +1771,24 @@ function handleAction(p) {
       const m = store.meta.filter(x => x.id === wid)[0];
       if (!m) return { ok: false, error: 'Workshop tidak ditemukan.' };
       if (!(m.price > 0) && !m.donasi) return { ok: false, error: 'Workshop ini tidak berbiaya.' };
-      const pesertaD = db.participants.filter(x => x.id === p.id)[0];
+      const pesertaD = cariPeserta(db, p.id);
       /* Donasi: nominal dari peserta (atau yang tercatat saat mendaftar), minimal Rp 2.000. */
       const tagihan = m.donasi
         ? Math.round(Number(p.amount) || Number(pesertaD && pesertaD.donasi) || 0)
         : (pesertaD && pesertaD.harga != null ? Math.round(pesertaD.harga) : hargaDasar(m));
-      if (!m.donasi && tagihan <= 0) { if (pesertaD) { pesertaD.status = 'aktif'; sebarStatus(pesertaD); touch(); } return { ok: true, data: { paid: true } }; }
+      if (!m.donasi && tagihan <= 0) {
+        let ps = pesertaD;
+        if (ps && ps.antre) ps = sahkanPendaftar(db, ps.id); else if (ps) { ps.status = 'aktif'; sebarStatus(ps); }
+        touch();
+        return { ok: true, data: { paid: true, code: ps ? ps.code : '' } };
+      }
       if (m.donasi && tagihan < 2000) return { ok: false, error: 'Nominal donasi minimal Rp 2.000.' };
       if (m.donasi && pesertaD) pesertaD.donasi = tagihan;
       const via = penyedia();
       if (via === 'manual') return { ok: false, error: 'Pembayaran daring belum diaktifkan. Hubungi panitia untuk pembayaran manual.' };
-      const peserta = db.participants.filter(x => x.id === p.id)[0];
-      if (!peserta) return { ok: false, error: 'Peserta tidak ditemukan.' };
-      if (peserta.status === 'aktif') return { ok: true, data: { paid: true } };
+      const peserta = cariPeserta(db, p.id);
+      if (!peserta) return { ok: false, error: 'Pendaftaran tidak ditemukan. Silakan isi formulir lagi.' };
+      if (peserta.status === 'aktif') return { ok: true, data: { paid: true, code: peserta.code } };
       const ref = 'ws-' + wid + '-' + peserta.id;
       if (via === 'midtrans') {
         const lama = Object.values(db.payments || {}).filter(x => x.provider === 'midtrans' && x.participantId === peserta.id && x.status === 'menunggu' && x.expiresAt > Date.now())[0];
@@ -1774,7 +1833,9 @@ function handleAction(p) {
     case 'payStatus': {
       const bayar = (db.payments || {})[String(p.ref || '')];
       if (!bayar) return { ok: false, error: 'Tagihan tidak ditemukan.' };
-      const peserta = db.participants.filter(x => x.id === bayar.participantId)[0];
+      const sahNow = () => (db.participants || []).find(x => x.id === bayar.participantId);
+      const jawab = () => { const ps = sahNow(); return { ok: true, data: { status: bayar.status, pesertaStatus: ps ? ps.status : 'belum-bayar', code: ps && ps.status === 'aktif' ? ps.code : '' } }; };
+      const peserta = sahNow();
       if (bayar.provider === 'midtrans' && bayar.status === 'menunggu' && MIDTRANS_KEY) {
         const dPakai = db;
         return midtrans('GET', apiHost(), '/v2/' + encodeURIComponent(bayar.ref) + '/status').then(t => {
@@ -1782,8 +1843,8 @@ function handleAction(p) {
           if (st === 'lunas') tandaiLunas(dPakai, bayar);
           else bayar.status = st;
           touch();
-          return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
-        }).catch(() => ({ ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } }));
+          return jawab();
+        }).catch(() => jawab());
       }
       /* Xendit: jangan hanya menunggu callback — tanyakan langsung pembayaran QR ini. */
       if (bayar.provider === 'xendit' && bayar.status === 'menunggu' && XENDIT_SECRET && bayar.xenditId) {
@@ -1791,19 +1852,20 @@ function handleAction(p) {
         return xendit('/qr_codes/' + encodeURIComponent(bayar.xenditId) + '/payments', null, 'GET').then(j => {
           const daftar = Array.isArray(j.data) ? j.data : [];
           if (daftar.some(x => /SUCCEEDED|COMPLETED/i.test(String(x.status || '')))) { tandaiLunas(dPakai, bayar, 'cek status'); touch(); }
-          return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
-        }).catch(() => ({ ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } }));
+          return jawab();
+        }).catch(() => jawab());
       }
-      return { ok: true, data: { status: bayar.status, pesertaStatus: peserta ? peserta.status : null } };
+      return jawab();
     }
 
     /* Panitia menandai pembayaran manual sebagai lunas. */
     case 'markPaid': {
       if (!siapa || !BOLEH_SUSUN[siapa.role]) return { ok: false, error: 'Hanya admin penuh.' };
-      const peserta = db.participants.filter(x => x.id === p.id)[0];
+      let peserta = db.participants.filter(x => x.id === p.id)[0];
+      if (!peserta && (db.pendaftar || []).some(x => x.id === p.id)) peserta = sahkanPendaftar(db, p.id);
       if (!peserta) return { ok: false, error: 'Peserta tidak ditemukan.' };
       peserta.status = 'aktif';
-      peserta.paidAt = new Date().toISOString();
+      peserta.paidAt = peserta.paidAt || new Date().toISOString();
       sebarStatus(peserta);
       peserta.paidBy = siapa.name || 'panitia';
       touch();
