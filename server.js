@@ -978,6 +978,19 @@ function handleAction(p) {
       return { ok: true, data: { id: hit[0].id, name: hit[0].name, group: hit[0].group } };
     }
 
+    /* Mode bertahap: peserta menandai sesi selesai agar sesi berikutnya terbuka. */
+    case 'sesiSelesai': {
+      const ses = (db.sessions || []).find(x => x.id === p.sessionId);
+      if (!ses) return { ok: false, error: 'Sesi tidak ditemukan.' };
+      const ps = (db.participants || []).find(x => x.id === p.id);
+      if (!ps || ps.status === 'menunggu') return { ok: false, error: 'Peserta tidak dikenali.' };
+      const R0 = slot(ses.id);
+      R0.selesai = R0.selesai || {};
+      if (p.batal) delete R0.selesai[ps.id]; else R0.selesai[ps.id] = new Date().toISOString();
+      touch();
+      return { ok: true };
+    }
+
     case 'checkin': {
       const b = blockOf(p.sessionId, p.blockId);
       if (!b) return { ok: false, error: 'Materi check in tidak ditemukan.' };
