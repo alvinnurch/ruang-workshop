@@ -5494,7 +5494,8 @@ class Component extends DCLogic {
         const s = d.sessions.find(x => x.id === d.activeSessionId) || null;
         this.apiPost({
           action: 'putLive', password: this._pw || '',
-          activeSessionId: d.activeSessionId, activeIds: this.aktifIds(d), allOpen: !!d.allOpen,
+          activeSessionId: d.activeSessionId, activeIds: this.aktifIds(d), allOpen: !!d.allOpen, bertahap: !!d.bertahap,
+          selesaiIds: (d.sessions || []).filter(x => x.selesai).map(x => x.id),
           sessionId: s ? s.id : '',
           multiOpen: s ? s.multiOpen !== false : true,
           active: s ? s.active : null,
@@ -6119,7 +6120,10 @@ class Component extends DCLogic {
       const dx = t.clientX - a.x, dy = t.clientY - a.y;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       const ke = posP + (dx < 0 ? 1 : -1);
-      if (ke >= 0 && ke < daftarP.length) pindahP(daftarP[ke].s0.id);
+      if (ke >= 0 && ke < daftarP.length) {
+        if (bertahap && kunciB[daftarP[ke].s0.id]) return this.setState({ apiError: 'Sesi berikutnya terbuka setelah sesi ini ditandai selesai.' });
+        pindahP(daftarP[ke].s0.id);
+      }
     };
     if (!started && !mandiri) {
       v.liveBadge = 'Belum dimulai';
