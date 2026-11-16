@@ -2012,6 +2012,7 @@ function handleAction(p) {
       db.activeSessionId = incoming.activeSessionId || (db.sessions[0] ? db.sessions[0].id : null);
       /* Saklar "Semua sesi terbuka" ikut tersimpan saat admin penuh menyimpan susunan. */
       if (typeof incoming.allOpen === 'boolean') db.allOpen = incoming.allOpen;
+      if (typeof incoming.bertahap === 'boolean') db.bertahap = incoming.bertahap;
       { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(incoming.activeIds)) db.activeIds = sahIds(incoming.activeIds); }
       const keep = db.responses || {};
       db.responses = {};
@@ -2031,6 +2032,8 @@ function handleAction(p) {
       (p.open || []).forEach(o => { map[o.id] = !!o.open; });
       if (typeof p.activeSessionId !== 'undefined') db.activeSessionId = p.activeSessionId || null;
       if (typeof p.allOpen === 'boolean') db.allOpen = p.allOpen;
+      if (typeof p.bertahap === 'boolean') db.bertahap = p.bertahap;
+      if (Array.isArray(p.selesaiIds)) db.sessions.forEach(s => { s.selesai = p.selesaiIds.indexOf(s.id) >= 0; });
       { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(p.activeIds)) db.activeIds = sahIds(p.activeIds); }
       db.sessions.forEach(s => {
         (s.blocks || []).forEach(b => { if (Object.prototype.hasOwnProperty.call(map, b.id)) b.open = map[b.id]; });
