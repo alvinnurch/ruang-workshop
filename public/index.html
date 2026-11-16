@@ -861,6 +861,12 @@
               </button>
             </sc-for>
           </div>
+          <sc-if value="{{ bertahapShow }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px;background:#FFF;border:1px solid #E6DFD6;border-radius:12px;padding:10px 12px">
+              <span style="font-size:12.5px;color:#5C534B;line-height:1.5;flex:1 1 220px;text-wrap:pretty">{{ bertahapNote }}</span>
+              <button onClick="{{ bertahapToggle }}" style="{{ bertahapBtnStyle }}">{{ bertahapBtnLabel }}</button>
+            </div>
+          </sc-if>
         </div>
       </sc-if>
       <sc-if value="{{ noActiveSession }}" hint-placeholder-val="{{ false }}">
@@ -2202,6 +2208,9 @@
                   <button onClick="{{ goProjector }}" style="background:#1B1714;color:#FFF;border:none;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:700" style-hover="background:#332C25">Layar proyektor</button>
                   <button onClick="{{ toggleMulti }}" style="{{ multiStyle }}">{{ multiLabel }}</button>
                   <button onClick="{{ toggleAllOpen }}" title="{{ allOpenTitle }}" style="{{ allOpenStyle }}">{{ allOpenLabel }}</button>
+                  <sc-if value="{{ showSesiSelesai }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ toggleSesiSelesai }}" title="Membuka sesi berikutnya untuk semua peserta" style="{{ sesiSelesaiStyle }}">{{ sesiSelesaiLabel }}</button>
+                  </sc-if>
                   <button onClick="{{ closeAll }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup semua</button>
                 </div>
               </div>
@@ -4074,8 +4083,29 @@ class Component extends DCLogic {
     return db.activeSessionId ? [db.activeSessionId] : [];
   }
   /* Mode belajar mandiri: peserta memilih sesi sendiri, semua materi yang dipakai terbuka. */
+  /* Mode bertahap: sesi ke-n terbuka bila sesi sebelumnya ditandai selesai (oleh peserta atau panitia). */
+  sesiSelesaiOleh(db, sid, pid) {
+    const s = (db.sessions || []).find(x => x.id === sid);
+    if (s && s.selesai) return true;
+    const R = ((db.responses || {})[sid] || {}).selesai || {};
+    return !!(pid && R[pid]);
+  }
+  kunciBertahap(db, pid) {
+    const ses = db.sessions || [], out = {};
+    let buka = true;
+    ses.forEach(s => { out[s.id] = !buka; buka = buka && this.sesiSelesaiOleh(db, s.id, pid); });
+    return out;
+  }
   sesiPeserta() {
     const st = this.state, db = st.db || {};
+    if (db.allOpen && db.bertahap) {
+      const kunci = this.kunciBertahap(db, st.userId);
+      const terbuka = (db.sessions || []).filter(x => !kunci[x.id]);
+      const pilih = terbuka.find(x => x.id === st.pSesi)
+        || terbuka.find(x => !this.sesiSelesaiOleh(db, x.id, st.userId)) || terbuka[terbuka.length - 1];
+      if (!pilih) return null;
+      return Object.assign({}, pilih, { blocks: (pilih.blocks || []).map(b => b.enabled ? Object.assign({}, b, { open: true }) : b) });
+    }
     if (!db.allOpen) {
       const ids = this.aktifIds(db);
       if (ids.length < 2) return this.activeSess();
@@ -6018,15 +6048,50 @@ class Component extends DCLogic {
     const posP = Math.max(0, daftarP.findIndex(x => live && x.s0.id === live.id));
     const pindahP = id => this.setState({ pSesi: id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
     v.pSesiPos = daftarP.length > 1 ? (posP + 1) + ' dari ' + daftarP.length + (st.narrow ? ' · geser kartu' : '') : '';
+    const bertahap = mandiri && !!db.bertahap;
+    const kunciB = bertahap ? this.kunciBertahap(db, st.userId) : {};
     v.pSesiChips = daftarP.map(({ s0, i }) => {
       const on = live && s0.id === live.id;
+      const terkunci = !!kunciB[s0.id];
+      const tuntas = bertahap && this.sesiSelesaiOleh(db, s0.id, st.userId);
+      if (terkunci) return {
+        num: '🔒', title: s0.title || 'Sesi', full: 'Terkunci — selesaikan sesi sebelumnya dulu',
+        numStyle: { flex: 'none', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' },
+        style: { display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '44px', maxWidth: st.narrow ? '72vw' : '300px', background: '#F1EBE3', border: '1px dashed #D8CEC2', color: '#A5968A', borderRadius: '100px', padding: '0 16px 0 9px', fontSize: '13.5px', fontWeight: 600, cursor: 'not-allowed', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start' },
+        pick: () => this.setState({ apiError: 'Sesi ' + (i + 1) + ' terbuka setelah sesi sebelumnya ditandai selesai.' })
+      };
       return {
-        num: String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi'),
+        num: tuntas && !on ? '✓' : String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi'),
         numStyle: { flex: 'none', width: '22px', height: '22px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11.5px', fontWeight: 800, background: on ? 'rgba(255,255,255,.22)' : '#F1EBE3', color: on ? '#FFF' : '#7A6F66' },
         style: { display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '44px', maxWidth: st.narrow ? '72vw' : '300px', background: on ? '#A5121C' : '#FFF', border: '1px solid ' + (on ? '#A5121C' : '#E0D8CE'), color: on ? '#FFF' : '#3B342E', borderRadius: '100px', padding: '0 16px 0 9px', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start', boxShadow: on ? '0 3px 10px rgba(165,18,28,.22)' : 'none' },
         pick: () => pindahP(s0.id)
       };
     });
+    v.bertahapShow = bertahap && !!live;
+    if (bertahap && live) {
+      const idx = (db.sessions || []).findIndex(x => x.id === live.id);
+      const tuntas = this.sesiSelesaiOleh(db, live.id, st.userId);
+      const olehPanitia = !!((db.sessions || [])[idx] || {}).selesai;
+      const akhir = idx === (db.sessions || []).length - 1;
+      v.liveBadge = 'Belajar bertahap · sesi ' + (idx + 1) + ' dari ' + (db.sessions || []).length;
+      v.bertahapNote = olehPanitia ? 'Sesi ini sudah ditutup panitia.' + (akhir ? '' : ' Sesi berikutnya terbuka.')
+        : tuntas ? 'Anda sudah menyelesaikan sesi ini.' + (akhir ? ' Ini sesi terakhir — terima kasih!' : ' Sesi berikutnya terbuka.')
+        : 'Sudah selesai mengikuti sesi ini? Tandai selesai' + (akhir ? '.' : ' untuk membuka sesi berikutnya.');
+      v.bertahapBtnLabel = olehPanitia ? 'Selesai ✓' : tuntas ? (akhir ? 'Selesai ✓' : 'Lanjut ke sesi berikutnya →') : 'Tandai sesi selesai';
+      v.bertahapBtnStyle = { background: tuntas || olehPanitia ? '#EEF5E9' : '#A5121C', color: tuntas || olehPanitia ? '#2C4D18' : '#FFF', border: tuntas || olehPanitia ? '1px solid #CFE2C2' : 'none', borderRadius: '9px', padding: '10px 15px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' };
+      const lanjut = () => { const nx = (db.sessions || [])[idx + 1]; if (nx) pindahP(nx.id); };
+      v.bertahapToggle = async () => {
+        if (olehPanitia || (tuntas && akhir)) return;
+        if (tuntas) return lanjut();
+        const tandai = d => { d.responses = d.responses || {}; const r = d.responses[live.id] = d.responses[live.id] || {}; r.selesai = Object.assign({}, r.selesai, { [st.userId]: new Date().toISOString() }); };
+        this.setState(s0 => { const d = JSON.parse(JSON.stringify(s0.db)); tandai(d); return { db: d }; });
+        if (this.api()) {
+          const out = await this.apiPost({ action: 'sesiSelesai', sessionId: live.id, id: st.userId });
+          if (!out || !out.ok) return this.setState({ apiError: (out && out.error) || 'Gagal menandai sesi.' });
+        }
+        if (!akhir) setTimeout(lanjut, 350);
+      };
+    }
     /* Bilah lengket diletakkan tepat di bawah header situs, yang tingginya berubah di ponsel. */
     v.headH = (this._headH || 67) + 'px';
     /* Lengket hanya di ponsel (satu kolom). Di desktop panel kanan sudah lengket sendiri. */
@@ -9016,12 +9081,23 @@ class Component extends DCLogic {
         add: () => { const b = this.newBlock(t); this.save(d => { d.sessions.find(s => s.id === cur.id).blocks.push(b); }); this.setState({ editBlock: b.id }); }
       }));
       v.closeAll = () => this.save(d => { const s = d.sessions.find(x => x.id === cur.id); s.blocks.forEach(b => { b.open = false; }); s.active = null; }, null, true);
-      v.allOpenLabel = db.allOpen ? 'Semua sesi terbuka' : 'Sesi dibuka admin';
-      v.allOpenTitle = db.allOpen
-        ? 'Peserta bebas memilih sesi dan semua materinya. Proyektor tetap menampilkan sesi aktif yang Anda pilih.'
-        : 'Peserta hanya melihat sesi aktif dan materi yang Anda buka.';
+      const modeBuka = !db.allOpen ? 'admin' : db.bertahap ? 'bertahap' : 'semua';
+      v.allOpenLabel = { admin: 'Sesi dibuka admin', semua: 'Semua sesi terbuka', bertahap: 'Terbuka bertahap ↓' }[modeBuka];
+      v.allOpenTitle = {
+        admin: 'Peserta hanya melihat sesi aktif dan materi yang Anda buka. Klik untuk ganti mode.',
+        semua: 'Peserta bebas memilih sesi dan semua materinya. Klik untuk ganti ke bertahap.',
+        bertahap: 'Sesi terbuka berurutan dari atas: sesi berikutnya terbuka setelah peserta menandai sesi sebelumnya selesai (atau Anda menandainya selesai). Klik untuk kembali ke mode admin.'
+      }[modeBuka];
       v.allOpenStyle = { background: db.allOpen ? '#FFF6E5' : '#FFF', border: '1px solid ' + (db.allOpen ? '#F0D9A8' : '#E0D8CE'), color: db.allOpen ? '#7A4E00' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
-      v.toggleAllOpen = () => this.save(d => { d.allOpen = !d.allOpen; }, null, true);
+      v.toggleAllOpen = () => this.save(d => {
+        if (!d.allOpen) { d.allOpen = true; d.bertahap = false; }
+        else if (!d.bertahap) d.bertahap = true;
+        else { d.allOpen = false; d.bertahap = false; }
+      }, null, true);
+      v.showSesiSelesai = !!(db.allOpen && db.bertahap);
+      v.sesiSelesaiLabel = cur.selesai ? 'Sesi ditutup ✓ (buka lagi)' : 'Tandai sesi ini selesai';
+      v.sesiSelesaiStyle = { background: cur.selesai ? '#EEF5E9' : '#FFF', border: '1px solid ' + (cur.selesai ? '#CFE2C2' : '#E0D8CE'), color: cur.selesai ? '#2C4D18' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' };
+      v.toggleSesiSelesai = () => this.save(d => { const t = d.sessions.find(x => x.id === cur.id); t.selesai = !t.selesai; }, null, true);
       v.multiLabel = cur.multiOpen === false ? 'Satu materi sekaligus' : 'Boleh dibuka bersamaan';
       v.multiStyle = { background: cur.multiOpen === false ? '#FFF' : '#EEF5E9', border: '1px solid ' + (cur.multiOpen === false ? '#E0D8CE' : '#CFE2C2'), color: cur.multiOpen === false ? '#5C534B' : '#2C4D18', borderRadius: '100px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
       v.toggleMulti = () => this.save(d => {
