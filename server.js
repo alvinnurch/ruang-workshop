@@ -176,6 +176,20 @@ const BOLEH_SUSUN_WS = { penuh: true, wsadmin: true, fasilitator: true };
 let db = null;
 let version = 1;
 store = load();
+/* Sekali jalan: pendaftar berbayar lama yang belum lunas dipindah ke antrean (kodenya dicabut). */
+(function pindahBelumBayar() {
+  let n = 0;
+  (store.meta || []).forEach(m => {
+    const d = store.data[m.id]; if (!d || !(m.price > 0 || m.donasi)) return;
+    d.pendaftar = Array.isArray(d.pendaftar) ? d.pendaftar : [];
+    d.participants = (d.participants || []).filter(x => {
+      if (x.status !== 'menunggu' || x.paidAt || x.paidBy || x.viaBundle) return true;
+      d.pendaftar.push(Object.assign({}, x, { code: '', kodeLama: x.code, antre: true, status: 'belum-bayar' }));
+      n++; return false;
+    });
+  });
+  if (n) { console.log('[migrasi] ' + n + ' pendaftar belum bayar dipindah ke antrean'); try { fs.writeFileSync(DATA_FILE, JSON.stringify(store), 'utf8'); } catch (e) {} }
+})();
 setInterval(() => {
   const batas = Date.now() - 3 * 864e5; let ubah = false;
   Object.values(store.data || {}).forEach(d => {
@@ -298,7 +312,10 @@ function metaPublik() {
   return store.meta.map(m => {
     const d = store.data[m.id] || EMPTY;
     return Object.assign({}, m, {
-      sessionCount: (d.sessions || []).length, participantCount: (d.participants || []).length,
+      sessionCount: (d.sessions || []).length,
+      participantCount: (d.participants || []).filter(x => x.status !== 'menunggu').length,
+      pesertaLunas: (d.participants || []).filter(x => x.status !== 'menunggu' && (x.paidAt || x.paidBy)).length,
+      pesertaAntre: (d.pendaftar || []).length + (d.participants || []).filter(x => x.status === 'menunggu').length,
       programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' }))
     });
   });
