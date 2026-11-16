@@ -477,7 +477,7 @@
         <div style="display:grid;gap:min(3vw,22px);flex:2 1 460px;min-width:min(100%,300px)">
           <div style="background:#FFF7EE;border-radius:min(5vw,36px);padding:min(4vw,32px)">
             <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:21px;margin:0 0 12px;font-weight:700;color:#3B3238">Tentang {{ profilJenis }}</h2>
-            <p style="font-size:14.5px;color:#6B6168;margin:0 0 20px;line-height:1.7;text-wrap:pretty">{{ profilDeskripsi }}</p>
+            <div style="font-size:14.5px;color:#6B6168;margin:0 0 20px;line-height:1.7;text-wrap:pretty">{{ profilDeskripsiEl }}</div>
             <sc-if value="{{ profilHasCapaian }}" hint-placeholder-val="{{ false }}">
               <div>
                 <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;margin:0 0 12px;font-weight:700;color:#3B3238">Yang akan dipelajari</h3>
@@ -546,6 +546,9 @@
                       <div style="flex:1;min-width:min(100%,180px)">
                         <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;font-weight:700;color:#3B3238;line-height:1.35;text-wrap:balance">{{ s.title }}</div>
                         <div style="font-size:12.5px;color:#7A6F76;margin-top:5px;line-height:1.5">{{ s.meta }}</div>
+                        <sc-if value="{{ s.hasDesc }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:13.5px;color:#4A3F46;margin-top:8px;line-height:1.6;text-wrap:pretty">{{ s.descEl }}</div>
+                        </sc-if>
                         <sc-if value="{{ s.hasOrang }}" hint-placeholder-val="{{ false }}">
                           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
                             <sc-for list="{{ s.orang }}" as="n" hint-placeholder-count="1">
@@ -598,7 +601,7 @@
             <sc-if value="{{ profilDonasi }}" hint-placeholder-val="{{ false }}">
               <div style="background:#FFF7EE;border-radius:16px;padding:14px 16px;margin:-6px 0 18px">
                 <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B1B20">Donasi Anda digunakan untuk</div>
-                <div style="font-size:13.5px;color:#3B3238;line-height:1.6;margin-top:5px;white-space:pre-line;text-wrap:pretty">{{ profilDonasiTujuan }}</div>
+                <div style="font-size:13.5px;color:#3B3238;line-height:1.6;margin-top:5px;text-wrap:pretty">{{ profilDonasiTujuanEl }}</div>
               </div>
             </sc-if>
             <div style="display:grid;gap:10px;border-top:1px solid #F3E8DC;padding-top:16px;margin-bottom:20px">
@@ -652,7 +655,7 @@
               <sc-if value="{{ payErr }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:12.5px;color:#A5121C;font-weight:600;margin-top:14px;line-height:1.5;text-wrap:pretty">{{ payErr }}</div>
               </sc-if>
-              <div style="font-size:12px;color:#8C8078;margin-top:16px;line-height:1.55">Kode peserta Anda: <b style="color:#1B1714;letter-spacing:.1em">{{ regCode }}</b> — aktif setelah pembayaran diterima.</div>
+              <div style="font-size:12px;color:#8C8078;margin-top:16px;line-height:1.55">Kode peserta dan tiket Anda terbit begitu pembayaran diterima. Anda belum tercatat sebagai peserta sebelum membayar.</div>
             </div>
           </sc-if>
           <sc-if value="{{ regDone }}" hint-placeholder-val="{{ false }}">
@@ -691,7 +694,7 @@
                 <div style="background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:16px;display:grid;gap:12px">
                   <div>
                     <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B1B20">Donasi sukarela</div>
-                    <div style="font-size:13px;color:#3B3238;line-height:1.6;margin-top:4px;white-space:pre-line;text-wrap:pretty">{{ regDonasiTujuan }}</div>
+                    <div style="font-size:13px;color:#3B3238;line-height:1.6;margin-top:4px;text-wrap:pretty">{{ regDonasiTujuanEl }}</div>
                   </div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <sc-for list="{{ regDonasiChips }}" as="c" hint-placeholder-count="3">
@@ -957,7 +960,7 @@
                 </div>
                 <button onClick="{{ closePanel }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup</button>
               </div>
-              <p style="font-size:14.5px;line-height:1.65;color:#3B342E;margin:0 0 20px;text-wrap:pretty">{{ panelDesc }}</p>
+              <div style="font-size:14.5px;line-height:1.65;color:#3B342E;margin:0 0 20px;text-wrap:pretty">{{ panelDescEl }}</div>
               <sc-if value="{{ docHasMeta }}" hint-placeholder-val="{{ false }}">
                 <div style="display:grid;gap:9px;background:#FAF6F0;border:1px solid #EDE6DD;border-radius:10px;padding:14px 16px;margin-bottom:18px">
                   <sc-for list="{{ docMeta }}" as="m" hint-placeholder-count="2">
@@ -1082,7 +1085,7 @@
                 <div>
                   <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A5121C">{{ panelKind }}</div>
                   <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:22px;margin:6px 0 0;font-weight:700">{{ panelTitle }}</h3>
-                  <div style="font-size:13.5px;color:#7A6F66;margin-top:6px;max-width:60ch;line-height:1.55">{{ panelDesc }}</div>
+                  <div style="font-size:13.5px;color:#7A6F66;margin-top:6px;max-width:60ch;line-height:1.55">{{ panelDescEl }}</div>
                 </div>
                 <button onClick="{{ closePanel }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup</button>
               </div>
@@ -1237,7 +1240,7 @@
                 <div>
                   <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A5121C">Formulir</div>
                   <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:22px;margin:6px 0 0;font-weight:700">{{ panelTitle }}</h3>
-                  <div style="font-size:13.5px;color:#7A6F66;margin-top:6px;max-width:60ch;line-height:1.55">{{ panelDesc }}</div>
+                  <div style="font-size:13.5px;color:#7A6F66;margin-top:6px;max-width:60ch;line-height:1.55">{{ panelDescEl }}</div>
                 </div>
                 <button onClick="{{ closePanel }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup</button>
               </div>
@@ -1637,7 +1640,7 @@
             <sc-if value="{{ projDocHasHint }}" hint-placeholder-val="{{ false }}">
               <div style="background:#2A231D;border:1px solid #4E4338;border-radius:11px;padding:12px 16px;margin-bottom:18px;font-size:14px;color:#E8B84B;line-height:1.55;text-wrap:pretty">{{ projDocHint }}</div>
             </sc-if>
-            <div style="font-size:15px;color:#A99C90;line-height:1.65;margin-bottom:26px;text-wrap:pretty">{{ panelDesc }}</div>
+            <div style="font-size:15px;color:#A99C90;line-height:1.65;margin-bottom:26px;text-wrap:pretty">{{ panelDescDarkEl }}</div>
             <div style="display:inline-grid;gap:12px;background:#262019;border:1px solid #3A322A;border-radius:14px;padding:26px 34px;text-align:left">
               <sc-for list="{{ docMeta }}" as="m" hint-placeholder-count="2">
                 <div style="display:flex;gap:20px;font-size:17px"><span style="width:130px;flex:none;color:#A99C90">{{ m.label }}</span><span style="font-weight:600;letter-spacing:.05em">{{ m.value }}</span></div>
@@ -2130,7 +2133,17 @@
                 </label>
                 <label style="display:grid;gap:5px;grid-column:1/-1">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Deskripsi</span>
-                  <textarea value="{{ sDesc }}" onChange="{{ onSDesc }}" rows="2" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none;resize:vertical;line-height:1.55"></textarea>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtB }}" title="Tebal" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:800;font-size:13px;color:#3B342E;cursor:pointer">B</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtI }}" title="Miring" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-style:italic;font-size:13px;color:#3B342E;cursor:pointer">I</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtU }}" title="Garis bawah" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:underline;font-size:13px;color:#3B342E;cursor:pointer">U</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtS }}" title="Coret" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:line-through;font-size:13px;color:#3B342E;cursor:pointer">S</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtH }}" title="Subjudul" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:700;font-size:12px;color:#3B342E;cursor:pointer">H</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtList }}" title="Daftar berbutir" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:13px;color:#3B342E;cursor:pointer">• ≡</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtLink }}" title="Tautan" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;cursor:pointer">🔗 Tautan</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtHtml }}" title="Sisipkan HTML / kode embed" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;font-family:ui-monospace,Menlo,monospace;cursor:pointer">&lt;/&gt; HTML</button>
+                          </div>
+                  <textarea data-rich="1" value="{{ sDesc }}" onChange="{{ onSDesc }}" rows="2" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none;resize:vertical;line-height:1.55"></textarea>
                 </label>
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Narasumber / fasilitator</span>
@@ -2237,6 +2250,7 @@
                           <sc-if value="{{ b.embedOn }}" hint-placeholder-val="{{ false }}">
                             <div style="display:flex;gap:8px;flex-wrap:wrap">
                               <button onClick="{{ b.copyEmbed }}" style="background:#3B342E;color:#FFF;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700" style-hover="background:#1B1714">{{ b.copyLabel }}</button>
+                              <button onClick="{{ b.copyShort }}" title="Untuk WordPress/Tutor LMS yang membuang iframe — butuh plugin Ruang Embed" style="background:#FFF;border:1px solid #3B342E;color:#3B342E;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700" style-hover="background:#F6F1EA">{{ b.copyShortLabel }}</button>
                               <button onClick="{{ b.toggleEmbedResult }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600" style-hover="background:#F6F1EA">{{ b.embedResultLabel }}</button>
                               <sc-if value="{{ b.hasResultLink }}" hint-placeholder-val="{{ false }}">
                                 <a href="{{ b.resultUrl }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;text-decoration:none">Buka layar hasil ↗</a>
@@ -2265,7 +2279,17 @@
                           </label>
                           <label style="display:grid;gap:5px;grid-column:1/-1">
                             <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Deskripsi materi</span>
-                            <textarea value="{{ b.desc }}" onChange="{{ b.onDesc }}" rows="3" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;resize:vertical;line-height:1.55"></textarea>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtB }}" title="Tebal" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:800;font-size:13px;color:#3B342E;cursor:pointer">B</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtI }}" title="Miring" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-style:italic;font-size:13px;color:#3B342E;cursor:pointer">I</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtU }}" title="Garis bawah" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:underline;font-size:13px;color:#3B342E;cursor:pointer">U</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtS }}" title="Coret" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:line-through;font-size:13px;color:#3B342E;cursor:pointer">S</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtH }}" title="Subjudul" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:700;font-size:12px;color:#3B342E;cursor:pointer">H</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtList }}" title="Daftar berbutir" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:13px;color:#3B342E;cursor:pointer">• ≡</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtLink }}" title="Tautan" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;cursor:pointer">🔗 Tautan</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtHtml }}" title="Sisipkan HTML / kode embed" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;font-family:ui-monospace,Menlo,monospace;cursor:pointer">&lt;/&gt; HTML</button>
+                          </div>
+                            <textarea data-rich="1" value="{{ b.desc }}" onChange="{{ b.onDesc }}" rows="3" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none;resize:vertical;line-height:1.55"></textarea>
                           </label>
                           <label style="display:grid;gap:5px;align-content:start">
                             <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Pengisi materi</span>
@@ -3047,7 +3071,17 @@
                       <div style="display:grid;gap:12px">
                         <label style="display:grid;gap:5px">
                           <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Donasi digunakan untuk</span>
-                          <textarea value="{{ w.donasiTujuan }}" onChange="{{ w.onDonasiTujuan }}" rows="3" placeholder="mis. Seluruh donasi untuk beasiswa santri penulis dan biaya konsumsi peserta dari daerah." style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;resize:vertical;line-height:1.55" style-focus="border-color:#A5121C"></textarea>
+                          <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtB }}" title="Tebal" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:800;font-size:13px;color:#3B342E;cursor:pointer">B</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtI }}" title="Miring" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-style:italic;font-size:13px;color:#3B342E;cursor:pointer">I</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtU }}" title="Garis bawah" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:underline;font-size:13px;color:#3B342E;cursor:pointer">U</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtS }}" title="Coret" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:line-through;font-size:13px;color:#3B342E;cursor:pointer">S</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtH }}" title="Subjudul" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:700;font-size:12px;color:#3B342E;cursor:pointer">H</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtList }}" title="Daftar berbutir" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:13px;color:#3B342E;cursor:pointer">• ≡</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtLink }}" title="Tautan" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;cursor:pointer">🔗 Tautan</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtHtml }}" title="Sisipkan HTML / kode embed" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;font-family:ui-monospace,Menlo,monospace;cursor:pointer">&lt;/&gt; HTML</button>
+                          </div>
+                          <textarea data-rich="1" value="{{ w.donasiTujuan }}" onChange="{{ w.onDonasiTujuan }}" rows="3" placeholder="mis. Seluruh donasi untuk beasiswa santri penulis dan biaya konsumsi peserta dari daerah." style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;resize:vertical;line-height:1.55" style-focus="border-color:#A5121C"></textarea>
                         </label>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;align-items:end">
                           <label style="display:grid;gap:5px">
@@ -3148,7 +3182,17 @@
                   </label>
                   <label style="display:grid;gap:5px">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Deskripsi lengkap</span>
-                    <textarea value="{{ w.deskripsi }}" onChange="{{ w.onDeskripsi }}" rows="3" style="width:100%;box-sizing:border-box;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.6;background:#FCFAF7;outline:none;resize:vertical" style-focus="border-color:#A5121C;background:#FFF"></textarea>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtB }}" title="Tebal" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:800;font-size:13px;color:#3B342E;cursor:pointer">B</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtI }}" title="Miring" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-style:italic;font-size:13px;color:#3B342E;cursor:pointer">I</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtU }}" title="Garis bawah" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:underline;font-size:13px;color:#3B342E;cursor:pointer">U</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtS }}" title="Coret" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;text-decoration:line-through;font-size:13px;color:#3B342E;cursor:pointer">S</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtH }}" title="Subjudul" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-weight:700;font-size:12px;color:#3B342E;cursor:pointer">H</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtList }}" title="Daftar berbutir" style="min-width:30px;height:28px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:13px;color:#3B342E;cursor:pointer">• ≡</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtLink }}" title="Tautan" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;cursor:pointer">🔗 Tautan</button>
+                            <button type="button" onMouseDown="{{ fmtKeep }}" onClick="{{ fmtHtml }}" title="Sisipkan HTML / kode embed" style="height:28px;padding:0 9px;border:1px solid #E0D8CE;background:#FFF;border-radius:6px;font-size:12px;font-weight:600;color:#3B342E;font-family:ui-monospace,Menlo,monospace;cursor:pointer">&lt;/&gt; HTML</button>
+                          </div>
+                    <textarea data-rich="1" value="{{ w.deskripsi }}" onChange="{{ w.onDeskripsi }}" rows="3" style="width:100%;box-sizing:border-box;border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.6;background:#FCFAF7;outline:none;resize:vertical" style-focus="border-color:#A5121C;background:#FFF"></textarea>
                   </label>
                   <label style="display:grid;gap:5px">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Yang akan dipelajari — satu poin per baris</span>
@@ -4302,6 +4346,72 @@ class Component extends DCLogic {
       }
     };
   }
+  /* ── Teks kaya: HTML dibersihkan sebelum ditampilkan ── */
+  escHtml(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  polos(t) {
+    return String(t || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|li|h\d|div|blockquote)>/gi, '\n').replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  bersihHtml(src, gelap) {
+    const t = String(src || '');
+    if (!/<[a-z!\/][^>]*>/i.test(t)) return this.escHtml(t).replace(/\n/g, '<br>');
+    if (typeof DOMParser === 'undefined') return this.escHtml(this.polos(t)).replace(/\n/g, '<br>');
+    const doc = new DOMParser().parseFromString('<div id="r">' + t + '</div>', 'text/html');
+    const root = doc.getElementById('r');
+    root.querySelectorAll('script,style,link,meta,object,embed,form,input,button,select,textarea,noscript,base').forEach(n => n.remove());
+    const BOLEH = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, S: 1, STRIKE: 1, DEL: 1, A: 1, P: 1, BR: 1, UL: 1, OL: 1, LI: 1, H2: 1, H3: 1, H4: 1, BLOCKQUOTE: 1, IMG: 1, IFRAME: 1, SPAN: 1, DIV: 1, CODE: 1, PRE: 1, HR: 1, SMALL: 1, MARK: 1, SUP: 1, SUB: 1, FIGURE: 1, FIGCAPTION: 1, TABLE: 1, THEAD: 1, TBODY: 1, TR: 1, TD: 1, TH: 1, VIDEO: 1, AUDIO: 1, SOURCE: 1 };
+    const ATTR = { href: 1, src: 1, alt: 1, title: 1, width: 1, height: 1, allow: 1, allowfullscreen: 1, frameborder: 1, colspan: 1, rowspan: 1, controls: 1, style: 1, referrerpolicy: 1, scrolling: 1 };
+    Array.from(root.querySelectorAll('*')).forEach(el => {
+      if (!el.parentNode) return;
+      if (!BOLEH[el.tagName]) { el.replaceWith(...el.childNodes); return; }
+      Array.from(el.attributes).forEach(a => {
+        const n = a.name.toLowerCase(), v = a.value;
+        if (!ATTR[n]) el.removeAttribute(a.name);
+        else if ((n === 'href' || n === 'src') && /^\s*(javascript|vbscript|data:(?!image\/))/i.test(v)) el.removeAttribute(a.name);
+        else if (n === 'style' && /expression|javascript:|position\s*:\s*fixed/i.test(v)) el.removeAttribute(a.name);
+      });
+      if (el.tagName === 'A') { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer'); el.style.color = el.style.color || (gelap ? '#E8B84B' : '#B31F24'); }
+      if (el.tagName === 'IFRAME') {
+        if (!/^https:\/\//i.test(el.getAttribute('src') || '')) { el.remove(); return; }
+        el.setAttribute('loading', 'lazy'); el.style.maxWidth = '100%'; el.style.border = el.style.border || '0'; el.style.borderRadius = el.style.borderRadius || '10px';
+        if (!el.getAttribute('width')) el.style.width = '100%';
+        if (!el.getAttribute('height')) el.style.aspectRatio = el.style.aspectRatio || '16/9';
+      }
+      if (el.tagName === 'IMG' || el.tagName === 'VIDEO') { el.style.maxWidth = '100%'; el.style.height = el.style.height || 'auto'; el.style.borderRadius = el.style.borderRadius || '10px'; }
+      if (/^(UL|OL)$/.test(el.tagName)) el.style.paddingLeft = el.style.paddingLeft || '1.3em';
+      if (/^(H2|H3|H4)$/.test(el.tagName)) { el.style.fontFamily = "'Plus Jakarta Sans',system-ui,sans-serif"; el.style.margin = el.style.margin || '.6em 0 .3em'; el.style.lineHeight = '1.3'; }
+      if (el.tagName === 'BLOCKQUOTE') { el.style.margin = el.style.margin || '.6em 0'; el.style.maxWidth = '100%'; }
+    });
+    /* Spasi kosong di antara tag (khas kode embed) tidak dijadikan baris baru. */
+    const w = doc.createTreeWalker(root, 4);
+    const kosong = []; while (w.nextNode()) if (!/\S/.test(w.currentNode.nodeValue) && /\n/.test(w.currentNode.nodeValue)) kosong.push(w.currentNode);
+    kosong.forEach(n => { n.nodeValue = ' '; });
+    return root.innerHTML;
+  }
+  richEl(src, gelap) {
+    const k = (gelap ? '1' : '0') + String(src || '');
+    this._richC = this._richC || new Map();
+    let html = this._richC.get(k);
+    if (html == null) { html = this.bersihHtml(src, gelap); if (this._richC.size > 300) this._richC.clear(); this._richC.set(k, html); }
+    return React.createElement('div', { style: { whiteSpace: 'pre-line', overflowWrap: 'anywhere' }, dangerouslySetInnerHTML: { __html: html } });
+  }
+  taAktif() { const el = this._ta; return el && document.body.contains(el) ? el : null; }
+  sisip(fn) {
+    const el = this.taAktif();
+    if (!el) return this.setState({ apiError: 'Klik dulu kolom teks yang ingin diformat.' });
+    const a = el.selectionStart, b = el.selectionEnd, val = el.value, pilih = val.slice(a, b);
+    const r = fn(pilih); if (!r) return;
+    const baru = val.slice(0, a) + r.text + val.slice(b);
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(el, baru);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.focus();
+    const s0 = a + (r.from != null ? r.from : r.text.length), s1 = a + (r.to != null ? r.to : r.text.length);
+    try { el.setSelectionRange(s0, s1); } catch (e) {}
+  }
+  bungkus(buka, tutup, contoh) {
+    this.sisip(p => { const isi = p || contoh; return { text: buka + isi + tutup, from: buka.length, to: buka.length + isi.length }; });
+  }
   cdAktif() {
     const db = this.state.db || {};
     const s = (db.sessions || []).filter(x => x.id === db.activeSessionId)[0];
@@ -5028,6 +5138,8 @@ class Component extends DCLogic {
     this.pasangRute();
   }
   componentDidMount() {
+    this._onFocusIn = e => { const t = e.target; if (t && t.tagName === 'TEXTAREA' && t.getAttribute('data-rich')) this._ta = t; };
+    document.addEventListener('focusin', this._onFocusIn);
     if (typeof window !== 'undefined') {
       this._onHash = () => { if (location.hash !== this._rute) this.bacaRute(); };
       window.addEventListener('hashchange', this._onHash);
@@ -5995,6 +6107,29 @@ class Component extends DCLogic {
     }
     v.certSayaUnduh = () => { if (v.certSaya) this.cetakSertifikat(wsSaya, akuCert); };
     v.doLogin = tryLogin;
+    v.fmtKeep = e => e.preventDefault();
+    v.fmtB = () => this.bungkus('<b>', '</b>', 'teks tebal');
+    v.fmtI = () => this.bungkus('<i>', '</i>', 'teks miring');
+    v.fmtU = () => this.bungkus('<u>', '</u>', 'teks bergaris');
+    v.fmtS = () => this.bungkus('<s>', '</s>', 'teks dicoret');
+    v.fmtH = () => this.bungkus('<h3>', '</h3>', 'Subjudul');
+    v.fmtList = () => this.sisip(p => {
+      const baris = (p || 'Poin pertama\nPoin kedua').split(/\n/).map(x => x.trim()).filter(Boolean);
+      return { text: '<ul>' + baris.map(x => '<li>' + x + '</li>').join('') + '</ul>' };
+    });
+    v.fmtLink = () => {
+      const el = this.taAktif(); if (!el) return this.setState({ apiError: 'Klik dulu kolom teks yang ingin diberi tautan.' });
+      const url = window.prompt('Alamat tautan (https://…)', 'https://');
+      if (!url || url === 'https://') return;
+      const aman = String(url).trim().replace(/"/g, '%22');
+      this.sisip(p => { const isi = p || aman; return { text: '<a href="' + aman + '">' + isi + '</a>' }; });
+    };
+    v.fmtHtml = () => {
+      const el = this.taAktif(); if (!el) return this.setState({ apiError: 'Klik dulu kolom teks tempat kode akan disisipkan.' });
+      const kode = window.prompt('Tempel kode HTML atau embed (YouTube, Google Maps, Canva, gambar, dll.):', '');
+      if (!kode) return;
+      this.sisip(() => ({ text: kode }));
+    };
     v.hasLoginPilih = Array.isArray(st.loginPilih) && st.loginPilih.length > 0;
     v.loginPilih = (st.loginPilih || []).map(o => {
       const mm = (st.wsMeta || []).find(x => x.id === o.ws) || {};
@@ -6574,8 +6709,9 @@ class Component extends DCLogic {
       v.profilHasKategori = !!v.profilKategori;
       v.profilPartner = m.partnerName || 'Penyelenggara';
       v.profilInisial = this.inisial(m.partnerName || m.title);
-      v.profilRingkasan = String(m.ringkasan || '').trim() || String(m.subtitle || '').trim() || 'Workshop ini dikelola melalui ruang islami.co — sesi, materi, presensi, dan evaluasi dalam satu tempat.';
+      v.profilRingkasan = this.polos(m.ringkasan) || String(m.subtitle || '').trim() || 'Workshop ini dikelola melalui ruang islami.co — sesi, materi, presensi, dan evaluasi dalam satu tempat.';
       v.profilDeskripsi = String(m.deskripsi || '').trim() || 'Panitia belum menuliskan uraian lengkap workshop ini. Hubungi penyelenggara untuk keterangan lebih jauh.';
+      v.profilDeskripsiEl = this.richEl(v.profilDeskripsi);
       const capaian = Array.isArray(m.capaian) ? m.capaian.filter(x => String(x || '').trim()) : [];
       v.profilCapaian = capaian;
       v.profilHasCapaian = !!capaian.length;
@@ -6590,7 +6726,8 @@ class Component extends DCLogic {
         no: i + 1, title: x.title,
         meta: [String(x.time || '').trim(), String(x.venue || '').trim(), String(x.mode || '').trim()].filter(Boolean).join(' · ') || 'Jadwal menyusul',
         orang: this.narasumberSesi(x).map(n => ({ nama: n.nama, inisial: this.inisial(n.nama), hasFoto: !!n.ig, foto: this.avatarIg(n.ig) || this.BLANK, onErr: sembunyiP, fotoStyle: this.fotoBg(n.ig, n.up), })),
-        hasOrang: this.narasumberSesi(x).length > 0
+        hasOrang: this.narasumberSesi(x).length > 0,
+        hasDesc: !!String(x.desc || '').trim(), descEl: String(x.desc || '').trim() ? this.richEl(x.desc) : ''
       });
       v.profilSesi = ses.map(kartuSesi);
       const progP = Array.isArray(db.programs) ? db.programs : [];
@@ -6622,6 +6759,7 @@ class Component extends DCLogic {
       { const di = this.diskonInfo(m); v.profilDiskonOn = di.on; v.profilHargaAsli = di.asli; v.profilDiskonBadge = di.badge; }
       v.profilDonasi = !!m.donasi;
       v.profilDonasiTujuan = String(m.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.';
+      v.profilDonasiTujuanEl = this.richEl(v.profilDonasiTujuan);
       v.profilInfo = [
         { label: 'Tanggal mulai', value: String(m.dateLabel || '').trim() || 'Menyusul' },
         { label: 'Format', value: this.FORMATS[m.format || 'online'] },
@@ -6807,7 +6945,9 @@ class Component extends DCLogic {
     v.regErr = st.regErr || ''; v.regCode = st.regCode || '';
     const donasiOn = !!(wsAktif && wsAktif.donasi);
     const nominal = donasiOn ? (Number(st.regDonasi) || 0) : 0;
-    v.regDonasi = donasiOn && !st.regCode;
+    const terdaftar = !!(st.regCode || st.regPid);
+    v.regDonasi = donasiOn && !terdaftar;
+    v.regDonasiTujuanEl = donasiOn ? this.richEl(String(wsAktif.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.') : '';
     v.regDonasiTujuan = donasiOn ? (String(wsAktif.donasiTujuan || '').trim() || 'Penyelenggara belum menuliskan peruntukan donasi.') : '';
     const saran = donasiOn ? (Array.isArray(wsAktif.donasiSaran) && wsAktif.donasiSaran.length ? wsAktif.donasiSaran : this.DONASI_SARAN) : [];
     const chipS = on => ({ background: on ? '#B31F24' : '#FFF', color: on ? '#FFF7EE' : '#3B3238', border: '1px solid ' + (on ? '#B31F24' : '#EAD9C6'), borderRadius: '100px', padding: '9px 16px', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer' });
@@ -6818,9 +6958,10 @@ class Component extends DCLogic {
     v.regDonasiNote = nominal > 0 ? 'Anda berdonasi ' + this.rp(nominal) + '. Kode peserta aktif setelah donasi diterima.'
       : st.regDonasi === 0 ? 'Anda mendaftar tanpa donasi. Kode peserta langsung aktif.'
       : 'Pilih nominal, atau tulis sendiri. Minimal ' + this.rp(this.DONASI_MIN) + '.';
-    const perluBayar = !!st.regCode && (donasiOn ? !!st.regBayarNominal : !!(wsAktif && wsAktif.price > 0)) && st.payStatus !== 'lunas';
+    const perluBayar = terdaftar && !st.regCode && (donasiOn ? !!st.regBayarNominal : !!(wsAktif && wsAktif.price > 0)) && st.payStatus !== 'lunas';
     v.regPay = perluBayar;
     v.regDone = !!st.regCode && !perluBayar;
+    v.regMenungguKode = terdaftar && !st.regCode && !perluBayar;
     v.unduhTiketLabel = st.tiketUnduh ? 'Menyiapkan…' : '⬇  Unduh tiket';
     const unduh = p => {
       if (st.tiketUnduh || !p || !p.code) return;
@@ -6833,7 +6974,7 @@ class Component extends DCLogic {
     };
     v.regUnduhTiket = () => unduh({ id: st.regPid, name: st.regName, code: st.regCode });
     v.unduhTiket = () => { const mm = st.userId ? (db.participants || []).find(x => x.id === st.userId) : null; unduh(mm); };
-    v.regForm = !st.regCode;
+    v.regForm = !terdaftar;
     v.regMailNote = st.regMailed ? 'Tiket dan kode juga sudah dikirim ke ' + (st.regEmail || 'email Anda') + '.' : '';
     v.regMailShow = !!st.regMailed;
     v.payAmount = donasiOn ? (st.regBayarNominal ? this.rp(st.regBayarNominal) : '') : (st.regHarga != null ? this.rp(st.regHarga) : (wsAktif && wsAktif.price > 0 ? this.rp(this.hargaDiskon(wsAktif).harga) : ''));
@@ -6890,11 +7031,13 @@ class Component extends DCLogic {
       if (!diam) this.setState({ payChecking: false });
       if (!out || !out.ok) return diam ? null : this.setState({ payErr: (out && out.error) || 'Gagal memeriksa status.' });
       if (out.data.pesertaStatus === 'aktif' || out.data.status === 'lunas') {
-        this.setState({ payStatus: 'lunas', payErr: '' });
+        const kodeBaru = out.data.code || st.regCode || '';
+        if (!kodeBaru) return diam ? null : this.setState({ payErr: 'Pembayaran diterima, kode sedang diterbitkan. Periksa lagi beberapa detik lagi.' });
+        this.setState({ payStatus: 'lunas', payErr: '', regCode: kodeBaru, regStatus: 'aktif' });
         const wsB = this.wsNow();
         if (!this._tiketBayar && st.regPid && st.regEmail && wsB && wsB.ticketAuto !== false && this.state.mailOn) {
           this._tiketBayar = true;
-          this.kirimTiket(wsB, { id: st.regPid, name: st.regName, code: st.regCode, email: st.regEmail }, false).then(r => { if (r && r.ok) this.setState({ regMailed: true }); }).catch(() => {});
+          this.kirimTiket(wsB, { id: st.regPid, name: st.regName, code: kodeBaru, email: st.regEmail }, false).then(r => { if (r && r.ok) this.setState({ regMailed: true }); }).catch(() => {});
         }
       }
       else if (!diam) this.setState({ payErr: 'Pembayaran belum terbaca. Bila Anda baru saja membayar, tunggu sebentar lalu periksa lagi.' });
@@ -6910,7 +7053,7 @@ class Component extends DCLogic {
     {
       const harga = wsAktif && !wsAktif.donasi ? this.hargaDiskon(wsAktif).harga : 0;
       const info = st.regVoucherInfo;
-      v.regVoucherShow = harga > 0 && !st.regCode;
+      v.regVoucherShow = harga > 0 && !(st.regCode || st.regPid);
       v.regVoucher = st.regVoucher || '';
       v.regVoucherOk = !!info; v.regVoucherErr = st.regVoucherErr || '';
       v.regVoucherBtn = info ? 'Ganti' : st.regVoucherBusy ? 'Memeriksa…' : 'Pakai';
@@ -6958,7 +7101,7 @@ class Component extends DCLogic {
       }
       const out = await this.apiPost({ action: 'register', name: nama, org: st.regOrg, phone: st.regPhone, email: st.regEmail, donasi: donasiOn ? nominal : undefined, voucher: vInfo ? vInfo.code : undefined });
       if (!out || !out.ok) return this.setState({ regErr: (out && out.error) || 'Pendaftaran gagal. Coba lagi.' });
-      this.setState({ regCode: out.data.code, regStatus: out.data.status, regPid: out.data.id || null, regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '', regMailed: false });
+      this.setState({ regCode: out.data.code || '', regStatus: out.data.status, regPid: out.data.id || null, regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '', regMailed: false });
       this._tiketBayar = false;
       const wsR = this.wsNow();
       if (out.data.status === 'aktif' && !out.data.lama && st.regEmail && wsR && wsR.ticketAuto !== false && this.state.mailOn)
@@ -7014,7 +7157,7 @@ class Component extends DCLogic {
                 iconStyle: { width: '30px', height: '30px', flex: 'none', borderRadius: '8px', display: 'grid', placeItems: 'center', fontSize: '12px', background: '#E8EFFB', color: '#2D6CDF' },
                 chevStyle: { fontSize: '22px', color: '#B5A99D', flex: 'none', transition: 'transform .2s', transform: buka ? 'rotate(90deg)' : 'none' },
                 cardStyle: { padding: '10px 16px', borderTop: '1px solid #F1EBE3', background: buka ? '#FFFBF6' : 'transparent' },
-                open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: b.desc || '',
+                open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: buka ? this.richEl(b.desc) : '',
                 hasVideo: false, video: null, kosong: false,
                 url: b.recUrl, linkLabel: 'Tonton rekaman ↗',
                 linkStyle: { justifySelf: 'start', display: 'inline-flex', background: '#2D6CDF', border: 'none', color: '#FFF', borderRadius: '9px', padding: '10px 16px', fontSize: '13.5px', fontWeight: 700, textDecoration: 'none' },
@@ -7031,7 +7174,7 @@ class Component extends DCLogic {
               iconStyle: { width: '30px', height: '30px', flex: 'none', borderRadius: '8px', display: 'grid', placeItems: 'center', fontSize: '12px', background: vid ? '#FBEFEF' : '#F3EDE5', color: vid ? '#A5121C' : '#5C534B' },
               chevStyle: { fontSize: '22px', color: '#B5A99D', flex: 'none', transition: 'transform .2s', transform: buka ? 'rotate(90deg)' : 'none' },
               cardStyle: { padding: '10px 16px', borderTop: '1px solid #F1EBE3', background: buka ? '#FFFBF6' : 'transparent' },
-              open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: b.desc || '',
+              open: buka, hasDesc: buka && !!String(b.desc || '').trim(), desc: buka ? this.richEl(b.desc) : '',
               hasVideo: buka && ytOk, video: buka && ytOk ? this.ytFrame(b.url) : null,
               kosong: buka && (vid ? !ytOk : !adaUrl),
               url: adaUrl ? b.url : '#',
@@ -7154,7 +7297,7 @@ class Component extends DCLogic {
         const passive = this.selalu(b) || b.type === 'zoom';
         const badge = this.selalu(b) ? 'Selalu tersedia' : passive ? (b.open ? 'Tersedia' : 'Terkunci') : done ? 'Selesai' : b.open ? 'Dibuka' : 'Terkunci';
         return {
-          kind: this.KINDS[b.type], title: b.title, desc: b.desc, presenter: b.presenter ? 'Pengisi: ' + b.presenter : '',
+          kind: this.KINDS[b.type], title: b.title, desc: this.polos(b.desc), presenter: b.presenter ? 'Pengisi: ' + b.presenter : '',
           badge, open: () => this.setState({ panel: b.id, fbSent: false, formSent: false, formError: '' }),
           cardStyle: { display: 'flex', gap: '15px', alignItems: 'flex-start', width: '100%', background: b.open ? '#FFF' : '#FAF6F0', border: '1px solid ' + (b.id === live.active && b.open ? '#A5121C' : '#E6DFD6'), borderRadius: '12px', padding: '17px 19px', cursor: 'pointer', opacity: b.open ? 1 : 0.72 },
           dotStyle: { width: '10px', height: '10px', borderRadius: '50%', flex: 'none', marginTop: '6px', background: done ? '#3E6B22' : b.open ? '#A5121C' : '#CFC5B8', animation: b.open && !done && !passive ? 'wsPulse 1.6s infinite' : 'none' },
@@ -7243,7 +7386,7 @@ class Component extends DCLogic {
       }
 
       if (pb) {
-        v.panelKind = this.KINDS[pb.type]; v.panelTitle = pb.title; v.panelDesc = pb.desc;
+        v.panelKind = this.KINDS[pb.type]; v.panelTitle = pb.title; v.panelDesc = pb.desc; v.panelDescEl = this.richEl(pb.desc);
         v.docHasView = false; v.docViewSrc = '';
         v.panelPresenter = pb.presenter ? 'Pengisi: ' + pb.presenter : '';
         v.cloudPrompt = pb.prompt || 'Tulis satu kata…';
@@ -7703,7 +7846,7 @@ class Component extends DCLogic {
       v.idleTitle = anyOpen ? live.title : 'Sesi belum dimulai';
       v.idleKicker = anyOpen ? 'Menunggu fasilitator' : live.title;
       if (ab && st.role === 'projector') {
-        v.panelDesc = ab.desc; v.panelPresenter = ab.presenter ? 'Pengisi: ' + ab.presenter : '';
+        v.panelDesc = ab.desc; v.panelDescDarkEl = this.richEl(ab.desc, true); v.panelPresenter = ab.presenter ? 'Pengisi: ' + ab.presenter : '';
         if (ab.type === 'zoom') v.docMeta = [{ label: 'Meeting ID', value: ab.meetingId || '—' }, { label: 'Passcode', value: ab.passcode || '—' }];
         if (ab.type === 'ppt') v.docMeta = [{ label: 'Berkas', value: ab.fileName || '—' }];
         if (ab.type === 'video') v.docMeta = [];
@@ -8914,7 +9057,7 @@ class Component extends DCLogic {
           : b.type === 'form' ? (b.fields || []).length + ' isian · ' + filled + ' peserta mengisi'
           : filled + ' peserta mengisi';
         const row = {
-          kind: this.KINDS[b.type], title: b.title, desc: b.desc || '', presenter: b.presenter || '', meta,
+          kind: this.KINDS[b.type], title: b.title, desc: b.desc || '', descText: this.polos(b.desc), presenter: b.presenter || '', meta,
           order: String(bi + 1).padStart(2, '0'),
           moveUp: () => move(bi, bi - 1), moveDown: () => move(bi, bi + 1),
           upStyle: navStyle(bi > 0), downStyle: navStyle(bi < arr.length - 1),
@@ -8965,6 +9108,13 @@ class Component extends DCLogic {
             if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(kode).then(ok, ok); else ok();
           },
           selectAll: e => { try { e.target.select(); } catch (er) {} },
+          copyShortLabel: st.embedCopied === 'sc-' + b.id ? 'Tersalin ✓' : 'Salin shortcode',
+          copyShort: () => {
+            const asal = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://ruang.islami.co';
+            const kode = '[ruang src="' + asal + '/embed/' + encodeURIComponent(embedWid) + '/' + encodeURIComponent(b.id) + '" tinggi="' + (b.type === 'quiz' || b.type === 'form' ? 640 : 480) + '"]';
+            const ok = () => { this.setState({ embedCopied: 'sc-' + b.id }); clearTimeout(this._copyT); this._copyT = setTimeout(() => this.setState({ embedCopied: null }), 2200); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(kode).then(ok, ok); else ok();
+          },
           toggleEnabled: () => mut(b.id, (x, s) => { x.enabled = !x.enabled; if (!x.enabled) { x.open = false; if (s.active === x.id) s.active = null; } }),
           openLabel: this.selalu(b) ? 'Selalu tampil' : b.open ? 'Tutup' : (cur.multiOpen === false ? 'Buka & tampilkan' : 'Buka'),
           openBtnStyle: this.selalu(b) ? { background: '#EEF5E9', border: '1px solid #CFE2C2', color: '#2C4D18', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, cursor: 'default' } : { background: b.open ? '#F6F1EA' : '#A5121C', border: b.open ? '1px solid #E0D8CE' : 'none', color: b.open ? '#5C534B' : '#FFF', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, opacity: b.enabled ? 1 : 0.4 },
