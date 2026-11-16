@@ -198,10 +198,10 @@
             <p style="font-size:14px;color:#6B6168;margin:0;line-height:1.6">{{ katalogMeta }}</p>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1 1 420px;justify-content:flex-end">
-            <select value="{{ jenisPilih }}" onChange="{{ onJenisPilih }}" aria-label="Jenis event" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237A6F76' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
+            <select value="{{ jenisPilih }}" onChange="{{ onJenisPilih }}" aria-label="Jenis event" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%278%27%3E%3Cpath%20d=%27M1%201l5%205%205-5%27%20fill=%27none%27%20stroke=%27%237A6F76%27%20stroke-width=%271.6%27/%3E%3C/svg%3E) no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
               <sc-for list="{{ jenisFilters }}" as="f" hint-placeholder-count="5"><option value="{{ f.id }}">{{ f.label }}</option></sc-for>
             </select>
-            <select value="{{ fmtPilih }}" onChange="{{ onFmtPilih }}" aria-label="Format" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237A6F76' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
+            <select value="{{ fmtPilih }}" onChange="{{ onFmtPilih }}" aria-label="Format" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 38px 12px 18px;font-size:14px;font-weight:600;background:#FFF url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%278%27%3E%3Cpath%20d=%27M1%201l5%205%205-5%27%20fill=%27none%27%20stroke=%27%237A6F76%27%20stroke-width=%271.6%27/%3E%3C/svg%3E) no-repeat right 16px center;appearance:none;-webkit-appearance:none;color:#3B3238;outline:none;cursor:pointer" style-focus="border-color:#B31F24">
               <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4"><option value="{{ f.id }}">{{ f.label }}</option></sc-for>
             </select>
             <input value="{{ cari }}" onChange="{{ onCari }}" placeholder="Cari judul atau lembaga" style="border:1px solid #EAD9C6;border-radius:100px;padding:12px 20px;font-size:14px;background:#FFF;outline:none;flex:1 1 220px;min-width:min(100%,200px)" style-focus="border-color:#B31F24" />
@@ -546,9 +546,6 @@
                       <div style="flex:1;min-width:min(100%,180px)">
                         <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15.5px;font-weight:700;color:#3B3238;line-height:1.35;text-wrap:balance">{{ s.title }}</div>
                         <div style="font-size:12.5px;color:#7A6F76;margin-top:5px;line-height:1.5">{{ s.meta }}</div>
-                        <sc-if value="{{ s.hasDesc }}" hint-placeholder-val="{{ false }}">
-                          <div style="font-size:13.5px;color:#4A3F46;margin-top:8px;line-height:1.6;text-wrap:pretty">{{ s.descEl }}</div>
-                        </sc-if>
                         <sc-if value="{{ s.hasOrang }}" hint-placeholder-val="{{ false }}">
                           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
                             <sc-for list="{{ s.orang }}" as="n" hint-placeholder-count="1">
@@ -900,6 +897,42 @@
               <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(21px,3vw,28px);line-height:1.2;margin:0 0 10px;font-weight:700;letter-spacing:-.015em">{{ sessionTitle }}</h2>
               <div style="font-size:13.5px;color:#5C534B;line-height:1.6">{{ sessionSubline }}</div>
             </div>
+            <sc-if value="{{ pDetailShow }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px 24px 18px;border-bottom:1px solid #EDE6DD;display:grid;gap:14px;background:#FFFCF8">
+                <sc-if value="{{ pDetailHasMeta }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px 18px">
+                    <sc-for list="{{ pDetailMeta }}" as="m" hint-placeholder-count="3">
+                      <div style="display:flex;gap:10px;align-items:flex-start;min-width:0">
+                        <span style="width:30px;height:30px;flex:none;border-radius:9px;background:#F6EDE3;display:grid;place-items:center;font-size:14px">{{ m.icon }}</span>
+                        <div style="min-width:0">
+                          <div style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8C8078">{{ m.label }}</div>
+                          <div style="font-size:13.5px;font-weight:600;color:#1B1714;line-height:1.4;overflow-wrap:anywhere">{{ m.value }}</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ pDetailHasOrang }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8C8078;margin-right:4px">Narasumber / fasilitator</span>
+                    <sc-for list="{{ pDetailOrang }}" as="o" hint-placeholder-count="2">
+                      <span style="display:inline-flex;align-items:center;gap:8px;background:#FFF;border:1px solid #EAD9C6;border-radius:100px;padding:4px 12px 4px 4px">
+                        <span style="position:relative;overflow:hidden;width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700;color:#9B1B20;background:#FDECEC">{{ o.inisial }}<span style="{{ o.fotoStyle }}"></span></span>
+                        <span style="font-size:13px;font-weight:600;color:#3B3238">{{ o.nama }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ pDetailHasDesc }}" hint-placeholder-val="{{ false }}">
+                  <div>
+                    <div style="{{ pDetailDescStyle }}">{{ pDetailDesc }}</div>
+                    <sc-if value="{{ pDetailCanMore }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ pDetailMoreToggle }}" style="background:none;border:none;padding:6px 0 0;color:#A5121C;font-size:12.5px;font-weight:700;cursor:pointer">{{ pDetailMoreLabel }}</button>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
             <sc-if value="{{ hasCheckinBlock }}" hint-placeholder-val="{{ false }}">
               <div style="padding:16px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
                 <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A6F66">Status kehadiran</div>
@@ -2207,7 +2240,14 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                   <button onClick="{{ goProjector }}" style="background:#1B1714;color:#FFF;border:none;border-radius:8px;padding:9px 13px;font-size:12.5px;font-weight:700" style-hover="background:#332C25">Layar proyektor</button>
                   <button onClick="{{ toggleMulti }}" style="{{ multiStyle }}">{{ multiLabel }}</button>
-                  <button onClick="{{ toggleAllOpen }}" title="{{ allOpenTitle }}" style="{{ allOpenStyle }}">{{ allOpenLabel }}</button>
+                  <label title="{{ allOpenTitle }}" style="display:inline-flex;align-items:center;gap:8px">
+                    <span style="font-size:12px;font-weight:700;color:#5C534B;white-space:nowrap">Pengaturan sesi</span>
+                    <select value="{{ modeBuka }}" onChange="{{ onModeBuka }}" style="border:1px solid #E0D8CE;border-radius:8px;padding:9px 34px 9px 13px;font-size:12.5px;font-weight:700;color:#3B342E;background:#FFF url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%278%27%3E%3Cpath%20d=%27M1%201l5%205%205-5%27%20fill=%27none%27%20stroke=%27%235C534B%27%20stroke-width=%271.6%27/%3E%3C/svg%3E) no-repeat right 12px center;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none">
+                      <option value="admin">Dibuka admin</option>
+                      <option value="semua">Semua terbuka</option>
+                      <option value="bertahap">Terbuka bertahap</option>
+                    </select>
+                  </label>
                   <sc-if value="{{ showSesiSelesai }}" hint-placeholder-val="{{ false }}">
                     <button onClick="{{ toggleSesiSelesai }}" title="Membuka sesi berikutnya untuk semua peserta" style="{{ sesiSelesaiStyle }}">{{ sesiSelesaiLabel }}</button>
                   </sc-if>
@@ -6040,6 +6080,30 @@ class Component extends DCLogic {
     v.sessionMeta = metaRows.length ? metaRows
       : [{ label: 'Status', value: live ? 'Detail sesi belum diisi panitia' : 'Menunggu jadwal' }];
     v.hasSessionDesc = !!(live && String(live.desc || '').trim());
+    {
+      const meta = [];
+      const orang = live ? this.narasumberSesi(live) : [];
+      if (live) {
+        const add = (icon, label, val) => { const t = String(val || '').trim(); if (t) meta.push({ icon, label, value: t }); };
+        add('🗓', 'Waktu', live.time);
+        add('📍', 'Tempat', live.venue);
+        add('💻', 'Format', live.mode);
+        if (!orang.length) add('🎤', 'Pengisi', live.speaker);
+      }
+      const desc = live ? String(live.desc || '').trim() : '';
+      const panjang = this.polos(desc).length > 320 || (desc.match(/\n/g) || []).length > 5;
+      const buka = !!(st.pDetailMore && live && st.pDetailMore === live.id);
+      v.pDetailMeta = meta; v.pDetailHasMeta = meta.length > 0;
+      v.pDetailOrang = orang.map(n => ({ nama: n.nama, inisial: this.inisial(n.nama), fotoStyle: this.fotoBg(n.ig, n.up) }));
+      v.pDetailHasOrang = orang.length > 0;
+      v.pDetailHasDesc = !!desc;
+      v.pDetailDesc = desc ? this.richEl(desc) : '';
+      v.pDetailCanMore = panjang;
+      v.pDetailDescStyle = Object.assign({ fontSize: '14px', color: '#3B342E', lineHeight: 1.65, textWrap: 'pretty' }, panjang && !buka ? { maxHeight: '7.6em', overflow: 'hidden', WebkitMaskImage: 'linear-gradient(#000 65%,transparent)', maskImage: 'linear-gradient(#000 65%,transparent)' } : {});
+      v.pDetailMoreLabel = buka ? 'Ringkas ▴' : 'Baca selengkapnya ▾';
+      v.pDetailMoreToggle = () => this.setState({ pDetailMore: buka ? null : (live && live.id) });
+      v.pDetailShow = !!live && (meta.length > 0 || orang.length > 0 || !!desc);
+    }
     if (mandiri && live) v.liveBadge = 'Belajar mandiri · semua sesi terbuka';
     const idsAktif = this.aktifIds(db);
     const multiAktif = !mandiri && idsAktif.length > 1;
@@ -6103,7 +6167,12 @@ class Component extends DCLogic {
       this._pSesiBar = el;
       const h = document.querySelector('header');
       const tinggi = h ? Math.round(h.getBoundingClientRect().height) : 67;
-      if (tinggi && tinggi !== this._headH) { this._headH = tinggi; requestAnimationFrame(() => this.forceUpdate()); }
+      /* Hanya ukur ulang bila tinggi header berubah nyata, dan paling banyak 3× per detik — cegah lingkaran render. */
+      const kini = Date.now();
+      if (tinggi && Math.abs(tinggi - (this._headH || 0)) > 2 && (!this._headT || kini - this._headT > 350)) {
+        this._headH = tinggi; this._headT = kini;
+        requestAnimationFrame(() => this.forceUpdate());
+      }
       if (!el) return;
       const anak = el.children[posP];
       if (anak && this._pSesiLast !== posP + ':' + daftarP.length) {
@@ -9088,11 +9157,13 @@ class Component extends DCLogic {
       const modeBuka = !db.allOpen ? 'admin' : db.bertahap ? 'bertahap' : 'semua';
       v.allOpenLabel = { admin: 'Sesi dibuka admin', semua: 'Semua sesi terbuka', bertahap: 'Terbuka bertahap ↓' }[modeBuka];
       v.allOpenTitle = {
-        admin: 'Peserta hanya melihat sesi aktif dan materi yang Anda buka. Klik untuk ganti mode.',
-        semua: 'Peserta bebas memilih sesi dan semua materinya. Klik untuk ganti ke bertahap.',
-        bertahap: 'Sesi terbuka berurutan dari atas: sesi berikutnya terbuka setelah peserta menandai sesi sebelumnya selesai (atau Anda menandainya selesai). Klik untuk kembali ke mode admin.'
+        admin: 'Dibuka admin: peserta hanya melihat sesi aktif dan materi yang Anda buka.',
+        semua: 'Semua terbuka: peserta bebas memilih sesi dan semua materinya.',
+        bertahap: 'Terbuka bertahap: sesi terbuka berurutan dari atas — sesi berikutnya terbuka setelah peserta (atau Anda) menandai sesi sebelumnya selesai.'
       }[modeBuka];
       v.allOpenStyle = { background: db.allOpen ? '#FFF6E5' : '#FFF', border: '1px solid ' + (db.allOpen ? '#F0D9A8' : '#E0D8CE'), color: db.allOpen ? '#7A4E00' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
+      v.modeBuka = modeBuka;
+      v.onModeBuka = e => { const m = e.target.value; this.save(d => { d.allOpen = m !== 'admin'; d.bertahap = m === 'bertahap'; }, null, true); };
       v.toggleAllOpen = () => this.save(d => {
         if (!d.allOpen) { d.allOpen = true; d.bertahap = false; }
         else if (!d.bertahap) d.bertahap = true;
