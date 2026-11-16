@@ -6322,8 +6322,8 @@ class Component extends DCLogic {
           m.jenis === 'rangkaian' ? { label: 'Isi', value: this.isiRangkaian(m).length + ' event' } : { label: 'Sesi', value: m.sessionCount || 0 },
           { label: 'Peserta', value: (m.participantCount || 0) + (m.quota ? ' / ' + m.quota : '') },
           { label: 'Biaya', value: m.price > 0 ? rupiah(m.price) : 'Gratis' },
-          { label: 'Terbayar', value: m.price > 0 ? lunasWs.length + ' dari ' + bayarWs.length : '—' }
-        ],
+          { label: 'Terbayar', value: (m.price > 0 || m.donasi) ? (m.pesertaLunas != null ? m.pesertaLunas : lunasWs.length) + ' dari ' + (m.participantCount || 0) : '—' }
+        ].concat((m.price > 0 || m.donasi) && m.pesertaAntre ? [{ label: 'Belum bayar', value: String(m.pesertaAntre) }] : []),
         manageLabel: 'Kelola',
         manage: () => { this.pilihWs(m.id); this.setState({ role: 'admin', tab: 'control' }); },
         edit: () => {
