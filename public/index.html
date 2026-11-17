@@ -4857,7 +4857,13 @@ class Component extends DCLogic {
       return (x.protocol === 'https:' || x.protocol === 'http:') && /^[^.\s]+(\.[^.\s]+)+$/.test(x.hostname) && !/\s/.test(u);
     } catch (e) { return false; }
   }
-  fotoNarsum(nama) { const f = (this.state.db || {}).narsumFoto || {}; return f[String(nama || '').trim().toLowerCase()] || ''; }
+  fotoNarsum(nama) {
+    const k = String(nama || '').trim().toLowerCase();
+    const f = (this.state.db || {}).narsumFoto || {};
+    if (f[k]) return f[k];
+    const m = this.wsNow && this.wsNow();
+    return (m && m.narsumFoto && m.narsumFoto[k]) || '';
+  }
   kecilkanFoto(file) {
     return new Promise((ok, no) => {
       const rd = new FileReader();
@@ -8429,7 +8435,9 @@ class Component extends DCLogic {
     const simpanMeta = (ubah, segera) => {
       /* Selalu bekerja dari salinan terbaru, bukan dari render yang mungkin sudah usang. */
       const sumber = this._metaDraft || this.state.wsMeta || [];
-      const baru = JSON.parse(JSON.stringify(sumber)).map(m => { delete m.sessionCount; delete m.participantCount; return m; });
+      /* Salinan dari server sebelum draf ini — dasar menghitung kolom yang berubah. */
+      if (!this._metaDraft) this._metaBase = JSON.parse(JSON.stringify(this.state.wsMeta || []));
+      const baru = JSON.parse(JSON.stringify(sumber)).map(m => { delete m.sessionCount; delete m.participantCount; delete m.countOnline; delete m.narsumFoto; return m; });
       ubah(baru);
       this._metaDraft = baru;
       this._metaEditAt = Date.now();
@@ -8438,8 +8446,23 @@ class Component extends DCLogic {
       const kirim = () => {
         const muatan = this._metaDraft;
         const versi = this._metaEditAt;
-        this.apiPost({ action: 'putWorkshops', password: this._pw || '', meta: muatan }).then(out => {
-          if (!(out && out.ok && out.data && out.data.meta)) return this.setState({ wsMsg: (out && out.error) || 'Gagal menyimpan.' });
+        const dasar = this._metaBase || [];
+        /* Hanya kirim kolom yang berubah per event — tidak lagi seluruh daftar beserta flyer & logo. */
+        const idSama = dasar.length === muatan.length && muatan.every(m => dasar.some(d => d.id === m.id));
+        const tambal = idSama ? muatan.map(m => {
+          const d = dasar.find(x => x.id === m.id) || {};
+          const f = {};
+          Object.keys(m).forEach(k => { if (k !== 'id' && JSON.stringify(m[k]) !== JSON.stringify(d[k])) f[k] = m[k]; });
+          return Object.keys(f).length ? { id: m.id, fields: f } : null;
+        }).filter(Boolean) : null;
+        const janji = tambal
+          ? (tambal.length ? this.apiPost({ action: 'patchWorkshops', password: this._pw || '', user: this._user || '', patches: tambal })
+            : Promise.resolve({ ok: true, data: { meta: this.state.wsMeta } }))
+          : this.apiPost({ action: 'putWorkshops', password: this._pw || '', meta: muatan });
+        janji.then(out => {
+          if (out && !out.ok && /unknown action/i.test(String(out.error || ''))) return this.setState({ wsMsg: 'server.js di Lightsail masih versi lama — unggah server.js terbaru lalu restart.' });
+          if (!(out && out.ok && out.data && out.data.meta)) return this.setState({ wsMsg: (out && out.error) || 'Gagal menyimpan — periksa koneksi, lalu ketik ulang angkanya.' });
+          this._metaBase = JSON.parse(JSON.stringify(out.data.meta));
           /* Ada ketikan baru sejak kiriman ini: jangan timpa layar dengan jawaban lama. */
           if (this._metaEditAt !== versi) return;
           this._metaDraft = null;
