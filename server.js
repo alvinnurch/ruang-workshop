@@ -315,6 +315,7 @@ function metaPublik() {
       sessionCount: (d.sessions || []).length,
       participantCount: (d.participants || []).filter(x => x.status !== 'menunggu').length,
       countOnline: (d.participants || []).filter(x => x.status !== 'menunggu' && x.jalur === 'online').length,
+      narsumFoto: d.narsumFoto && Object.keys(d.narsumFoto).length ? d.narsumFoto : undefined,
       pesertaLunas: (d.participants || []).filter(x => x.status !== 'menunggu' && (x.paidAt || x.paidBy)).length,
       pesertaAntre: (d.pendaftar || []).length + (d.participants || []).filter(x => x.status === 'menunggu').length,
       programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' }))
@@ -1574,6 +1575,28 @@ function handleAction(p) {
     case 'listWorkshops':
       return { ok: true, data: { meta: metaPublik() } };
 
+    /* Simpan sebagian: hanya kolom yang berubah, per event. */
+    case 'patchWorkshops': {
+      if (!siapa) return { ok: false, error: 'Silakan masuk sebagai admin.' };
+      const wsadmin = !siapa.superadmin && (BOLEH_SUSUN_WS[siapa.role] || BOLEH_SUSUN[siapa.role]);
+      if (!siapa.superadmin && !wsadmin) return { ok: false, error: 'Tidak diizinkan mengubah data event.' };
+      const kunci = ['id', 'price', 'published', 'unggulan', 'slug', 'platformFee', 'platformFeeStatus', 'platformFeeNote'];
+      const hitung = ['sessionCount', 'participantCount', 'countOnline', 'pesertaLunas', 'narsumFoto'];
+      const milik = siapa.superadmin ? null : ((siapa.wsIds && siapa.wsIds.length) ? siapa.wsIds : [siapa.wsId]);
+      for (const t of (Array.isArray(p.patches) ? p.patches : [])) {
+        const m = store.meta.find(x => x.id === t.id);
+        if (!m) continue;
+        if (milik && milik.indexOf(t.id) < 0) return { ok: false, error: 'Akun ini hanya boleh menyunting event miliknya.' };
+        Object.keys(t.fields || {}).forEach(k => {
+          if (hitung.indexOf(k) >= 0 || k === 'id') return;
+          if (!siapa.superadmin && kunci.indexOf(k) >= 0) return;
+          m[k] = t.fields[k];
+        });
+      }
+      touch();
+      return { ok: true, data: { meta: metaPublik() } };
+    }
+
     case 'putWorkshops': {
       const wsadmin = !!siapa && !siapa.superadmin && (BOLEH_SUSUN_WS[siapa.role] || BOLEH_SUSUN[siapa.role]);
       if (!siapa || (!siapa.superadmin && !wsadmin)) return { ok: false, error: 'Hanya super admin atau admin event yang boleh mengubah data event.' };
@@ -2021,7 +2044,8 @@ function handleAction(p) {
         db.narsumFoto = {};
         Object.keys(incoming.narsumFoto).slice(0, 200).forEach(k => {
           const u = String(incoming.narsumFoto[k] || '');
-          if (/^https?:\/\//i.test(u)) db.narsumFoto[String(k).slice(0, 80)] = u.slice(0, 800);
+          /* Link luar (https://) atau gambar dari galeri unggahan (/media/…). */
+          if (/^https?:\/\//i.test(u) || /^\/media\/[\w.-]+$/.test(u)) db.narsumFoto[String(k).slice(0, 80)] = u.slice(0, 800);
         });
       }
       if (Array.isArray(incoming.pengumuman)) db.pengumuman = incoming.pengumuman;
