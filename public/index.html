@@ -5350,7 +5350,12 @@ class Component extends DCLogic {
   }
   async apiPush(db) {
     this._pushing = true;
-    try { return await this.apiPost({ action: 'putDb', password: this._pw || '', db }); }
+    const removedIds = (this._removedIds || []).slice();
+    try {
+      const out = await this.apiPost({ action: 'putDb', password: this._pw || '', db, removedIds });
+      if (out && out.ok) this._removedIds = (this._removedIds || []).filter(id => removedIds.indexOf(id) < 0);
+      return out;
+    }
     finally { this._pushing = false; }
   }
   componentDidUpdate(prev, prevState) {
@@ -10234,7 +10239,7 @@ class Component extends DCLogic {
       dupStyle: db.participants.filter(x => String(x.code || '').toUpperCase() === String(p.code || '').toUpperCase()).length > 1
         ? { fontSize: '11.5px', fontWeight: 700, color: '#A5121C', background: '#FCEDEE', border: '1px solid #F0C9CC', borderRadius: '100px', padding: '4px 9px', marginRight: '9px' }
         : { display: 'none' },
-      remove: () => this.save(d => { d.participants = d.participants.filter(x => x.id !== p.id); })
+      remove: () => { this._removedIds = (this._removedIds || []).concat([p.id]); this.save(d => { d.participants = d.participants.filter(x => x.id !== p.id); }); }
     }));
 
     if (allMode) applyAll();
