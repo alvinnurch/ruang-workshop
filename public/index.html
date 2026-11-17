@@ -606,6 +606,16 @@
                 <div style="display:flex;gap:12px;font-size:13px;line-height:1.5"><span style="color:#7A6F76;width:96px;flex:none">{{ i.label }}</span><b style="color:#3B3238;flex:1">{{ i.value }}</b></div>
               </sc-for>
             </div>
+            <sc-if value="{{ profilHybridSeats }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;gap:8px;margin-bottom:14px">
+                <sc-for list="{{ profilSeats }}" as="k" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:10px 14px">
+                    <span style="font-size:13px;color:#4A3F46">{{ k.label }}</span>
+                    <span style="{{ k.style }}">{{ k.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
             <button onClick="{{ profilDaftar }}" style="{{ profilDaftarStyle }}">{{ profilDaftarLabel }}</button>
             <p style="font-size:12px;color:#7A6F76;margin:12px 0 16px;line-height:1.55;text-wrap:pretty">{{ profilDaftarNote }}</p>
             <button onClick="{{ profilMasuk }}" style="width:100%;background:#FFF7EE;border:1px solid #EAD9C6;color:#4A3F46;border-radius:100px;padding:13px;font-size:13.5px;font-weight:700" style-hover="background:#FDECEC">Sudah terdaftar? Masuk</button>
@@ -687,6 +697,34 @@
                   <input value="{{ regEmail }}" onChange="{{ onRegEmail }}" style="border:1px solid #DCD3C8;border-radius:9px;padding:12px 14px;font-size:15px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
               </div>
+              <sc-if value="{{ regHybrid }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;gap:6px">
+                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Ikut secara *</span>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:9px">
+                    <sc-for list="{{ regJalurOpts }}" as="o" hint-placeholder-count="2">
+                      <button onClick="{{ o.pick }}" style="{{ o.style }}">
+                        <span style="display:block;font-size:14px;font-weight:700">{{ o.label }}</span>
+                        <span style="display:block;font-size:12px;margin-top:3px;opacity:.85">{{ o.note }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-for list="{{ regExtra }}" as="q" hint-placeholder-count="0">
+                <div style="display:grid;gap:6px">
+                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">{{ q.label }}</span>
+                  <sc-if value="{{ q.isText }}" hint-placeholder-val="{{ true }}">
+                    <input value="{{ q.value }}" onChange="{{ q.onInput }}" placeholder="{{ q.hint }}" style="border:1px solid #DCD3C8;border-radius:9px;padding:12px 14px;font-size:15px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                  </sc-if>
+                  <sc-if value="{{ q.isChoice }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                      <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3">
+                        <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
               <sc-if value="{{ regDonasi }}" hint-placeholder-val="{{ false }}">
                 <div style="background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:16px;display:grid;gap:12px">
                   <div>
@@ -3039,6 +3077,29 @@
                       </sc-for>
                     </select>
                   </label>
+                  <div style="grid-column:1/-1;background:#FAF6F0;border:1px solid #E6DFD6;border-radius:11px;padding:14px 16px;display:grid;gap:10px">
+                    <div>
+                      <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;font-weight:700">Pertanyaan pendaftaran</div>
+                      <div style="font-size:12.5px;color:#7A6F66;line-height:1.5;margin-top:2px;text-wrap:pretty">Nama, Instansi, No HP, dan Email selalu ditanyakan. Tambahkan pertanyaan lain di bawahnya — jawabannya ikut di CSV peserta.</div>
+                    </div>
+                    <sc-for list="{{ w.regQs }}" as="q" hint-placeholder-count="0">
+                      <div style="background:#FFF;border:1px solid #E6DFD6;border-radius:9px;padding:10px;display:grid;gap:8px">
+                        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:7px;align-items:center">
+                          <input value="{{ q.label }}" onChange="{{ q.onLabel }}" placeholder="Pertanyaan, mis. Ukuran kaos" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" />
+                          <select value="{{ q.type }}" onChange="{{ q.onType }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0">
+                            <option value="text">Isian singkat</option>
+                            <option value="choice">Pilihan</option>
+                          </select>
+                          <button onClick="{{ q.toggleReq }}" style="{{ q.reqStyle }}">{{ q.reqLabel }}</button>
+                          <button onClick="{{ q.remove }}" title="Hapus" style="background:#FFF;border:1px solid #F0C9CC;border-radius:7px;width:32px;height:36px;color:#A5121C">×</button>
+                        </div>
+                        <sc-if value="{{ q.isChoice }}" hint-placeholder-val="{{ false }}">
+                          <input value="{{ q.options }}" onChange="{{ q.onOptions }}" placeholder="Pilihan, pisahkan dengan koma: S, M, L, XL" style="border:1px solid #DCD3C8;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#FFF;outline:none;min-width:0" style-focus="border-color:#A5121C" />
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <div><button onClick="{{ w.addRegQ }}" style="background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">+ Tambah pertanyaan</button></div>
+                  </div>
                   <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Biaya (Rp, 0 = gratis)</span>
                     <input value="{{ w.price }}" onChange="{{ w.onPrice }}" disabled="{{ w.priceLocked }}" type="number" min="0" step="1000" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -3175,8 +3236,20 @@
                       </sc-if>
                     </div>
                   </sc-if>
+                  <sc-if value="{{ w.isHybrid }}" hint-placeholder-val="{{ false }}">
+                    <label style="display:grid;gap:5px;align-content:start">
+                      <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota luring</span>
+                      <input value="{{ w.quotaOffline }}" onChange="{{ w.onQuotaOffline }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                    </label>
+                  </sc-if>
+                  <sc-if value="{{ w.isHybrid }}" hint-placeholder-val="{{ false }}">
+                    <label style="display:grid;gap:5px;align-content:start">
+                      <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota daring</span>
+                      <input value="{{ w.quotaOnline }}" onChange="{{ w.onQuotaOnline }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                    </label>
+                  </sc-if>
                   <label style="display:grid;gap:5px;align-content:start">
-                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Kuota (0 = tanpa batas)</span>
+                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">{{ w.quotaLabel }}</span>
                     <input value="{{ w.quota }}" onChange="{{ w.onQuota }}" type="number" min="0" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                   </label>
                   <label style="display:grid;gap:5px;align-content:start">
@@ -4748,6 +4821,19 @@ class Component extends DCLogic {
   FORMATS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
   JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', rangkaian: 'Rangkaian' };
   /* Rangkaian = bungkus beberapa event yang sudah ada. */
+  /* Kuota: total & per jalur hybrid. Peserta lama tanpa jalur dihitung luring. */
+  kuotaInfo(m) {
+    m = m || {};
+    const hybrid = m.format === 'hybrid';
+    const qOn = hybrid ? Math.max(0, m.quotaOnline || 0) : 0, qOff = hybrid ? Math.max(0, m.quotaOffline || 0) : 0;
+    const total = hybrid && (qOn || qOff) ? qOn + qOff : (m.quota || 0);
+    const isi = m.participantCount || 0;
+    const isiOn = m.countOnline || 0, isiOff = Math.max(0, isi - isiOn);
+    const penuhOn = hybrid && qOn > 0 && isiOn >= qOn, penuhOff = hybrid && qOff > 0 && isiOff >= qOff;
+    const penuh = total > 0 && (hybrid && (qOn || qOff) ? ((!qOn || penuhOn) && (!qOff || penuhOff)) : isi >= total);
+    return { hybrid, qOn, qOff, total, isi, isiOn, isiOff, penuhOn, penuhOff, penuh, sisaOn: Math.max(0, qOn - isiOn), sisaOff: Math.max(0, qOff - isiOff) };
+  }
+  regQs() { const m = this.wsNow(); return (m && Array.isArray(m.regQuestions) ? m.regQuestions : []).filter(q => String(q.label || '').trim()); }
   isiRangkaian(m) { const all = this.state.wsMeta || []; return ((m && m.items) || []).map(id => all.find(x => x.id === id)).filter(Boolean); }
   rangkaianDari(m) { return (this.state.wsMeta || []).filter(x => x.jenis === 'rangkaian' && x.published && (x.items || []).indexOf(m && m.id) >= 0); }
   JENIS_PROGRAM = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', talkshow: 'Talkshow', pameran: 'Pameran', lainnya: 'Lainnya' };
@@ -6806,7 +6892,7 @@ class Component extends DCLogic {
         tanggal: String(m.dateLabel || '').trim() || 'Jadwal menyusul',
         lokasi: lokasiOf(m), harga: this.hargaLabel(m.price, m),
         diskonOn: this.diskonInfo(m).on, hargaAsli: this.diskonInfo(m).asli, diskonBadge: this.diskonInfo(m).badge,
-        pendaftar: this.pendaftarLabel(m), hasPendaftar: !!this.pendaftarLabel(m),
+        pendaftar: this.kuotaInfo(m).penuh ? 'Sudah penuh' : this.pendaftarLabel(m), hasPendaftar: this.kuotaInfo(m).penuh || !!this.pendaftarLabel(m),
         pendaftarBar: { height: '100%', borderRadius: '100px', background: m.quota && (m.participantCount || 0) >= m.quota ? '#7A6F76' : '#B31F24',
           width: (m.quota ? Math.min(100, Math.round((m.participantCount || 0) / m.quota * 100)) : Math.min(100, 8 + (m.participantCount || 0))) + '%' },
         /* Flyer (16:9) menjadi sampul kartu; tanpa flyer, warna format seperti biasa. */
@@ -6865,7 +6951,7 @@ class Component extends DCLogic {
         meta: [String(x.time || '').trim(), String(x.venue || '').trim(), String(x.mode || '').trim()].filter(Boolean).join(' · ') || 'Jadwal menyusul',
         orang: this.narasumberSesi(x).map(n => ({ nama: n.nama, inisial: this.inisial(n.nama), hasFoto: !!n.ig, foto: this.avatarIg(n.ig) || this.BLANK, onErr: sembunyiP, fotoStyle: this.fotoBg(n.ig, n.up), })),
         hasOrang: this.narasumberSesi(x).length > 0,
-        hasDesc: !!String(x.desc || '').trim(), descEl: String(x.desc || '').trim() ? this.richEl(x.desc) : ''
+        hasDesc: false, descEl: ''
       });
       v.profilSesi = ses.map(kartuSesi);
       const progP = Array.isArray(db.programs) ? db.programs : [];
@@ -6904,17 +6990,23 @@ class Component extends DCLogic {
         { label: 'Lokasi', value: lokasiOf(m) },
         { label: 'Batas daftar', value: String(m.batasDaftar || '').trim() || 'Selama kuota tersedia' }
       ].concat(this.pendaftarLabel(m) ? [{ label: 'Pendaftar', value: this.pendaftarLabel(m) }] : []);
-      const bolehDaftarProfil = (m.registration || 'panitia') !== 'panitia';
-      v.profilDaftarLabel = bolehDaftarProfil ? (m.donasi ? 'Daftar & Donasi' : m.price > 0 ? 'Daftar & Bayar' : 'Daftar Sekarang') : 'Pendaftaran lewat panitia';
+      const kq = this.kuotaInfo(m);
+      const bolehDaftarProfil = (m.registration || 'panitia') !== 'panitia' && !kq.penuh;
+      v.profilDaftarLabel = kq.penuh ? 'Sudah Penuh' : bolehDaftarProfil ? (m.donasi ? 'Daftar & Donasi' : m.price > 0 ? 'Daftar & Bayar' : 'Daftar Sekarang') : 'Pendaftaran lewat panitia';
+      v.profilHybridSeats = kq.hybrid && (kq.qOn || kq.qOff);
+      v.profilSeats = [
+        kq.qOff ? { label: 'Luring (tatap muka)', value: kq.penuhOff ? 'Penuh' : 'Sisa ' + kq.sisaOff + ' dari ' + kq.qOff, style: { fontSize: '13px', fontWeight: 700, color: kq.penuhOff ? '#8C8078' : '#2C4D18' } } : null,
+        kq.qOn ? { label: 'Daring (online)', value: kq.penuhOn ? 'Penuh' : 'Sisa ' + kq.sisaOn + ' dari ' + kq.qOn, style: { fontSize: '13px', fontWeight: 700, color: kq.penuhOn ? '#8C8078' : '#2C4D18' } } : null
+      ].filter(Boolean);
       v.profilDaftarStyle = {
         width: '100%', background: bolehDaftarProfil ? '#B31F24' : '#EFEAE6', color: bolehDaftarProfil ? '#FFF7EE' : '#7A6F76',
         border: 'none', borderRadius: '100px', padding: '15px', fontSize: '14.5px', fontWeight: 700,
         cursor: bolehDaftarProfil ? 'pointer' : 'default'
       };
       v.profilDaftarNote = bolehDaftarProfil
-        ? (m.donasi ? 'Anda bebas menentukan nominal donasi di halaman berikutnya.' + (m.donasiOpsional ? ' Boleh juga mendaftar tanpa donasi.' : '') : m.price > 0 ? 'Pendaftaran dan pembayaran diproses di halaman berikutnya. Kode peserta aktif setelah pembayaran diterima.' : 'Kode peserta terbit seketika setelah pendaftaran.')
+        ? (kq.penuh ? 'Kuota peserta sudah terpenuhi. Pantau terus — kursi bisa dibuka lagi bila ada yang batal.' : m.donasi ? 'Anda bebas menentukan nominal donasi di halaman berikutnya.' + (m.donasiOpsional ? ' Boleh juga mendaftar tanpa donasi.' : '') : m.price > 0 ? 'Pendaftaran dan pembayaran diproses di halaman berikutnya. Kode peserta aktif setelah pembayaran diterima.' : 'Kode peserta terbit seketika setelah pendaftaran.')
         : 'Hubungi penyelenggara untuk didaftarkan; kode peserta dibagikan panitia.';
-      v.profilDaftar = () => { if (bolehDaftarProfil) this.setState({ role: 'register', regErr: '', regCode: '' }); };
+      v.profilDaftar = () => { if (bolehDaftarProfil) this.setState({ role: 'register', regErr: '', regCode: '', regJalur: '' }); };
       v.profilMasuk = () => this.setState({ role: 'login', loginError: '' });
       v.profilBack = () => {
         try { localStorage.setItem(this.WSKEY, ''); } catch (e) {}
@@ -7189,6 +7281,34 @@ class Component extends DCLogic {
     v.onRegPhone = e => this.setState({ regPhone: e.target.value });
     v.onRegEmail = e => this.setState({ regEmail: e.target.value, regErr: '' });
     {
+      const kq = this.kuotaInfo(wsAktif);
+      v.regHybrid = kq.hybrid;
+      v.regJalurOpts = !kq.hybrid ? [] : [['offline', 'Luring (tatap muka)', kq.qOff, kq.sisaOff, kq.penuhOff], ['online', 'Daring (online)', kq.qOn, kq.sisaOn, kq.penuhOn]].map(([id, label, q, sisa, full]) => {
+        const on = st.regJalur === id;
+        return {
+          label, note: full ? 'Kuota penuh' : q ? 'Sisa ' + sisa + ' kursi' : 'Tanpa batas',
+          style: { textAlign: 'left', background: full ? '#F3EFEC' : on ? '#A5121C' : '#FFF', color: full ? '#9A9097' : on ? '#FFF' : '#1B1714', border: '1.5px solid ' + (full ? '#E6DFD6' : on ? '#A5121C' : '#DCD3C8'), borderRadius: '11px', padding: '12px 14px', cursor: full ? 'not-allowed' : 'pointer', font: 'inherit' },
+          pick: () => { if (!full) this.setState({ regJalur: id, regErr: '' }); }
+        };
+      });
+    }
+    const pertanyaan = (wsAktif && Array.isArray(wsAktif.regQuestions) ? wsAktif.regQuestions : []).filter(q => String(q.label || '').trim());
+    const jwb = st.regAns || {};
+    v.regExtra = pertanyaan.map(q => {
+      const pilihan = q.type === 'choice' ? String(q.options || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean) : [];
+      const isChoice = q.type === 'choice' && pilihan.length > 0;
+      return {
+        label: q.label + (q.required ? ' *' : ''), value: jwb[q.id] || '', hint: q.required ? 'Wajib diisi' : 'Opsional',
+        isText: !isChoice, isChoice,
+        onInput: e => { const t = e.target.value; this.setState(x => ({ regAns: Object.assign({}, x.regAns, { [q.id]: t }), regErr: '' })); },
+        opts: pilihan.map(o => {
+          const on = jwb[q.id] === o;
+          return { label: o, style: { background: on ? '#A5121C' : '#FFF', color: on ? '#FFF' : '#3B342E', border: '1px solid ' + (on ? '#A5121C' : '#DCD3C8'), borderRadius: '100px', padding: '9px 15px', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer' },
+            pick: () => this.setState(x => ({ regAns: Object.assign({}, x.regAns, { [q.id]: on ? '' : o }), regErr: '' })) };
+        })
+      };
+    });
+    {
       const harga = wsAktif && !wsAktif.donasi ? this.hargaDiskon(wsAktif).harga : 0;
       const info = st.regVoucherInfo;
       v.regVoucherShow = harga > 0 && !(st.regCode || st.regPid);
@@ -7223,6 +7343,11 @@ class Component extends DCLogic {
     v.doRegister = async () => {
       const nama = String(st.regName || '').trim();
       if (!nama) return this.setState({ regErr: 'Nama belum diisi.' });
+      const kq0 = this.kuotaInfo(wsAktif);
+      if (kq0.penuh) return this.setState({ regErr: 'Kuota peserta sudah penuh.' });
+      if (kq0.hybrid && !st.regJalur) return this.setState({ regErr: 'Pilih ikut secara luring atau daring.' });
+      const kurang = pertanyaan.find(q => q.required && !String((st.regAns || {})[q.id] || '').trim());
+      if (kurang) return this.setState({ regErr: '“' + kurang.label + '” wajib diisi.' });
       if (donasiOn) {
         if (st.regDonasi == null) return this.setState({ regErr: wsAktif.donasiOpsional ? 'Pilih nominal donasi, atau pilih Tanpa donasi.' : 'Pilih atau tulis nominal donasi dulu.' });
         if (st.regDonasi > 0 && st.regDonasi < this.DONASI_MIN) return this.setState({ regErr: 'Nominal donasi minimal ' + this.rp(this.DONASI_MIN) + '.' });
@@ -7237,7 +7362,7 @@ class Component extends DCLogic {
         if (bayar) setTimeout(() => v.payStart(), 60);
         return;
       }
-      const out = await this.apiPost({ action: 'register', name: nama, org: st.regOrg, phone: st.regPhone, email: st.regEmail, donasi: donasiOn ? nominal : undefined, voucher: vInfo ? vInfo.code : undefined });
+      const out = await this.apiPost({ action: 'register', name: nama, org: st.regOrg, phone: st.regPhone, email: st.regEmail, extra: st.regAns || {}, jalur: st.regJalur || '', donasi: donasiOn ? nominal : undefined, voucher: vInfo ? vInfo.code : undefined });
       if (!out || !out.ok) return this.setState({ regErr: (out && out.error) || 'Pendaftaran gagal. Coba lagi.' });
       this.setState({ regCode: out.data.code || '', regStatus: out.data.status, regPid: out.data.id || null, regErr: '', payQr: '', payRef: '', payStatus: '', payErr: '', regMailed: false });
       this._tiketBayar = false;
@@ -8455,6 +8580,11 @@ class Component extends DCLogic {
         onPlatformFeeStatus: e => ubah('platformFeeStatus', e.target.value),
         onPlatformFeeNote: e => ubah('platformFeeNote', e.target.value),
         onQuota: e => ubah('quota', Math.max(0, parseInt(e.target.value, 10) || 0)),
+        isHybrid: m.format === 'hybrid',
+        quotaOnline: m.quotaOnline || 0, quotaOffline: m.quotaOffline || 0,
+        quotaLabel: m.format === 'hybrid' ? 'Kuota total (dipakai bila kuota luring & daring 0)' : 'Kuota (0 = tanpa batas)',
+        onQuotaOnline: e => ubah('quotaOnline', Math.max(0, parseInt(e.target.value, 10) || 0)),
+        onQuotaOffline: e => ubah('quotaOffline', Math.max(0, parseInt(e.target.value, 10) || 0)),
         zoomHost: m.zoomHost || '',
         onZoomHost: e => ubah('zoomHost', e.target.value.trim().toLowerCase()),
         onReg: e => ubah('registration', e.target.value),
@@ -8464,6 +8594,20 @@ class Component extends DCLogic {
         onJenis: e => ubah('jenis', e.target.value),
         jenisLabel: this.jenisOf(m),
         isBundle: m.jenis === 'rangkaian',
+        regQs: (Array.isArray(m.regQuestions) ? m.regQuestions : []).map((q, i) => {
+          const ubahQ = fn => ubah('regQuestions', (m.regQuestions || []).map((x, j) => j === i ? Object.assign({}, x, fn(x)) : x));
+          return {
+            label: q.label || '', type: q.type || 'text', options: q.options || '', isChoice: q.type === 'choice',
+            onLabel: e => { const t = e.target.value; ubahQ(() => ({ label: t })); },
+            onType: e => { const t = e.target.value; ubahQ(() => ({ type: t })); },
+            onOptions: e => { const t = e.target.value; ubahQ(() => ({ options: t })); },
+            reqLabel: q.required ? 'Wajib' : 'Opsional',
+            reqStyle: { background: q.required ? '#FBEFEF' : '#FFF', border: '1px solid ' + (q.required ? '#F0C9CC' : '#E0D8CE'), color: q.required ? '#8E1018' : '#7A6F66', borderRadius: '7px', padding: '0 11px', height: '36px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' },
+            toggleReq: () => ubahQ(x => ({ required: !x.required })),
+            remove: () => ubah('regQuestions', (m.regQuestions || []).filter((x, j) => j !== i))
+          };
+        }),
+        addRegQ: () => ubah('regQuestions', (m.regQuestions || []).concat([{ id: 'q' + Date.now().toString(36), label: '', type: 'text', options: '', required: false }])),
         bundleNote: (() => { const n = (m.items || []).filter(id => metaAdmin.some(x => x.id === id)).length; return n ? n + ' event dalam rangkaian ini' : 'Belum ada event dipilih.'; })(),
         bundleChips: m.jenis !== 'rangkaian' ? [] : metaAdmin.filter(x => x.id !== m.id && x.jenis !== 'rangkaian').map(x => {
           const on = (m.items || []).indexOf(x.id) >= 0;
@@ -9695,13 +9839,13 @@ class Component extends DCLogic {
       v.exportPdf = () => this.printRecap(cur, R);
       v.exportCsv = () => {
         const formBlocks = (cur.blocks || []).filter(b => b.type === 'form');
-        const head = ['Nama', 'Kode', 'Kelompok', 'Instansi', 'HP', 'Email', 'Check in', 'Pre test', 'Post test', 'Selisih', 'Umpan balik', 'Catatan'];
+        const head = ['Nama', 'Kode', 'Kelompok', 'Instansi', 'HP', 'Email'].concat(this.regQs().map(q => q.label)).concat(['Check in', 'Pre test', 'Post test', 'Selisih', 'Umpan balik', 'Catatan']);
         formBlocks.forEach(b => (b.fields || []).forEach(f => head.push(b.title + ' — ' + f.label)));
         const rows = db.participants.map(p => {
           const pre = preB && (R.quiz[preB.id] || {})[p.id], post = postB && (R.quiz[postB.id] || {})[p.id];
           const f = fbB && (R.feedback[fbB.id] || {})[p.id];
           const e = f && this.EMOJIS.find(x => x.id === f.emoji);
-          const row = [p.name, p.code, p.group, p.org, p.phone, p.email, R.checkins[p.id] || '', pre ? pre.score : '', post ? post.score : '', pre && post ? post.score - pre.score : '', e ? e.label : '', f ? f.note : ''];
+          const row = [p.name, p.code, p.group, p.org, p.phone, p.email].concat(this.regQs().map(q => ((p.extra || {})[q.id]) || '')).concat([R.checkins[p.id] || '', pre ? pre.score : '', post ? post.score : '', pre && post ? post.score - pre.score : '', e ? e.label : '', f ? f.note : '']);
           formBlocks.forEach(b => {
             const ans = (R.forms[b.id] || {})[p.id] || {};
             (b.fields || []).forEach(fl => {
@@ -9716,7 +9860,7 @@ class Component extends DCLogic {
       };
     }
 
-    v.exportCodes = () => this.download('kode-peserta.csv', [['Nama', 'Kode', 'Kelompok', 'Instansi', 'HP', 'Email']].concat(db.participants.map(p => [p.name, p.code, p.group, p.org, p.phone, p.email])));
+    v.exportCodes = () => this.download('kode-peserta.csv', [['Nama', 'Kode', 'Kelompok', 'Instansi', 'HP', 'Email'].concat(this.regQs().map(q => q.label))].concat(db.participants.map(p => [p.name, p.code, p.group, p.org, p.phone, p.email].concat(this.regQs().map(q => ((p.extra || {})[q.id]) || '')))));
     v.newName = st.newName; v.newGroup = st.newGroup; v.newOrg = st.newOrg; v.newPhone = st.newPhone; v.newEmail = st.newEmail;
     v.onNewName = e => this.setState({ newName: e.target.value });
     v.onNewGroup = e => this.setState({ newGroup: e.target.value });
