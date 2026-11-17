@@ -2035,7 +2035,7 @@ function handleAction(p) {
         });
       }
       db.sessions = incoming.sessions || [];
-      db.participants = incoming.participants || [];
+      db.participants = (incoming.participants || []).map(x => { if (x && x.jalur && x.jalur !== 'online' && x.jalur !== 'offline') delete x.jalur; return x; });
       db.groups = Array.isArray(incoming.groups) ? incoming.groups : (db.groups || []);
       if (typeof incoming.useGroups === 'boolean') db.useGroups = incoming.useGroups;
       if (Array.isArray(incoming.programs)) db.programs = incoming.programs;
