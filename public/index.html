@@ -2251,7 +2251,7 @@
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tempat / kanal</span>
                   <input value="{{ sVenue }}" onChange="{{ onSVenue }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
-                <label style="display:grid;gap:5px">
+                <label style="display:grid;gap:5px;align-content:start">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Format</span>
                   <select value="{{ sMode }}" onChange="{{ onSMode }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:11px 13px;font-size:14px;background:#FCFAF7;outline:none">
                     <option value="Tatap muka">Tatap muka</option>
@@ -3272,7 +3272,7 @@
                       </div>
                     </div>
                   </sc-if>
-                  <label style="display:grid;gap:5px">
+                  <label style="display:grid;gap:5px;align-content:start">
                     <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Format</span>
                     <select value="{{ w.format }}" onChange="{{ w.onFormat }}" style="border:1px solid #DCD3C8;border-radius:8px;padding:10px 12px;font-size:13.5px;background:#FCFAF7;outline:none">
                       <sc-for list="{{ formatOptions }}" as="o" hint-placeholder-count="3">
@@ -5124,7 +5124,9 @@ class Component extends DCLogic {
   pendaftarLabel(m) {
     if (!m || m.showCount === false) return '';
     const n = m.participantCount || 0;
-    if (m.quota) return n + ' / ' + m.quota + ' terdaftar' + (n >= m.quota ? ' · penuh' : ' · sisa ' + (m.quota - n));
+    const kq = this.kuotaInfo(m);
+    if (kq.hybrid && (kq.qOn || kq.qOff)) return n + ' / ' + kq.total + ' terdaftar · ' + [kq.qOff ? 'luring ' + kq.isiOff + '/' + kq.qOff : '', kq.qOn ? 'daring ' + kq.isiOn + '/' + kq.qOn : ''].filter(Boolean).join(' · ');
+    if (kq.total) return n + ' / ' + kq.total + ' terdaftar' + (n >= kq.total ? ' · penuh' : ' · sisa ' + (kq.total - n));
     return n + ' orang terdaftar';
   }
   /* Event berbayar = harga tetap, atau donasi dengan nominal > 0 yang dipilih peserta. */
@@ -5138,7 +5140,7 @@ class Component extends DCLogic {
     const isi = m && m.jenis === 'rangkaian' ? this.isiRangkaian(m).length : -1;
     return [
       isi >= 0 ? { icon: '◫', label: 'Event', value: isi ? isi + ' event' : '—' } : { icon: '◷', label: 'Sesi', value: jumlahSesi ? jumlahSesi + ' sesi' : '—' },
-      { icon: '◍', label: 'Kuota', value: m.quota ? m.quota + ' kursi' : 'Terbuka' },
+      { icon: '◍', label: 'Kuota', value: (() => { const kq = this.kuotaInfo(m); if (kq.hybrid && (kq.qOn || kq.qOff)) return [kq.qOff ? kq.qOff + ' luring' : '', kq.qOn ? kq.qOn + ' daring' : ''].filter(Boolean).join(' · '); return kq.total ? kq.total + ' kursi' : 'Terbuka'; })() },
       { icon: '✓', label: 'Sertifikat', value: m.sertifikat === false ? 'Tidak' : 'Ya' }
     ];
   }
@@ -6544,7 +6546,7 @@ class Component extends DCLogic {
         meta: [m.partnerName, m.dateLabel, m.place].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'Belum ada keterangan',
         lines: [
           m.jenis === 'rangkaian' ? { label: 'Isi', value: this.isiRangkaian(m).length + ' event' } : { label: 'Sesi', value: m.sessionCount || 0 },
-          { label: 'Peserta', value: (m.participantCount || 0) + (m.quota ? ' / ' + m.quota : '') },
+          { label: 'Peserta', value: (m.participantCount || 0) + (this.kuotaInfo(m).total ? ' / ' + this.kuotaInfo(m).total : '') },
           { label: 'Biaya', value: m.price > 0 ? rupiah(m.price) : 'Gratis' },
           { label: 'Terbayar', value: (m.price > 0 || m.donasi) ? (m.pesertaLunas != null ? m.pesertaLunas : lunasWs.length) + ' dari ' + (m.participantCount || 0) : '—' }
         ].concat((m.price > 0 || m.donasi) && m.pesertaAntre ? [{ label: 'Belum bayar', value: String(m.pesertaAntre) }] : []),
@@ -6893,8 +6895,8 @@ class Component extends DCLogic {
         lokasi: lokasiOf(m), harga: this.hargaLabel(m.price, m),
         diskonOn: this.diskonInfo(m).on, hargaAsli: this.diskonInfo(m).asli, diskonBadge: this.diskonInfo(m).badge,
         pendaftar: this.kuotaInfo(m).penuh ? 'Sudah penuh' : this.pendaftarLabel(m), hasPendaftar: this.kuotaInfo(m).penuh || !!this.pendaftarLabel(m),
-        pendaftarBar: { height: '100%', borderRadius: '100px', background: m.quota && (m.participantCount || 0) >= m.quota ? '#7A6F76' : '#B31F24',
-          width: (m.quota ? Math.min(100, Math.round((m.participantCount || 0) / m.quota * 100)) : Math.min(100, 8 + (m.participantCount || 0))) + '%' },
+        pendaftarBar: (() => { const kq = this.kuotaInfo(m); return { height: '100%', borderRadius: '100px', background: kq.penuh ? '#7A6F76' : '#B31F24',
+          width: (kq.total ? Math.min(100, Math.round(kq.isi / kq.total * 100)) : Math.min(100, 8 + kq.isi)) + '%' }; })(),
         /* Flyer (16:9) menjadi sampul kartu; tanpa flyer, warna format seperti biasa. */
         coverStyle: Object.assign(
           { color: '#FFF7EE', border: 'none', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', cursor: 'pointer', font: 'inherit', width: '100%' },
@@ -7153,7 +7155,7 @@ class Component extends DCLogic {
         tag: harga,
         tagStyle: { fontSize: '11.5px', fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: m.price > 0 ? '#8E1018' : '#2C4D18', background: m.price > 0 ? '#FBEFEF' : '#EEF5E9', border: '1px solid ' + (m.price > 0 ? '#F0C9CC' : '#CFE2C2'), borderRadius: '100px', padding: '5px 11px', marginLeft: 'auto' },
         meta: [m.subtitle, m.dateLabel, m.place].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'Jadwal menyusul',
-        stats: (m.sessionCount || 0) + ' sesi · ' + (m.participantCount || 0) + ' peserta terdaftar' + (m.quota ? ' dari kuota ' + m.quota : ''),
+        stats: (m.sessionCount || 0) + ' sesi · ' + (m.participantCount || 0) + ' peserta terdaftar' + (this.kuotaInfo(m).total ? ' dari kuota ' + this.kuotaInfo(m).total : ''),
         enter: () => this.pilihWs(m.id),
         registerStyle: mandiri
           ? { background: '#FFF', border: '1px solid #E0D8CE', color: '#3B342E', borderRadius: '9px', padding: '11px 16px', fontSize: '13.5px', fontWeight: 600 }
