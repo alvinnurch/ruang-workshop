@@ -280,6 +280,19 @@ function persist() {
     } catch (e) { console.error('[workshop] gagal menulis data:', e.message); }
   }, 400);
 }
+/* Cadangan otomatis sebelum perubahan besar dari dasbor. Menyimpan 200 terakhir di data/riwayat. */
+let _snapT = 0;
+function snapshotDulu(alasan) {
+  try {
+    const kini = Date.now(); if (kini - _snapT < 60e3) return; _snapT = kini;
+    const dir = path.join(path.dirname(DATA_FILE), 'riwayat');
+    fs.mkdirSync(dir, { recursive: true });
+    const nama = new Date().toISOString().replace(/[:.]/g, '-') + '-' + alasan + '.json';
+    fs.writeFileSync(path.join(dir, nama), JSON.stringify(store));
+    const semua = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort();
+    semua.slice(0, Math.max(0, semua.length - 200)).forEach(f => { try { fs.unlinkSync(path.join(dir, f)); } catch (e) {} });
+  } catch (e) { console.error('[riwayat] gagal:', e.message); }
+}
 function touch() { version++; persist(); broadcast(); }
 /* ── Voucher diskon: disimpan per event di luar data publik, agar kodenya tidak bocor ── */
 function voucherDaftar(wid) {
@@ -2035,7 +2048,25 @@ function handleAction(p) {
         });
       }
       db.sessions = incoming.sessions || [];
-      db.participants = (incoming.participants || []).map(x => { if (x && x.jalur && x.jalur !== 'online' && x.jalur !== 'offline') delete x.jalur; return x; });
+      /* Jangan pernah menimpa peserta yang tidak dikenal layar admin (mis. baru mendaftar/membayar
+         setelah dasbor dibuka). Hanya id di removedIds yang benar-benar dihapus. */
+      {
+        snapshotDulu('putDb');
+        const masuk = (incoming.participants || []).map(x => { if (x && x.jalur && x.jalur !== 'online' && x.jalur !== 'offline') delete x.jalur; return x; }).filter(x => x && x.id);
+        const hapus = new Set(Array.isArray(p.removedIds) ? p.removedIds : []);
+        const idMasuk = new Set(masuk.map(x => x.id));
+        const lama = db.participants || [];
+        const dipertahankan = lama.filter(x => !idMasuk.has(x.id) && !hapus.has(x.id));
+        if (dipertahankan.length) console.log('[putDb] ' + dipertahankan.length + ' peserta tidak ada di layar admin — dipertahankan: ' + dipertahankan.map(x => x.name).join(', '));
+        /* Status lunas & tiket dari server menang atas salinan layar yang mungkin usang. */
+        const petaLama = new Map(lama.map(x => [x.id, x]));
+        masuk.forEach(x => {
+          const o = petaLama.get(x.id); if (!o) return;
+          ['paidAt', 'ticketSentAt', 'ticketSentBy', 'waSentAt', 'registeredAt'].forEach(k => { if (o[k] && !x[k]) x[k] = o[k]; });
+          if (o.status === 'aktif' && x.status === 'menunggu') x.status = 'aktif';
+        });
+        db.participants = masuk.filter(x => !hapus.has(x.id)).concat(dipertahankan);
+      }
       db.groups = Array.isArray(incoming.groups) ? incoming.groups : (db.groups || []);
       if (typeof incoming.useGroups === 'boolean') db.useGroups = incoming.useGroups;
       if (Array.isArray(incoming.programs)) db.programs = incoming.programs;
