@@ -314,6 +314,7 @@ function metaPublik() {
     return Object.assign({}, m, {
       sessionCount: (d.sessions || []).length,
       participantCount: (d.participants || []).filter(x => x.status !== 'menunggu').length,
+      countOnline: (d.participants || []).filter(x => x.status !== 'menunggu' && x.jalur === 'online').length,
       pesertaLunas: (d.participants || []).filter(x => x.status !== 'menunggu' && (x.paidAt || x.paidBy)).length,
       pesertaAntre: (d.pendaftar || []).length + (d.participants || []).filter(x => x.status === 'menunggu').length,
       programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' }))
@@ -531,7 +532,7 @@ function sahkanPendaftar(d, pid) {
   isiR.forEach(id => {
     const dd = store.data[id]; dd.participants = dd.participants || [];
     if (!dd.participants.some(x => x.id === ps.id)) dd.participants.push({
-      id: ps.id, name: ps.name, code: ps.code, org: ps.org, phone: ps.phone, email: ps.email,
+      id: ps.id, name: ps.name, code: ps.code, org: ps.org, phone: ps.phone, email: ps.email, extra: ps.extra, jalur: ps.jalur,
       group: '', status: 'aktif', registeredAt: ps.registeredAt, paidAt: ps.paidAt, viaBundle: rec.bundleOf || ''
     });
   });
@@ -1725,10 +1726,25 @@ function handleAction(p) {
     case 'register': {
       const m = store.meta.filter(x => x.id === wid)[0];
       if (!m) return { ok: false, error: 'Workshop tidak ditemukan.' };
+      const qList = (Array.isArray(m.regQuestions) ? m.regQuestions : []).filter(q => String(q.label || '').trim());
+      const extra = {};
+      qList.forEach(q => { const v = String(((p.extra || {})[q.id]) || '').trim().slice(0, 300); if (v) extra[q.id] = v; });
+      const kosongWajib = qList.find(q => q.required && !extra[q.id]);
+      if (kosongWajib) return { ok: false, error: '“' + kosongWajib.label + '” wajib diisi.' };
       if (m.registration === 'panitia') return { ok: false, error: 'Pendaftaran workshop ini dilakukan oleh panitia.' };
       const nama = String(p.name || '').trim();
       if (!nama) return { ok: false, error: 'Nama belum diisi.' };
-      if (m.quota && db.participants.length >= m.quota) return { ok: false, error: 'Kuota peserta sudah penuh.' };
+      {
+        const sah = (db.participants || []).filter(x => x.status !== 'menunggu');
+        const hybrid = m.format === 'hybrid', qOn = hybrid ? (m.quotaOnline || 0) : 0, qOff = hybrid ? (m.quotaOffline || 0) : 0;
+        if (hybrid && (qOn || qOff)) {
+          const j = p.jalur === 'online' ? 'online' : p.jalur === 'offline' ? 'offline' : '';
+          if (!j) return { ok: false, error: 'Pilih ikut secara luring atau daring.' };
+          const isiOn = sah.filter(x => x.jalur === 'online').length, isiOff = sah.length - isiOn;
+          if (j === 'online' && qOn && isiOn >= qOn) return { ok: false, error: 'Kuota daring sudah penuh.' };
+          if (j === 'offline' && qOff && isiOff >= qOff) return { ok: false, error: 'Kuota luring sudah penuh.' };
+        } else if (m.quota && sah.length >= m.quota) return { ok: false, error: 'Kuota peserta sudah penuh.' };
+      }
       const email = String(p.email || '').trim().toLowerCase();
       if (email) {
         const sama = db.participants.filter(x => String(x.email || '').toLowerCase() === email)[0];
@@ -1762,7 +1778,7 @@ function handleAction(p) {
         db.pendaftar = db.pendaftar || [];
         db.pendaftar.push({
           id: pid, name: nama, code: '', antre: true,
-          group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
+          group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email, extra: Object.keys(extra).length ? extra : undefined, jalur: m.format === 'hybrid' && (p.jalur === 'online' || p.jalur === 'offline') ? p.jalur : undefined,
           status: 'belum-bayar', registeredAt: new Date().toISOString(),
           donasi: m.donasi ? nominal : undefined,
           harga: !m.donasi && m.price > 0 ? hargaAkhir : undefined,
@@ -1774,7 +1790,7 @@ function handleAction(p) {
       }
       db.participants.push({
         id: pid, name: nama, code: kode,
-        group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email,
+        group: db.useGroups === false ? '' : ((db.groups || [])[0] || ''), org: p.org || '', phone: p.phone || '', email: email, extra: Object.keys(extra).length ? extra : undefined, jalur: m.format === 'hybrid' && (p.jalur === 'online' || p.jalur === 'offline') ? p.jalur : undefined,
         status: perlu ? 'menunggu' : 'aktif', registeredAt: new Date().toISOString(),
         donasi: m.donasi ? nominal : undefined,
         harga: !m.donasi && m.price > 0 ? hargaAkhir : undefined,
