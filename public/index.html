@@ -465,6 +465,9 @@
                 <div style="background:#FFF;border-radius:20px;padding:16px 12px;text-align:center;box-shadow:0 14px 30px -24px rgba(139,79,40,.6)">
                   <div style="width:36px;height:36px;margin:0 auto 9px;border-radius:12px;background:#FDECEC;color:#B31F24;display:grid;place-items:center;font-size:16px">{{ s.icon }}</div>
                   <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;font-weight:700;color:#3B3238;line-height:1.15">{{ s.value }}</div>
+                  <sc-if value="{{ s.hasSub }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:11px;color:#7A6F76;margin-top:3px;line-height:1.35">{{ s.sub }}</div>
+                  </sc-if>
                   <div style="font-size:10.5px;color:#7A6F76;letter-spacing:.06em;text-transform:uppercase;margin-top:4px">{{ s.label }}</div>
                 </div>
               </sc-for>
@@ -6240,7 +6243,11 @@ class Component extends DCLogic {
     const isi = m && m.jenis === 'rangkaian' ? this.isiRangkaian(m).length : -1;
     return [
       isi >= 0 ? { icon: '◫', label: 'Event', value: isi ? isi + ' event' : '—' } : { icon: '◷', label: 'Sesi', value: jumlahSesi ? jumlahSesi + ' sesi' : '—' },
-      { icon: '◍', label: 'Kuota', value: (() => { const kq = this.kuotaInfo(m); if (kq.hybrid && (kq.qOn || kq.qOff)) return [kq.qOff ? kq.qOff + ' luring' : '', kq.qOn ? kq.qOn + ' daring' : ''].filter(Boolean).join(' · '); return kq.total ? kq.total + ' kursi' : 'Terbuka'; })() },
+      (() => {
+        const kq = this.kuotaInfo(m);
+        const rinci = kq.hybrid && (kq.qOn || kq.qOff) ? [kq.qOff ? kq.qOff + ' luring' : '', kq.qOn ? kq.qOn + ' daring' : ''].filter(Boolean).join(' · ') : '';
+        return { icon: '◍', label: 'Kuota', value: kq.total ? kq.total + ' kursi' : 'Terbuka', sub: rinci, hasSub: !!rinci };
+      })(),
       { icon: '✓', label: 'Sertifikat', value: m.sertifikat === false ? 'Tidak' : 'Ya' }
     ];
   }
@@ -8364,15 +8371,15 @@ class Component extends DCLogic {
         meta: [String(x.time || '').trim(), String(x.venue || '').trim(), String(x.mode || '').trim()].filter(Boolean).join(' · ') || 'Jadwal menyusul',
         orang: this.narasumberSesi(x).map(n => ({ nama: n.nama, inisial: this.inisial(n.nama), hasFoto: !!n.ig, foto: this.avatarIg(n.ig) || this.BLANK, onErr: sembunyiP, fotoStyle: this.fotoBg(n.ig, n.up), })),
         hasOrang: this.narasumberSesi(x).length > 0,
-        /* ±3–4 kalimat (≈55 kata); lebih panjang bisa dilebarkan. */
+        /* Maksimal dua baris; lebih panjang muncul tombol Selengkapnya. */
         ...(() => {
           const teks = this.polos(String(x.desc || '')).replace(/\s+/g, ' ').trim();
-          const kata = teks ? teks.split(' ').length : 0, buka = !!(st.profilDesc || {})[x.id];
+          const panjang = teks.length > 150, buka = !!(st.profilDesc || {})[x.id];
           return {
-            hasDesc: !!teks, descEl: teks, canMore: kata > 55,
+            hasDesc: !!teks, descEl: teks, canMore: panjang,
             moreLabel: buka ? 'Ringkas ▴' : 'Selengkapnya ▾',
             moreGo: () => this.setState(z => ({ profilDesc: Object.assign({}, z.profilDesc, { [x.id]: !buka }) })),
-            descStyle: Object.assign({ fontSize: '13.5px', color: '#4A3F46', lineHeight: 1.6, marginTop: '8px', textWrap: 'pretty' }, kata > 55 && !buka ? { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {})
+            descStyle: Object.assign({ fontSize: '13.5px', color: '#4A3F46', lineHeight: 1.6, marginTop: '8px', textWrap: 'pretty' }, panjang && !buka ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {})
           };
         })()
       });
@@ -11892,7 +11899,7 @@ class Component extends DCLogic {
       if (nav) { v.aNav = nav; v.aNavTitle = title; v.aNavOwn = true; }
       else v.aNavTitle = 'Menu';
       /* Heregistrasi, sertifikat, voucher, pendapatan: menu hanya mengulang isi tab — cukup Event dikelola & Label. */
-      v.aNavShow = ['hereg', 'cert', 'voucher', 'pendapatan', 'payments'].indexOf(tab) < 0;
+      v.aNavShow = ['ringkasan', 'hereg', 'cert', 'voucher', 'pendapatan', 'payments'].indexOf(tab) < 0;
       if (prim) {
         Object.defineProperty(v, 'aPrimShow', { enumerable: true, configurable: true, value: (st.adminRole || 'penuh') !== 'pemantau' });
         v.aPrimLabel = prim[0]; v.aPrimGo = prim[1];
