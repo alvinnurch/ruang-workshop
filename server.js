@@ -2047,7 +2047,17 @@ function handleAction(p) {
           return { id: a.id, name: a.name || '', user: a.user || '', role: a.role || 'pemantau', sessionIds: a.sessionIds || [], pass: a.pass || (lama ? lama.pass : '') };
         });
       }
-      db.sessions = incoming.sessions || [];
+      /* Susunan sesi: tolak bila admin lain sudah menyimpan versi baru sejak layar ini dimuat. */
+      {
+        const baru = incoming.sessions || [];
+        const berubah = JSON.stringify(baru) !== JSON.stringify(db.sessions || []);
+        if (berubah && db.sessionsAt && p.baseSessionsAt !== undefined && p.baseSessionsAt !== db.sessionsAt && db.sessionsBy !== (siapa.name || siapa.user || '')) {
+          const jam = new Date(db.sessionsAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+          return { ok: false, conflict: true, error: (db.sessionsBy || 'Admin lain') + ' baru saja menyimpan susunan sesi (pukul ' + jam + '). Salin perubahan Anda, muat ulang halaman, lalu simpan lagi — agar pekerjaannya tidak tertimpa.' };
+        }
+        if (berubah) { snapshotDulu('sesi'); db.sessionsAt = new Date().toISOString(); db.sessionsBy = siapa.name || siapa.user || ''; }
+        db.sessions = baru;
+      }
       /* Jangan pernah menimpa peserta yang tidak dikenal layar admin (mis. baru mendaftar/membayar
          setelah dasbor dibuka). Hanya id di removedIds yang benar-benar dihapus. */
       {
