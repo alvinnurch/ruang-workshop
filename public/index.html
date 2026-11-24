@@ -20,6 +20,14 @@
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; background: #FAF8F5; color: #1B1714; -webkit-font-smoothing: antialiased; }
   button { font-family: inherit; cursor: pointer; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  /* Ponsel: tidak ada yang boleh melebarkan halaman ke samping (Safari iPhone memperkecil seluruh halaman bila ada). */
+  @media (max-width: 819px) {
+    html, body { max-width: 100%; overflow-x: hidden; }
+    * { grid-auto-columns: minmax(0, 1fr); }
+    button, input, select, textarea, img, table, iframe { max-width: 100%; }
+    body { overflow-wrap: break-word; }
+  }
   input, select, textarea { font-family: inherit; }
   a { color: #A5121C; text-decoration: none; }
   a:hover { color: #7D0D14; text-decoration: underline; }
@@ -2105,7 +2113,7 @@
           </div>
         </sc-if>
         <div style="display:flex;align-items:center;gap:10px;order:99;flex:none">
-          <button onClick="{{ logout }}" title="Keluar" style="background:#FFF;border:1px solid #E6DCD0;color:#5C534B;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#F6F1EA">Keluar</button>
+          <sc-if value="{{ shellWide }}" hint-placeholder-val="{{ true }}"><button onClick="{{ logout }}" title="Keluar" style="background:#FFF;border:1px solid #E6DCD0;color:#5C534B;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#F6F1EA">Keluar</button></sc-if>
           <span style="{{ shellHeadAvatarStyle }}">{{ shellMeInitial }}</span>
           
         </div>
@@ -2623,7 +2631,7 @@
           </div>
         </sc-if>
         <div style="display:flex;align-items:center;gap:10px;order:99;flex:none">
-          <button onClick="{{ logout }}" title="Keluar" style="background:#FFF;border:1px solid #E6DCD0;color:#5C534B;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#F6F1EA">Keluar</button>
+          <sc-if value="{{ shellWide }}" hint-placeholder-val="{{ true }}"><button onClick="{{ logout }}" title="Keluar" style="background:#FFF;border:1px solid #E6DCD0;color:#5C534B;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#F6F1EA">Keluar</button></sc-if>
           <span style="{{ shellHeadAvatarStyle }}">{{ shellMeInitial }}</span>
           
         </div>
@@ -11771,7 +11779,7 @@ class Component extends DCLogic {
       v.pplSel = sel ? deco(sel) : {};
       const wide = !st.narrow;
       v.pplGridStyle = { display: 'grid', gap: '12px' };
-      v.pplListStyle = { display: 'grid', gridTemplateColumns: wide ? 'repeat(auto-fill,minmax(min(100%,320px),1fr))' : '1fr', gap: '10px', alignContent: 'start' };
+      v.pplListStyle = { display: 'grid', gridTemplateColumns: wide ? 'repeat(auto-fill,minmax(min(100%,320px),1fr))' : 'minmax(0,1fr)', gap: '10px', alignContent: 'start' };
       v.pplDetailStyle = { width: '100%', maxWidth: '620px', boxSizing: 'border-box', background: '#FFF', borderRadius: '22px', padding: st.narrow ? '20px 18px' : '24px', boxShadow: '0 40px 90px -30px rgba(60,20,15,.6)' };
       v.pplPopClose = () => this.setState({ pplPop: false });
       v.pplPopStop = ev => ev.stopPropagation();
@@ -12224,6 +12232,10 @@ class Component extends DCLogic {
       v.sNav = pas(v.sNav);
       v.mSubShow = sempit && (st.role === 'super' ? (v.sNav || []).length > 1 : (!!v.aNavOwn && (v.aNav || []).length > 1));
       v.mRoleShow = sempit && !!st.isSuper;
+      /* Ponsel: tombol Keluar sudah ada di kepala situs; bilah judul dasbor platform tak berisi apa-apa lagi. */
+      if (sempit && st.role === 'super') v.shellHeadStyle = { display: 'none' };
+      /* Ponsel: status simpan sudah tertulis di tombol Simpan — pil kedua disembunyikan. */
+      if (sempit && st.role !== 'super' && v.showSaveNow && v.syncStyle) v.syncStyle = Object.assign({}, v.syncStyle, { display: 'none' });
       v.roleSwitch = (v.roleSwitch || []).map(r => Object.assign({}, r, { mStyle: Object.assign({}, r.style || {}, { flex: 1, padding: '9px 10px', fontSize: '13px' }) }));
     }
     return v;
