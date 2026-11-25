@@ -3360,10 +3360,16 @@
                     </sc-for>
                   </div>
                 </sc-if>
-                <label style="display:grid;gap:5px">
-                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Waktu</span>
-                  <input value="{{ sTime }}" onChange="{{ onSTime }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:11px 13px;font-size:14px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
-                </label>
+                <div style="display:grid;gap:6px;grid-column:1/-1">
+                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tanggal &amp; waktu</span>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;align-items:end">
+                    <label style="display:grid;gap:4px"><span style="font-size:11.5px;color:#7A6F66">Tanggal</span><input type="date" value="{{ sDate }}" onChange="{{ onSDate }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;min-width:0;font-family:inherit;color:#1B1714" style-focus="border-color:#A5121C" /></label>
+                    <label style="display:grid;gap:4px"><span style="font-size:11.5px;color:#7A6F66">Mulai</span><input type="time" value="{{ sStart }}" onChange="{{ onSStart }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;min-width:0;font-family:inherit;color:#1B1714" style-focus="border-color:#A5121C" /></label>
+                    <label style="display:grid;gap:4px"><span style="font-size:11.5px;color:#7A6F66">Selesai</span><input type="time" value="{{ sEnd }}" onChange="{{ onSEnd }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;min-width:0;font-family:inherit;color:#1B1714" style-focus="border-color:#A5121C" /></label>
+                    <label style="display:grid;gap:4px"><span style="font-size:11.5px;color:#7A6F66">Zona</span><select value="{{ sTz }}" onChange="{{ onSTz }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:10px 12px;font-size:14px;background:#FFF;outline:none;min-width:0;font-family:inherit;color:#1B1714"><option value="WIB">WIB</option><option value="WITA">WITA</option><option value="WIT">WIT</option></select></label>
+                  </div>
+                  <span style="font-size:12px;color:#7A6F66">{{ sTimeNote }}</span>
+                </div>
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Tempat / kanal</span>
                   <input value="{{ sVenue }}" onChange="{{ onSVenue }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:11px 13px;font-size:14px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
@@ -10783,8 +10789,22 @@ class Component extends DCLogic {
       const R = this.resp(cur.id);
       const setS = (k) => e => { const val = e.target.value; this.markDraft(); this.save(d => { d.sessions.find(s => s.id === cur.id)[k] = val; }); };
       v.resultSubtitle = [cur.title, String(cur.time || '').trim()].filter(Boolean).join(' · ');
-      v.sTitle = cur.title; v.sDesc = cur.desc; v.sSpeaker = cur.speaker; v.sTime = cur.time; v.sVenue = cur.venue; v.sMode = cur.mode;
-      v.onSTitle = setS('title'); v.onSDesc = setS('desc'); v.onSSpeaker = setS('speaker'); v.onSTime = setS('time'); v.onSVenue = setS('venue'); v.onSMode = setS('mode');
+      v.sTitle = cur.title; v.sDesc = cur.desc; v.sSpeaker = cur.speaker; v.sTime = cur.time; v.sVenue = cur.venue; v.sDate = cur.date || ''; v.sStart = cur.start || ''; v.sEnd = cur.end || ''; v.sTz = cur.tz || 'WIB'; v.sMode = cur.mode;
+      v.onSTitle = setS('title'); v.onSDesc = setS('desc'); v.onSSpeaker = setS('speaker'); v.onSTime = setS('time');
+      {
+        /* Tanggal & jam dipilih, lalu teks jadwal (s.time) disusun otomatis — dipakai di semua tampilan. */
+        const susun = s => {
+          const tgl = s.date ? new Date(s.date + 'T00:00:00Z').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : '';
+          const j = x => String(x || '').replace(':', '.');
+          const jam = s.start ? j(s.start) + (s.end ? '\u2013' + j(s.end) : '') + ' ' + (s.tz || 'WIB') : '';
+          return [tgl, jam].filter(Boolean).join(' \u00b7 ');
+        };
+        const setW = k => e => { const val = e.target.value; this.markDraft(); this.save(d => { const s = d.sessions.find(x => x.id === cur.id); s[k] = val; const t = susun(s); if (t || s.date !== undefined) s.time = t; }); };
+        v.onSDate = setW('date'); v.onSStart = setW('start'); v.onSEnd = setW('end'); v.onSTz = setW('tz');
+        const pakaiPilih = !!(cur.date || cur.start || cur.end);
+        v.sTimeNote = pakaiPilih ? 'Tampil sebagai: ' + (String(cur.time || '').trim() || '\u2014')
+          : (String(cur.time || '').trim() ? 'Jadwal lama: \u201c' + String(cur.time).trim() + '\u201d \u2014 pilih tanggal dan jam untuk menggantinya.' : 'Pilih tanggal dan jam sesi.');
+      } v.onSVenue = setS('venue'); v.onSMode = setS('mode');
       v.sSpeakerIg = cur.speakerIg || ''; v.onSSpeakerIg = setS('speakerIg');
       {
         const ann = Array.isArray(db.pengumuman) ? db.pengumuman : [];
