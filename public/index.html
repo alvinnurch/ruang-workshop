@@ -5370,6 +5370,8 @@ class Component extends DCLogic {
   };
   /* 'fasilitator' adalah nama lama admin workshop. */
   peranNorm(r) { return r === 'fasilitator' ? 'wsadmin' : (r || 'pemantau'); }
+  /* Draf simpanan admin dipisah per event, agar draf satu event tidak pernah muncul (atau terkirim) di event lain. */
+  draftKey(id) { return this.KEY + '_draft_' + (id != null ? id : (this.state.wsId || '')); }
   adminList() { const a = (this.state.db || {}).admins; return Array.isArray(a) ? a : []; }
   akunSaya() { return this.adminList().filter(a => a.id === this.state.adminId)[0] || null; }
   /* Sesi yang boleh disentuh peran ini. null = semua. */
@@ -6280,7 +6282,7 @@ class Component extends DCLogic {
     if (!this.state.draftPending) this.setState({ draftPending: true });
     clearTimeout(this._draftT);
     clearTimeout(this._pushT); this._pushT = null; this._busy = false;
-    try { localStorage.setItem(this.KEY + '_draft', JSON.stringify(this.state.db)); } catch (e) {}
+    try { localStorage.setItem(this.draftKey(), JSON.stringify(this.state.db)); } catch (e) {}
   }
   async flushDraft() {
     clearTimeout(this._draftT);
@@ -6300,7 +6302,7 @@ class Component extends DCLogic {
       for (let i = 0; i < 4 && !verified; i++) {
         try {
           const seq = (this._reqSeq = (this._reqSeq || 0) + 1);
-          const res = await this.fetchT(this.api() + '?action=db', { method: 'GET' }, 20000);
+          const res = await this.fetchT(this.api() + '?action=db&ws=' + encodeURIComponent(this.state.wsId || ''), { method: 'GET' }, 20000);
           const out = await res.json();
           verified = !!(out && out.ok && out.data && this.fingerprint(out.data) === this.fingerprint(snapshot));
           if (verified) this._staleBefore = seq - 1;
@@ -6309,12 +6311,12 @@ class Component extends DCLogic {
       }
       if (verified) {
         this._dirty = false; this._draftDb = null;
-        try { localStorage.removeItem(this.KEY + '_draft'); } catch (e) {}
+        try { localStorage.removeItem(this.draftKey()); } catch (e) {}
         this.setState({ draftPending: false, draftSaving: false, syncAt: Date.now() });
       } else {
         /* Kiriman sudah diterima server; buang draf agar pemuatan berikutnya memakai data spreadsheet. */
         this._dirty = false; this._draftDb = null;
-        try { localStorage.removeItem(this.KEY + '_draft'); } catch (e) {}
+        try { localStorage.removeItem(this.draftKey()); } catch (e) {}
         this.setState({ draftPending: false, draftSaving: false, syncAt: Date.now(), apiError: 'Perubahan sudah dikirim, tetapi belum dapat dipastikan terbaca ulang dari spreadsheet. Segarkan halaman beberapa saat lagi untuk memeriksa.' });
       }
     } else {
@@ -6513,7 +6515,9 @@ class Component extends DCLogic {
     document.addEventListener('focusout', this._blur, true);
     if (this.api()) {
       try {
-        const draft = localStorage.getItem(this.KEY + '_draft');
+        /* Draf versi lama tanpa nama event tidak bisa dipastikan miliknya — dibuang. */
+        localStorage.removeItem(this.KEY + '_draft');
+        const draft = localStorage.getItem(this.draftKey());
         if (draft) {
           const db = JSON.parse(draft);
           if (db && db.sessions) { this._draftDb = db; this._dirty = true; this.setState({ db, draftPending: true }); }
@@ -6717,7 +6721,7 @@ class Component extends DCLogic {
       const db = JSON.parse(JSON.stringify(s.db));
       mut(db);
       if (!online) { try { localStorage.setItem(this.KEY, JSON.stringify(db)); } catch (e) {} }
-      else if (admin && !apiPayload && !now) { try { localStorage.setItem(this.KEY + '_draft', JSON.stringify(db)); } catch (e) {} }
+      else if (admin && !apiPayload && !now) { try { localStorage.setItem(this.draftKey(), JSON.stringify(db)); } catch (e) {} }
       return { db };
     });
     if (!online) return;
@@ -6740,7 +6744,7 @@ class Component extends DCLogic {
       return;
     }
     this._busy = true;
-    if (this._dirty || this.state.adminRole !== 'penuh') {
+    if (this._dirty || ['penuh', 'wsadmin'].indexOf(this.peranNorm(this.state.adminRole || 'penuh')) < 0) {
       /* Draf belum disimpan, atau peran tanpa hak susun: kirim hanya potongan kendali langsung. */
       this._pushT = setTimeout(() => {
         this._pushT = null; this._busy = false;
@@ -6765,7 +6769,7 @@ class Component extends DCLogic {
     this._pushT = setTimeout(async () => {
       this._pushT = null; this._busy = false;
       try { await this.apiPush(this.state.db); } finally {
-        try { localStorage.removeItem(this.KEY + '_draft'); } catch (e) {}
+        try { localStorage.removeItem(this.draftKey()); } catch (e) {}
         this.setState({ draftSaving: false });
       }
     }, 250);
@@ -9964,7 +9968,7 @@ class Component extends DCLogic {
       if (st.draftPending && !askReload) return this.setState({ reloadAsk: Date.now() });
       this.setState({ reloadAsk: 0 });
       this._dirty = false; this._draftDb = null;
-      try { localStorage.removeItem(this.KEY + '_draft'); } catch (e) {}
+      try { localStorage.removeItem(this.draftKey()); } catch (e) {}
       this.setState({ reloading: true, draftPending: false, apiError: '' });
       try { await this.apiGet(true); } catch (e) {}
       this.setState({ reloading: false });
