@@ -969,7 +969,7 @@
           <div style="display:grid;gap:10px">
             <sc-for list="{{ pAgenda }}" as="a" hint-placeholder-count="4">
               <button onClick="{{ a.go }}" style="display:flex;gap:12px;align-items:stretch;width:100%;border:none;background:none;padding:0;font:inherit;text-align:left;cursor:pointer">
-                <span style="width:52px;flex:none;font-size:12px;color:#8C8078;font-weight:600;padding-top:12px">{{ a.time }}</span>
+                <span style="width:78px;flex:none;font-size:12px;color:#8C8078;font-weight:600;padding-top:10px;line-height:1.35;white-space:nowrap"><span style="display:block;color:#3B342E;font-weight:700;font-size:11.5px">{{ a.date }}</span>{{ a.time }}</span>
                 <span style="{{ a.style }}"><span style="display:block;font-weight:700;font-size:13.5px">{{ a.title }}</span><span style="display:block;font-size:11.5px;opacity:.85;margin-top:2px">{{ a.sub }}</span></span>
               </button>
             </sc-for>
@@ -1574,7 +1574,7 @@
         <div style="display:grid;gap:10px">
           <sc-for list="{{ pAgenda }}" as="a" hint-placeholder-count="4">
             <button onClick="{{ a.go }}" style="display:flex;gap:12px;align-items:stretch;width:100%;border:none;background:none;padding:0;font:inherit;text-align:left;cursor:pointer">
-              <span style="width:48px;flex:none;font-size:12px;color:#8C8078;font-weight:600;padding-top:12px">{{ a.time }}</span>
+              <span style="width:78px;flex:none;font-size:12px;color:#8C8078;font-weight:600;padding-top:10px;line-height:1.35;white-space:nowrap"><span style="display:block;color:#3B342E;font-weight:700;font-size:11.5px">{{ a.date }}</span>{{ a.time }}</span>
               <span style="{{ a.style }}"><span style="display:block;font-weight:700;font-size:13.5px">{{ a.title }}</span><span style="display:block;font-size:11.5px;opacity:.85;margin-top:2px">{{ a.sub }}</span></span>
             </button>
           </sc-for>
@@ -7448,9 +7448,26 @@ class Component extends DCLogic {
       Object.defineProperty(v, 'pAgenda', { enumerable: true, configurable: true, get: () => (v.pSesiCards || []).map((c, i) => {
         const s0 = (sesiAll[i] || {}).s0 || {};
         const jam = (String(s0.time || '').match(/\d{1,2}[.:]\d{2}/) || [])[0] || ('S' + (i + 1));
+        /* Tanggal sesi: dari pilihan tanggal admin, atau dibaca dari teks jadwal lama ("17 September 2026"). */
+        const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const HARI = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        let tglPendek = '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(s0.date || ''))) {
+          const d0 = new Date(s0.date + 'T00:00:00Z');
+          tglPendek = HARI[d0.getUTCDay()] + ', ' + d0.getUTCDate() + ' ' + BLN[d0.getUTCMonth()];
+        } else {
+          const m0 = String(s0.time || '').match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Agt|Sep|Okt|Nov|Des)[a-z]*/i);
+          if (m0) tglPendek = m0[1] + ' ' + m0[2].charAt(0).toUpperCase() + m0[2].slice(1, 3).toLowerCase();
+          /* Event satu hari: tanggal event dipakai untuk semua sesinya. */
+          if (!tglPendek) {
+            const lbl = String((this.wsNow() || {}).dateLabel || '');
+            const m1 = /[-–—]|\bs\.?d\b|sampai/i.test(lbl) ? null : lbl.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Agt|Sep|Okt|Nov|Des)[a-z]*/i);
+            if (m1) tglPendek = m1[1] + ' ' + m1[2].charAt(0).toUpperCase() + m1[2].slice(1, 3).toLowerCase();
+          }
+        }
         const bg = { on: '#E0383E', done: '#2A2320', buka: '#F2C14E', kunci: '#E7DCCF' }[c.k];
         const fg = c.k === 'buka' ? '#3B2A05' : c.k === 'kunci' ? '#8C8078' : '#FFF';
-        return { time: jam.replace(':', '.'), title: c.title, sub: { on: 'sedang dibuka', done: 'selesai', buka: 'terbuka', kunci: 'terkunci' }[c.k] + (String(s0.time || '').trim() ? ' · ' + String(s0.time).trim() : ''), go: c.go, style: { flex: 1, display: 'block', background: bg, color: fg, borderRadius: '14px', padding: '12px 14px' } };
+        return { time: jam.replace(':', '.'), date: tglPendek, title: c.title, sub: { on: 'sedang dibuka', done: 'selesai', buka: 'terbuka', kunci: 'terkunci' }[c.k] + (String(s0.time || '').trim() ? ' · ' + String(s0.time).trim() : ''), go: c.go, style: { flex: 1, display: 'block', background: bg, color: fg, borderRadius: '14px', padding: '12px 14px' } };
       }) });
       Object.defineProperty(v, 'pJadwalMain', { enumerable: true, configurable: true, get: () => lebar && (v.pAgenda || []).length > 1 });
       Object.defineProperty(v, 'pHeroKicker', { enumerable: true, configurable: true, get: () => { const c = (v.pSesiCards || []).find(x => x.k === 'on'); return c ? c.sub : 'Sesi'; } });
