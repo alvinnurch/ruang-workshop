@@ -868,6 +868,10 @@
             <sc-if value="{{ pNarrow }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8C8078;font-weight:600">{{ pHalo }}</div></sc-if>
             <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.015em;line-height:1.2">Aktivitas Workshop</div>
             <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:14px;color:#A5121C;margin-top:4px">{{ pToday }}</div>
+            <div style="{{ pModeStyle }}">
+              <span aria-hidden="true" style="font-size:16px;flex:none">{{ pModeGlyph }}</span>
+              <span style="min-width:0;line-height:1.35"><span style="display:block;font-weight:800;font-size:13.5px;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ pModeLabel }}</span><span style="display:block;font-size:12px;opacity:.85">{{ pModeNote }}</span></span>
+            </div>
           </div>
           
         </div>
@@ -7403,7 +7407,20 @@ class Component extends DCLogic {
       const me0 = (db.participants || []).find(p => p.id === st.userId) || {};
       v.pMeName = me0.name || 'Peserta';
       v.pMeInitial = String(v.pMeName).trim().split(/\s+/).slice(0, 2).map(x => x[0] || '').join('').toUpperCase() || 'P';
-      v.pMeRole = 'Peserta' + (me0.jalur === 'online' ? ' · Daring' : me0.jalur === 'offline' ? ' · Luring' : '') + (me0.group ? ' · ' + me0.group : '');
+      {
+        /* Luring/daring: sama dengan aturan di daftar peserta admin. Event online → daring, offline → luring, hybrid → menurut pilihan peserta. */
+        const wsM = this.wsNow() || {}, fmt = wsM.format || 'online';
+        const daring = fmt === 'online' || (fmt === 'hybrid' && me0.jalur === 'online');
+        const modeTxt = daring ? 'Daring' : 'Luring';
+        v.pMeRole = 'Peserta · ' + modeTxt + (me0.group ? ' · ' + me0.group : '');
+        v.pModeLabel = daring ? 'Anda peserta daring' : 'Anda peserta luring';
+        v.pModeNote = daring ? 'Ikuti dari mana saja lewat tautan Zoom di tiap sesi'
+          : (wsM.place ? 'Hadir di ' + wsM.place : 'Hadir langsung di lokasi acara');
+        v.pModeGlyph = daring ? '◉' : '◎';
+        v.pModeStyle = daring
+          ? 'display:flex;gap:10px;align-items:center;margin-top:10px;padding:9px 12px;border-radius:12px;background:#EAF1FB;color:#1F3F73'
+          : 'display:flex;gap:10px;align-items:center;margin-top:10px;padding:9px 12px;border-radius:12px;background:#EEF5E6;color:#2C4D18';
+      }
       v.pKode = String(me0.code || '—').toUpperCase();
       Object.defineProperty(v, 'pCertLine', { enumerable: true, configurable: true, get: () => v.certSaya ? 'Sertifikat Anda siap diunduh' : 'Sertifikat dibuka panitia setelah syarat terpenuhi' });
       Object.defineProperty(v, 'pTiketGo', { enumerable: true, configurable: true, get: () => () => { if (v.showTicket && v.openTicket) v.openTicket(); } });
