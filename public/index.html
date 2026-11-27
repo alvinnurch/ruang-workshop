@@ -6581,6 +6581,50 @@ class Component extends DCLogic {
       }));
     }
   }
+  /* ── Thumbnail pratinjau tautan (WhatsApp/medsos): 1200×630 JPEG ringan dari flyer, dibuat di peramban admin. ── */
+  tandaGambar(src) { src = String(src || ''); return src ? src.length + ':' + src.slice(0, 40) + ':' + src.slice(-40) : ''; }
+  buatThumbOg(src) {
+    return new Promise((ok, gagal) => {
+      const img = new Image();
+      if (/^https?:\/\//i.test(src) && src.indexOf(location.origin) !== 0) img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const W = 1200, H = 630, c = document.createElement('canvas');
+          c.width = W; c.height = H;
+          const g = c.getContext('2d');
+          g.fillStyle = '#FFF7EE'; g.fillRect(0, 0, W, H);
+          const sk = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+          const w = img.naturalWidth * sk, h = img.naturalHeight * sk;
+          g.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+          let q = 0.84, data = c.toDataURL('image/jpeg', q);
+          while (data.length > 330000 && q > 0.45) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
+          ok(data);
+        } catch (e) { gagal(e); }
+      };
+      img.onerror = () => gagal(new Error('Flyer tidak bisa dibaca'));
+      img.src = src;
+    });
+  }
+  async cekThumbOg() {
+    const st = this.state;
+    if (!this.api() || !this._pw || (st.role !== 'admin' && st.role !== 'super') || this._ogJalan) return;
+    const milik = st.isSuper ? null : (st.adminWsIds && st.adminWsIds.length ? st.adminWsIds : [st.wsId]);
+    this._ogSelesai = this._ogSelesai || {};
+    const antre = (st.wsMeta || []).filter(m => m.flyer && (!milik || milik.indexOf(m.id) >= 0)
+      && m.ogSig !== this.tandaGambar(m.flyer) && !this._ogSelesai[m.id + '|' + this.tandaGambar(m.flyer)]);
+    if (!antre.length) return;
+    this._ogJalan = true;
+    try {
+      for (const m of antre) {
+        const sig = this.tandaGambar(m.flyer);
+        this._ogSelesai[m.id + '|' + sig] = true;
+        try {
+          const data = await this.buatThumbOg(m.flyer);
+          await this.apiPost({ action: 'setOgImg', password: this._pw, id: m.id, sig, data, diam: true });
+        } catch (e) { /* flyer dari situs lain yang menolak dibaca: pratinjau memakai flyer aslinya */ }
+      }
+    } finally { this._ogJalan = false; }
+  }
   /* ── Hotline: pesan pengunjung/peserta ↔ panitia ── */
   hotKunci() { try { return JSON.parse(localStorage.getItem('ruang_hotline') || '[]').filter(x => x && x.id && x.token); } catch (e) { return []; } }
   hotSimpanKunci(th) {
@@ -6691,8 +6735,13 @@ class Component extends DCLogic {
       return;
     }
     this.pasangRute();
+    /* Nilai sebelumnya dilacak sendiri (prevState tidak selalu dikirim kerangka halaman). */
+    const gantiPeran = this._lalu_role !== this.state.role, gantiMeta = this._lalu_meta !== this.state.wsMeta;
+    this._lalu_role = this.state.role; this._lalu_meta = this.state.wsMeta;
     /* Hotline: muat ulang lencana pesan saat berganti peran (masuk/keluar). */
-    if (prevState && prevState.role !== this.state.role) { clearTimeout(this._hotRoleT); this._hotRoleT = setTimeout(() => this.hotMuat(), 1200); }
+    if (gantiPeran) { clearTimeout(this._hotRoleT); this._hotRoleT = setTimeout(() => this.hotMuat(), 1200); }
+    /* Thumbnail pratinjau: dibuat/diperbarui setiap kali daftar event (flyer) berubah di dasbor admin. */
+    if (gantiPeran || gantiMeta) { clearTimeout(this._ogT); this._ogT = setTimeout(() => this.cekThumbOg(), 2500); }
   }
   componentDidMount() {
     this._hotLambat = setInterval(() => { if (!this.state.hotOpen && this.hotPeran() !== 'tamu') this.hotMuat(); }, 45000);
@@ -11209,7 +11258,11 @@ class Component extends DCLogic {
           this.setState(x => { const d = JSON.parse(JSON.stringify(x.db)); d.pengumuman = list; return { db: d }; });
           if (this._draftDb) this._draftDb.pengumuman = list;
           if (!this.api()) return Promise.resolve({ ok: true });
-          return this.apiPost({ action: 'setPengumuman', password: this._pw || '', user: this._user || '', list });
+          return this.apiPost({ action: 'setPengumuman', password: this._pw || '', user: this._user || '', list }).then(out => {
+            /* Server menyimpan unggahan gambar sebagai berkas media — ambil ulang agar salinan di sini memakai alamatnya. */
+            if (out && out.ok) setTimeout(() => this.apiGet(true).catch(() => {}), 300);
+            return out;
+          });
         };
         v.annPost = async () => {
           const teks = String(st.annText || '').trim();
