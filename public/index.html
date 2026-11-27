@@ -845,6 +845,36 @@
 
   <!-- ══════════ PESERTA ══════════ -->
   <sc-if value="{{ isPeserta }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ pProfOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ pProfClose }}" style="position:fixed;inset:0;z-index:160;background:rgba(27,23,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;overflow-y:auto;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1B1714">
+        <div role="dialog" aria-modal="true" aria-labelledby="pprof-judul" onClick="{{ pProfStop }}" style="width:100%;max-width:460px;box-sizing:border-box;background:#FFF;border-radius:22px;padding:22px;box-shadow:0 40px 90px -30px rgba(60,20,15,.6);display:grid;gap:14px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span aria-hidden="true" style="width:48px;height:48px;flex:none;border-radius:50%;background:#FDECEC;color:#A5121C;display:grid;place-items:center;font-weight:800;font-size:16px;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ pMeInitial }}</span>
+            <div style="flex:1;min-width:0">
+              <div id="pprof-judul" style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:19px">Profil saya</div>
+              <div style="font-size:12.5px;color:#8C8078">Kode peserta {{ pKode }}</div>
+            </div>
+            <button type="button" onClick="{{ pProfClose }}" aria-label="Tutup" style="width:34px;height:34px;flex:none;border-radius:10px;border:none;background:#F6EFE8;color:#7A6F66;font-size:16px;cursor:pointer">✕</button>
+          </div>
+          <div style="background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;color:#4A3F46">Nama dipakai di sertifikat. Nomor WhatsApp dan email dipakai untuk tiket, informasi sesi, dan perubahan jadwal.</div>
+          <label style="display:grid;gap:6px"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nama lengkap *</span><input value="{{ pProfName }}" onChange="{{ onPProfName }}" autocomplete="name" style="width:100%;box-sizing:border-box;border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none;font-family:inherit" style-focus="border-color:#A5121C" /></label>
+          <label style="display:grid;gap:6px"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Nomor WhatsApp *</span><input type="tel" inputmode="tel" autocomplete="tel" value="{{ pProfPhone }}" onChange="{{ onPProfPhone }}" placeholder="08…" style="width:100%;box-sizing:border-box;border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none;font-family:inherit" style-focus="border-color:#A5121C" /></label>
+          <label style="display:grid;gap:6px"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Email *</span><input type="email" inputmode="email" autocomplete="email" value="{{ pProfEmail }}" onChange="{{ onPProfEmail }}" placeholder="nama@contoh.id" style="width:100%;box-sizing:border-box;border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none;font-family:inherit" style-focus="border-color:#A5121C" /></label>
+          <sc-if value="{{ pProfErr }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="font-size:13px;color:#A5121C;font-weight:600">{{ pProfErr }}</div>
+          </sc-if>
+          <sc-if value="{{ pProfOk }}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="font-size:13px;color:#2C4D18;font-weight:600">✓ {{ pProfOk }}</div>
+          </sc-if>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button type="button" onClick="{{ pProfClose }}" style="background:#FFF;border:1px solid #E6DCD0;color:#3B342E;border-radius:11px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Batal</button>
+            <button type="button" onClick="{{ pProfSave }}" style="{{ pProfBtnStyle }}">{{ pProfBtnLabel }}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </sc-if>
+  <sc-if value="{{ isPeserta }}" hint-placeholder-val="{{ false }}">
     <div style="{{ pShellStyle }}">
     <sc-if value="{{ pWide }}" hint-placeholder-val="{{ true }}">
       <aside style="{{ pAsideStyle }}">
@@ -949,7 +979,7 @@
             <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:14.5px">{{ pMeName }}</div>
             <div style="font-size:12px;color:#A5121C;font-weight:600">{{ pMeRole }}</div>
           </div>
-          <span style="width:42px;height:42px;border-radius:50%;background:#FDECEC;color:#A5121C;display:grid;place-items:center;font-weight:800;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ pMeInitial }}</span>
+          <button type="button" onClick="{{ pProfOpenGo }}" title="Ubah profil" aria-label="Ubah profil" style="width:42px;height:42px;flex:none;border:none;border-radius:50%;background:#FDECEC;color:#A5121C;display:grid;place-items:center;font-weight:800;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif" style-hover="background:#F8D9DA">{{ pMeInitial }}</button>
         </div>
       </div>
       <sc-if value="{{ pProgView }}" hint-placeholder-val="{{ true }}">
@@ -1632,8 +1662,9 @@
     <sc-if value="{{ pMobProfil }}" hint-placeholder-val="{{ false }}">
       <div style="padding:22px 16px 0;display:grid;gap:12px">
         <div style="display:flex;align-items:center;gap:14px;background:#FFF;border-radius:18px;padding:16px">
-          <span style="width:52px;height:52px;border-radius:50%;background:#FDECEC;color:#A5121C;display:grid;place-items:center;font-weight:800;font-size:17px;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ pMeInitial }}</span>
-          <div style="min-width:0"><div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:17px">{{ pMeName }}</div><div style="font-size:12.5px;color:#A5121C;font-weight:600">{{ pMeRole }}</div></div>
+          <button type="button" onClick="{{ pProfOpenGo }}" title="Ubah profil" aria-label="Ubah profil" style="width:52px;height:52px;flex:none;border:none;border-radius:50%;background:#FDECEC;color:#A5121C;display:grid;place-items:center;font-weight:800;font-size:17px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ pMeInitial }}</button>
+          <div style="min-width:0;flex:1"><div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:17px">{{ pMeName }}</div><div style="font-size:12.5px;color:#A5121C;font-weight:600">{{ pMeRole }}</div></div>
+          <button type="button" onClick="{{ pProfOpenGo }}" style="flex:none;border:1px solid #E6DCD0;background:#FFF;color:#3B342E;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Ubah</button>
         </div>
         <div style="background:#1B1714;border-radius:18px;padding:18px;color:#FBF4EE">
           <div style="font-size:12.5px;color:#C9BBAD">Kode peserta Anda</div>
@@ -5155,6 +5186,134 @@
     </div>
   </div>
 </sc-if>
+<sc-if value="{{ hotFabShow }}" hint-placeholder-val="{{ false }}">
+  <button type="button" onClick="{{ hotToggle }}" aria-label="{{ hotFabAria }}" aria-expanded="{{ hotOpenAttr }}" style="{{ hotFabStyle }}" style-hover="filter:brightness(1.06)">
+    <span aria-hidden="true" style="font-size:16px;line-height:1">💬</span><span>{{ hotFabLabel }}</span>
+    <sc-if value="{{ hotBadge }}" hint-placeholder-val="{{ false }}"><span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:100px;background:#FFF;color:#A5121C;font-size:11.5px;font-weight:800;display:grid;place-items:center">{{ hotBadge }}</span></sc-if>
+  </button>
+  <sc-if value="{{ hotOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-label="Hotline" style="{{ hotPanelStyle }}">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,#B31F24,#8E171C);color:#FFF7EE">
+        <span aria-hidden="true" style="width:36px;height:36px;flex:none;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:17px">💬</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:16px">{{ hotTitle }}</div>
+          <div style="font-size:12px;opacity:.85">{{ hotSub }}</div>
+        </div>
+        <button type="button" onClick="{{ hotClose }}" aria-label="Tutup hotline" style="width:32px;height:32px;flex:none;border:none;border-radius:10px;background:rgba(255,255,255,.16);color:#FFF;font-size:15px;cursor:pointer">✕</button>
+      </div>
+
+      <sc-if value="{{ hotIsUser }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#FBF6F0">
+          <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:8px;padding:14px">
+            <sc-for list="{{ hotMsgsRev }}" as="m" hint-placeholder-count="2">
+              <div style="{{ m.wrapStyle }}">
+                <div style="{{ m.bubbleStyle }}">
+                  <sc-if value="{{ m.name }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;font-weight:700;opacity:.75;margin-bottom:2px">{{ m.name }}</div></sc-if>
+                  <div style="white-space:pre-wrap;overflow-wrap:anywhere">{{ m.text }}</div>
+                  <div style="font-size:10.5px;opacity:.6;margin-top:3px;text-align:right">{{ m.time }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ hotIntroShow }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#FFF;border:1px solid #EFE5DA;border-radius:14px;padding:13px 14px;font-size:13px;line-height:1.55;color:#4A3F46">{{ hotIntro }}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ hotClosedNote }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 14px;font-size:12px;color:#7A6F66;background:#F3EAE0;text-align:center">{{ hotClosedNote }}</div>
+          </sc-if>
+          <div style="border-top:1px solid #EFE5DA;background:#FFF;padding:12px 14px;display:grid;gap:9px">
+            <sc-if value="{{ hotNeedId }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;gap:8px">
+                <input value="{{ hotName }}" onChange="{{ onHotName }}" aria-label="Nama" placeholder="Nama lengkap *" autocomplete="name" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0" style-focus="border-color:#A5121C" />
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px">
+                  <input type="email" inputmode="email" value="{{ hotEmail }}" onChange="{{ onHotEmail }}" aria-label="Email" placeholder="Email *" autocomplete="email" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0" style-focus="border-color:#A5121C" />
+                  <input type="tel" inputmode="tel" value="{{ hotPhone }}" onChange="{{ onHotPhone }}" aria-label="Nomor WhatsApp" placeholder="No. WhatsApp *" autocomplete="tel" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0" style-focus="border-color:#A5121C" />
+                </div>
+                <select value="{{ hotWs }}" onChange="{{ onHotWs }}" aria-label="Terkait event" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;background:#FFF;min-width:0">
+                  <sc-for list="{{ hotWsOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+                </select>
+              </div>
+            </sc-if>
+            <textarea value="{{ hotText }}" onChange="{{ onHotText }}" aria-label="Pesan" placeholder="Tulis keluhan atau pertanyaan Anda…" rows="3" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:64px;min-width:0" style-focus="border-color:#A5121C"></textarea>
+            <sc-if value="{{ hotErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:12.5px;color:#A5121C;font-weight:600">{{ hotErr }}</div></sc-if>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="flex:1;font-size:11.5px;color:#8C8078;line-height:1.4">{{ hotFootNote }}</span>
+              <button type="button" onClick="{{ hotSend }}" style="{{ hotSendStyle }}">{{ hotSendLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hotIsAdmin }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;display:flex;background:#FBF6F0">
+          <sc-if value="{{ hotListShow }}" hint-placeholder-val="{{ true }}">
+            <div style="{{ hotListStyle }}">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;padding:12px 12px 8px">
+                <sc-for list="{{ hotFilters }}" as="f" hint-placeholder-count="4"><button type="button" onClick="{{ f.go }}" style="{{ f.style }}">{{ f.label }}</button></sc-for>
+              </div>
+              <div style="flex:1;min-height:0;overflow-y:auto;padding:0 8px 10px;display:grid;gap:6px;align-content:start">
+                <sc-for list="{{ hotThreads }}" as="t" hint-placeholder-count="4">
+                  <button type="button" onClick="{{ t.pick }}" style="{{ t.style }}">
+                    <span style="display:flex;align-items:center;gap:6px">
+                      <span style="flex:1;min-width:0;font-weight:700;font-size:13.5px;color:#1B1714;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                      <span style="font-size:11px;color:#8C8078;white-space:nowrap">{{ t.time }}</span>
+                    </span>
+                    <span style="display:block;font-size:11.5px;color:#A5121C;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.ws }}</span>
+                    <span style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                      <span style="flex:1;min-width:0;font-size:12.5px;color:#5C534B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.last }}</span>
+                      <span style="{{ t.chipStyle }}">{{ t.chip }}</span>
+                    </span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ hotEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 10px;text-align:center;font-size:13px;color:#8C8078">{{ hotEmpty }}</div></sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hotChatShow }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <sc-if value="{{ hotHasSel }}" hint-placeholder-val="{{ true }}">
+                <div style="padding:11px 14px;background:#FFF;border-bottom:1px solid #EFE5DA;display:flex;gap:10px;align-items:flex-start">
+                  <sc-if value="{{ hotBackShow }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ hotBack }}" aria-label="Kembali ke daftar" style="flex:none;border:none;background:#F6EFE8;border-radius:9px;width:30px;height:30px;cursor:pointer;color:#5C534B">←</button></sc-if>
+                  <div style="flex:1;min-width:0;font-size:12.5px;color:#5C534B;line-height:1.5">
+                    <div style="font-weight:800;font-size:14.5px;color:#1B1714;font-family:'Plus Jakarta Sans',system-ui,sans-serif">{{ hotSelV.name }}</div>
+                    <div style="overflow-wrap:anywhere">{{ hotSelV.ws }}</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px">
+                      <a href="{{ hotSelV.mailto }}" style="color:#28406B;font-weight:600;text-decoration:none;overflow-wrap:anywhere">✉ {{ hotSelV.email }}</a>
+                      <a href="{{ hotSelV.wa }}" target="_blank" rel="noopener" style="color:#2C4D18;font-weight:600;text-decoration:none">WA {{ hotSelV.phone }}</a>
+                    </div>
+                  </div>
+                  <button type="button" onClick="{{ hotSelV.toggleDone }}" style="flex:none;border:1px solid #E6DCD0;background:#FFF;border-radius:9px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:#3B342E">{{ hotSelV.doneLabel }}</button>
+                </div>
+                <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:8px;padding:14px">
+                  <sc-for list="{{ hotSelV.msgsRev }}" as="m" hint-placeholder-count="2">
+                    <div style="{{ m.wrapStyle }}">
+                      <div style="{{ m.bubbleStyle }}">
+                        <sc-if value="{{ m.name }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;font-weight:700;opacity:.75;margin-bottom:2px">{{ m.name }}</div></sc-if>
+                        <div style="white-space:pre-wrap;overflow-wrap:anywhere">{{ m.text }}</div>
+                        <div style="font-size:10.5px;opacity:.6;margin-top:3px;text-align:right">{{ m.time }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="border-top:1px solid #EFE5DA;background:#FFF;padding:10px 12px;display:grid;gap:8px">
+                  <textarea value="{{ hotReply }}" onChange="{{ onHotReply }}" aria-label="Balasan" placeholder="Tulis balasan…" rows="2" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:52px;min-width:0" style-focus="border-color:#A5121C"></textarea>
+                  <sc-if value="{{ hotErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:12.5px;color:#A5121C;font-weight:600">{{ hotErr }}</div></sc-if>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="flex:1;font-size:11.5px;color:#8C8078">{{ hotReplyNote }}</span>
+                    <button type="button" onClick="{{ hotReplySend }}" style="{{ hotSendStyle }}">{{ hotReplyLabel }}</button>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hotNoSel }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1;display:grid;place-items:center;padding:24px;text-align:center;font-size:13px;color:#8C8078">Pilih percakapan di kiri untuk membaca dan membalas.</div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{}">
 class Component extends DCLogic {
@@ -6422,6 +6581,79 @@ class Component extends DCLogic {
       }));
     }
   }
+  /* ── Hotline: pesan pengunjung/peserta ↔ panitia ── */
+  hotKunci() { try { return JSON.parse(localStorage.getItem('ruang_hotline') || '[]').filter(x => x && x.id && x.token); } catch (e) { return []; } }
+  hotSimpanKunci(th) {
+    try { const k = this.hotKunci().filter(x => x.id !== th.id); k.unshift({ id: th.id, token: th.token }); localStorage.setItem('ruang_hotline', JSON.stringify(k.slice(0, 20))); } catch (e) {}
+  }
+  hotPeran() {
+    const r = this.state.role;
+    if ((r === 'admin' || r === 'super') && this._pw) return 'admin';
+    return r === 'peserta' ? 'peserta' : 'tamu';
+  }
+  hotSaya() { return ((this.state.db || {}).participants || []).find(p => p.id === this.state.userId) || null; }
+  async hotMuat(baca) {
+    if (!this.api() || this._hotSibuk) return;
+    const per = this.hotPeran();
+    let out = null;
+    this._hotSibuk = true;
+    try {
+      if (per === 'admin') out = await this.apiPost({ action: 'hotlineList', password: this._pw, diam: true });
+      else if (per === 'peserta') { const me = this.hotSaya(); if (me) out = await this.apiPost({ action: 'hotlineSaya', pid: me.id, code: me.code, tandaiBaca: !!baca, diam: true }); }
+      else { const k = this.hotKunci(); out = k.length ? await this.apiPost({ action: 'hotlineSaya', threads: k, tandaiBaca: !!baca, diam: true }) : { ok: true, data: [] }; }
+    } finally { this._hotSibuk = false; }
+    if (out && out.ok) this.setState({ hotList: out.data || [], hotListPer: per });
+  }
+  hotBuka() {
+    let id = {};
+    try { id = JSON.parse(localStorage.getItem('ruang_hotline_id') || '{}') || {}; } catch (e) {}
+    this.setState(x => ({ hotOpen: true, hotErr: '', hotName: x.hotName != null ? x.hotName : (id.name || ''), hotEmail: x.hotEmail != null ? x.hotEmail : (id.email || ''), hotPhone: x.hotPhone != null ? x.hotPhone : (id.phone || ''), hotWs: x.hotWs != null ? x.hotWs : (this.state.wsId || '') }));
+    this.hotMuat(true);
+    clearInterval(this._hotCepat);
+    this._hotCepat = setInterval(() => { if (this.state.hotOpen) this.hotMuat(true); }, 7000);
+  }
+  hotTutup() { clearInterval(this._hotCepat); this.setState({ hotOpen: false, hotErr: '' }); }
+  async hotKirim() {
+    const st = this.state, per = this.hotPeran();
+    const teks = String(st.hotText || '').trim();
+    if (!teks) return this.setState({ hotErr: 'Tulis pesan Anda dulu.' });
+    const aktif = (st.hotList || []).find(t => t.status !== 'selesai');
+    const kirim = { action: 'hotlineKirim', text: teks, diam: true };
+    if (per === 'peserta') {
+      const me = this.hotSaya(); if (!me) return this.setState({ hotErr: 'Silakan masuk ulang.' });
+      Object.assign(kirim, { pid: me.id, code: me.code }, aktif ? { threadId: aktif.id } : {});
+    } else if (aktif) Object.assign(kirim, { threadId: aktif.id, token: aktif.token });
+    else {
+      const name = String(st.hotName || '').trim(), email = String(st.hotEmail || '').trim(), phone = String(st.hotPhone || '').trim();
+      const hp = phone.replace(/[^0-9]/g, '');
+      if (!name) return this.setState({ hotErr: 'Nama wajib diisi.' });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return this.setState({ hotErr: 'Email wajib diisi dengan benar.' });
+      if (hp.length < 9 || hp.length > 15) return this.setState({ hotErr: 'Nomor WhatsApp wajib diisi dengan benar (9–15 angka).' });
+      Object.assign(kirim, { name, email, phone, hotWs: st.hotWs || '' });
+      try { localStorage.setItem('ruang_hotline_id', JSON.stringify({ name, email, phone })); } catch (e) {}
+    }
+    if (!this.api()) return this.setState({ hotErr: 'Hotline aktif setelah platform tersambung ke server.' });
+    this.setState({ hotBusy: true, hotErr: '' });
+    const out = await this.apiPost(kirim).catch(() => null);
+    if (!out || !out.ok) return this.setState({ hotBusy: false, hotErr: (out && out.error) || 'Pesan belum terkirim. Periksa sambungan, lalu coba lagi.' });
+    if (per !== 'peserta' && out.data && out.data.token) this.hotSimpanKunci(out.data);
+    this.setState({ hotBusy: false, hotText: '' });
+    this.hotMuat(true);
+  }
+  async hotBalas() {
+    const st = this.state, teks = String(st.hotReply || '').trim();
+    if (!st.hotSel) return;
+    if (!teks) return this.setState({ hotErr: 'Tulis balasan dulu.' });
+    this.setState({ hotBusy: true, hotErr: '' });
+    const out = await this.apiPost({ action: 'hotlineBalas', password: this._pw, threadId: st.hotSel, text: teks, diam: true }).catch(() => null);
+    if (!out || !out.ok) return this.setState({ hotBusy: false, hotErr: (out && out.error) || 'Balasan belum terkirim. Coba lagi.' });
+    this.setState({ hotBusy: false, hotReply: '' });
+    this.hotMuat();
+  }
+  async hotStatus(id, status) {
+    await this.apiPost({ action: 'hotlineStatus', password: this._pw, threadId: id, status, diam: true }).catch(() => null);
+    this.hotMuat();
+  }
   async apiPost(payload) {
     try {
       const res = await this.fetchT(this.api(), {
@@ -6459,8 +6691,11 @@ class Component extends DCLogic {
       return;
     }
     this.pasangRute();
+    /* Hotline: muat ulang lencana pesan saat berganti peran (masuk/keluar). */
+    if (prevState && prevState.role !== this.state.role) { clearTimeout(this._hotRoleT); this._hotRoleT = setTimeout(() => this.hotMuat(), 1200); }
   }
   componentDidMount() {
+    this._hotLambat = setInterval(() => { if (!this.state.hotOpen && this.hotPeran() !== 'tamu') this.hotMuat(); }, 45000);
     this._onFocusIn = e => { const t = e.target; if (t && t.tagName === 'TEXTAREA' && t.getAttribute('data-rich')) this._ta = t; };
     document.addEventListener('focusin', this._onFocusIn);
     if (typeof window !== 'undefined') {
@@ -6619,6 +6854,7 @@ class Component extends DCLogic {
   }
   fmtTime(s) { return s >= 60 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : s + 's'; }
   componentWillUnmount() {
+    clearInterval(this._hotLambat); clearInterval(this._hotCepat); clearTimeout(this._hotRoleT);
     window.removeEventListener('storage', this._sync);
     window.removeEventListener('resize', this._resize);
     window.removeEventListener('beforeunload', this._leave);
@@ -7453,6 +7689,43 @@ class Component extends DCLogic {
           : 'display:flex;gap:10px;align-items:center;margin-top:10px;padding:9px 12px;border-radius:12px;background:#EEF5E6;color:#2C4D18';
       }
       v.pKode = String(me0.code || '—').toUpperCase();
+      {
+        /* Profil peserta: klik avatar → popup ubah nama, nomor WhatsApp, email. */
+        v.pProfOpen = !!st.pProf;
+        v.pProfName = st.pProfName != null ? st.pProfName : (me0.name || '');
+        v.pProfPhone = st.pProfPhone != null ? st.pProfPhone : (me0.phone || '');
+        v.pProfEmail = st.pProfEmail != null ? st.pProfEmail : (me0.email || '');
+        v.pProfErr = st.pProfErr || ''; v.pProfOk = st.pProfOk || '';
+        v.pProfOpenGo = () => this.setState({ pProf: true, pProfName: null, pProfPhone: null, pProfEmail: null, pProfErr: '', pProfOk: '' });
+        v.pProfClose = () => this.setState({ pProf: false, pProfErr: '', pProfOk: '' });
+        v.pProfStop = ev => ev.stopPropagation();
+        v.onPProfName = e => this.setState({ pProfName: e.target.value, pProfErr: '', pProfOk: '' });
+        v.onPProfPhone = e => this.setState({ pProfPhone: e.target.value, pProfErr: '', pProfOk: '' });
+        v.onPProfEmail = e => this.setState({ pProfEmail: e.target.value, pProfErr: '', pProfOk: '' });
+        const sibuk = !!st.pProfBusy;
+        v.pProfBtnLabel = sibuk ? 'Menyimpan…' : 'Simpan profil';
+        v.pProfBtnStyle = { background: sibuk ? '#C98A8D' : '#A5121C', color: '#FFF', border: 'none', borderRadius: '11px', padding: '11px 18px', fontSize: '14px', fontWeight: 700, cursor: sibuk ? 'default' : 'pointer', fontFamily: 'inherit' };
+        v.pProfSave = async () => {
+          if (st.pProfBusy) return;
+          const name = String(v.pProfName || '').trim(), phone = String(v.pProfPhone || '').trim(), email = String(v.pProfEmail || '').trim();
+          const hp = phone.replace(/[^0-9]/g, '');
+          if (!name) return this.setState({ pProfErr: 'Nama lengkap wajib diisi.' });
+          if (hp.length < 9 || hp.length > 15) return this.setState({ pProfErr: 'Nomor WhatsApp belum benar. Tulis 9–15 angka, mis. 0812xxxxxxx.' });
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return this.setState({ pProfErr: 'Alamat email belum benar.' });
+          if (!this.api()) {
+            this.save(d => { const x = d.participants.find(y => y.id === me0.id); if (x) Object.assign(x, { name, phone, email }); });
+            return this.setState({ pProfOk: 'Profil tersimpan.', pProfErr: '' });
+          }
+          this.setState({ pProfBusy: true, pProfErr: '', pProfOk: '' });
+          const out = await this.apiPost({ action: 'updateProfil', id: me0.id, code: me0.code, name, phone, email }).catch(() => null);
+          if (!out || !out.ok) return this.setState({ pProfBusy: false, pProfErr: (out && out.error) || 'Gagal menyimpan. Periksa sambungan, lalu coba lagi.' });
+          this.setState(x => {
+            const db2 = x.db ? Object.assign({}, x.db, { participants: (x.db.participants || []).map(y => y.id === me0.id ? Object.assign({}, y, out.data) : y) }) : x.db;
+            return { db: db2, pProfBusy: false, pProfOk: 'Profil tersimpan.', pProfName: null, pProfPhone: null, pProfEmail: null };
+          });
+          this.apiGet(true).catch(() => {});
+        };
+      }
       Object.defineProperty(v, 'pCertLine', { enumerable: true, configurable: true, get: () => v.certSaya ? 'Sertifikat Anda siap diunduh' : 'Sertifikat dibuka panitia setelah syarat terpenuhi' });
       Object.defineProperty(v, 'pTiketGo', { enumerable: true, configurable: true, get: () => () => { if (v.showTicket && v.openTicket) v.openTicket(); } });
       Object.defineProperty(v, 'pTiketBtnStyle', { enumerable: true, configurable: true, get: () => ({ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: 'none', background: 'none', padding: 0, color: '#C9BBAD', fontSize: '12px', fontFamily: 'inherit', cursor: v.showTicket ? 'pointer' : 'default' }) });
@@ -12375,6 +12648,110 @@ class Component extends DCLogic {
       /* Ponsel: status simpan sudah tertulis di tombol Simpan — pil kedua disembunyikan. */
       if (sempit && st.role !== 'super' && v.showSaveNow && v.syncStyle) v.syncStyle = Object.assign({}, v.syncStyle, { display: 'none' });
       v.roleSwitch = (v.roleSwitch || []).map(r => Object.assign({}, r, { mStyle: Object.assign({}, r.style || {}, { flex: 1, padding: '9px 10px', fontSize: '13px' }) }));
+    }
+    {
+      /* Hotline: tombol mengambang di beranda/profil event, dasbor peserta, dan dasbor panitia. */
+      const per = this.hotPeran();
+      const publik = ['pickWs', 'profil', 'register', 'login', 'lembaga', 'verif'].indexOf(st.role) >= 0;
+      const sempitH = !!st.narrow;
+      v.hotFabShow = per === 'admin' || per === 'peserta' || publik;
+      const list = (st.hotListPer === per ? st.hotList : null) || [];
+      const unread = per === 'admin' ? list.reduce((a, t) => a + (t.unreadAdmin || 0), 0) : list.reduce((a, t) => a + (t.unreadUser || 0), 0);
+      v.hotBadge = unread ? String(unread > 99 ? '99+' : unread) : '';
+      v.hotOpen = !!st.hotOpen; v.hotOpenAttr = v.hotOpen ? 'true' : 'false';
+      v.hotFabLabel = per === 'admin' ? 'Hotline' : 'Bantuan';
+      v.hotFabAria = per === 'admin' ? 'Buka kotak masuk hotline' : 'Hubungi panitia lewat hotline';
+      const bawahNav = sempitH && (per === 'peserta' || per === 'admin');
+      /* Posisi: kiri bawah di ponsel & beranda; di laptop, dasbor panitia di kanan bawah, dasbor peserta di atas tombol pindai. */
+      const posFab = sempitH ? { left: '14px', bottom: bawahNav ? 'calc(88px + env(safe-area-inset-bottom))' : '16px' }
+        : per === 'admin' ? { right: '22px', bottom: '22px' } : per === 'peserta' ? { right: '28px', bottom: '106px' } : { left: '22px', bottom: '22px' };
+      const posPanel = per === 'admin' ? { right: '22px', bottom: '78px' } : per === 'peserta' ? { right: '28px', bottom: '162px' } : { left: '22px', bottom: '78px' };
+      v.hotFabStyle = { position: 'fixed', left: posFab.left || 'auto', right: posFab.right || 'auto', bottom: posFab.bottom, zIndex: 70,
+        display: v.hotOpen && sempitH ? 'none' : 'flex', alignItems: 'center', gap: '8px', border: 'none', borderRadius: '100px', padding: '11px 16px',
+        background: 'linear-gradient(135deg,#E0383E,#A5121C)', color: '#FFF', fontWeight: 700, fontSize: '14px', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", cursor: 'pointer', boxShadow: '0 14px 30px -12px rgba(120,20,20,.6)' };
+      v.hotToggle = () => (st.hotOpen ? this.hotTutup() : this.hotBuka());
+      v.hotClose = () => this.hotTutup();
+      const lebarPanel = per === 'admin' ? 880 : 400;
+      v.hotPanelStyle = sempitH
+        ? { position: 'fixed', inset: 0, zIndex: 180, background: '#FFF', display: 'flex', flexDirection: 'column', fontFamily: "'IBM Plex Sans',system-ui,sans-serif", color: '#1B1714' }
+        : { position: 'fixed', left: posPanel.left || 'auto', right: posPanel.right || 'auto', bottom: posPanel.bottom, zIndex: 180, width: 'min(' + lebarPanel + 'px, calc(100vw - 44px))', height: 'min(' + (per === 'admin' ? 640 : 580) + 'px, calc(100vh - ' + (parseInt(posPanel.bottom, 10) + 30) + 'px))', background: '#FFF', borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 90px -30px rgba(60,20,15,.55), 0 0 0 1px rgba(0,0,0,.04)', fontFamily: "'IBM Plex Sans',system-ui,sans-serif", color: '#1B1714' };
+      const jam = t => { const d = new Date(t); if (isNaN(d)) return ''; const hari = d.toDateString() === new Date().toDateString(); return d.toLocaleString('id-ID', hari ? { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }); };
+      const bubbles = (msgs, milikku) => (msgs || []).slice().reverse().map(m => {
+        const saya = m.by === milikku;
+        return { text: m.text, name: saya ? '' : (m.by === 'admin' ? (m.name || 'Panitia') : ''), time: jam(m.at),
+          wrapStyle: { display: 'flex', justifyContent: saya ? 'flex-end' : 'flex-start' },
+          bubbleStyle: { maxWidth: '82%', padding: '9px 12px', borderRadius: saya ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: saya ? '#A5121C' : '#FFF', color: saya ? '#FFF' : '#1B1714', border: saya ? 'none' : '1px solid #EFE5DA', fontSize: '13.5px', lineHeight: 1.45 } };
+      });
+      const wsJudul = id => { const m = (st.wsMeta || []).find(x => x.id === id); return m ? m.title : ''; };
+      v.hotSendStyle = { flex: 'none', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '14px', fontWeight: 700, fontFamily: 'inherit', cursor: st.hotBusy ? 'default' : 'pointer', background: st.hotBusy ? '#C98A8D' : '#A5121C', color: '#FFF' };
+      v.hotErr = st.hotErr || '';
+      v.hotIsAdmin = per === 'admin'; v.hotIsUser = !v.hotIsAdmin;
+      Object.assign(v, { hotThreads: [], hotFilters: [], hotSelV: { msgsRev: [] }, hotMsgsRev: [], hotWsOpts: [], hotEmpty: '', hotHasSel: false, hotNoSel: true, hotListShow: true, hotChatShow: true, hotBackShow: false,
+        hotIntroShow: false, hotClosedNote: '', hotNeedId: false, hotTitle: 'Hotline', hotSub: '', hotFootNote: '', hotReplyNote: '' });
+      if (v.hotIsUser) {
+        const aktif = list.find(t => t.status !== 'selesai');
+        const terakhir = aktif || list[0] || null;
+        v.hotTitle = 'Hotline panitia';
+        v.hotSub = per === 'peserta' ? (wsJudul(st.wsId) || 'Pertanyaan & keluhan peserta') : 'Pertanyaan & keluhan';
+        v.hotMsgsRev = terakhir ? bubbles(terakhir.msgs, 'user') : [];
+        v.hotIntroShow = !v.hotMsgsRev.length;
+        v.hotIntro = per === 'peserta'
+          ? 'Ada kendala atau pertanyaan seputar event? Tulis di sini. Panitia akan membalas di percakapan ini.'
+          : 'Ada kendala atau pertanyaan? Tulis pesan Anda. Panitia akan membalas di sini dan lewat email Anda.';
+        v.hotClosedNote = terakhir && !aktif ? 'Percakapan sebelumnya sudah ditutup panitia. Kirim pesan untuk memulai lagi.' : '';
+        v.hotNeedId = per === 'tamu' && !aktif;
+        v.hotName = st.hotName || ''; v.hotEmail = st.hotEmail || ''; v.hotPhone = st.hotPhone || ''; v.hotWs = st.hotWs || '';
+        v.onHotName = e => this.setState({ hotName: e.target.value, hotErr: '' });
+        v.onHotEmail = e => this.setState({ hotEmail: e.target.value, hotErr: '' });
+        v.onHotPhone = e => this.setState({ hotPhone: e.target.value, hotErr: '' });
+        v.onHotWs = e => this.setState({ hotWs: e.target.value });
+        v.hotWsOpts = [{ id: '', label: 'Umum / tidak terkait event tertentu' }].concat((st.wsMeta || []).filter(m => m.published !== false).map(m => ({ id: m.id, label: 'Event: ' + (m.title || m.id) })));
+        v.hotText = st.hotText || '';
+        v.onHotText = e => this.setState({ hotText: e.target.value, hotErr: '' });
+        v.hotSend = () => this.hotKirim();
+        v.hotSendLabel = st.hotBusy ? 'Mengirim…' : 'Kirim';
+        v.hotFootNote = per === 'peserta' ? 'Dikirim atas nama Anda (' + String((this.hotSaya() || {}).code || '').toUpperCase() + ').' : (v.hotNeedId ? 'Email dan WhatsApp dipakai panitia untuk membalas.' : 'Balasan juga dikirim ke email Anda.');
+      } else {
+        const filter = st.hotFilter || 'aktif';
+        const cocok = t => filter === 'semua' || (filter === 'aktif' ? t.status !== 'selesai' : t.status === filter);
+        const n = k => list.filter(t => k === 'aktif' ? t.status !== 'selesai' : k === 'semua' || t.status === k).length;
+        v.hotTitle = 'Kotak masuk hotline';
+        v.hotSub = st.role === 'super' || st.isSuper ? 'Semua pesan dari beranda dan peserta' : 'Pesan untuk event yang Anda kelola';
+        v.hotFilters = [['aktif', 'Aktif'], ['baru', 'Baru'], ['dibalas', 'Dibalas'], ['selesai', 'Selesai'], ['semua', 'Semua']].map(([id, label]) => {
+          const on = filter === id;
+          return { label: label + ' ' + n(id), go: () => this.setState({ hotFilter: id }), style: { border: '1px solid ' + (on ? '#A5121C' : '#E6DCD0'), background: on ? '#A5121C' : '#FFF', color: on ? '#FFF' : '#5C534B', borderRadius: '100px', padding: '5px 11px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' } };
+        });
+        const tampil = list.filter(cocok);
+        const selId = st.hotSel && list.some(t => t.id === st.hotSel) ? st.hotSel : null;
+        v.hotThreads = tampil.map(t => {
+          const on = t.id === selId, last = (t.msgs || [])[t.msgs.length - 1] || {};
+          const tone = t.status === 'baru' ? ['#FCEDEE', '#A5121C', 'Baru'] : t.status === 'dibalas' ? ['#EEF3FB', '#28406B', 'Dibalas'] : ['#F0ECE6', '#7A6F66', 'Selesai'];
+          return { name: (t.unreadAdmin ? '● ' : '') + (t.from.name || 'Tanpa nama'), time: jam(t.updatedAt), ws: t.wsTitle || 'Beranda · umum', last: (last.by === 'admin' ? 'Anda: ' : '') + (last.text || ''),
+            chip: tone[2], chipStyle: { flex: 'none', fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '100px', background: tone[0], color: tone[1] },
+            pick: () => { this.setState({ hotSel: t.id, hotErr: '', hotReply: '' }); if (t.unreadAdmin) this.hotStatus(t.id, 'dibaca'); },
+            style: { textAlign: 'left', width: '100%', boxSizing: 'border-box', minWidth: 0, border: '1.5px solid ' + (on ? '#E0383E' : 'transparent'), background: '#FFF', borderRadius: '12px', padding: '10px 11px', cursor: 'pointer', fontFamily: 'inherit', display: 'block', boxShadow: '0 6px 16px -14px rgba(60,20,15,.5)' } };
+        });
+        v.hotEmpty = tampil.length ? '' : (list.length ? 'Tidak ada pesan di kelompok ini.' : 'Belum ada pesan masuk.');
+        const sel = list.find(t => t.id === selId);
+        v.hotHasSel = !!sel; v.hotNoSel = !sel;
+        v.hotListShow = !sempitH || !sel; v.hotChatShow = !sempitH || !!sel; v.hotBackShow = sempitH;
+        v.hotListStyle = { width: sempitH ? '100%' : '320px', flex: 'none', borderRight: sempitH ? 'none' : '1px solid #EFE5DA', display: 'flex', flexDirection: 'column', minHeight: 0 };
+        v.hotBack = () => this.setState({ hotSel: null });
+        v.hotSelV = sel ? {
+          name: sel.from.name + (sel.from.code ? ' · ' + String(sel.from.code).toUpperCase() : ''),
+          ws: sel.wsTitle ? 'Event: ' + sel.wsTitle : 'Dari beranda · tidak terkait event',
+          email: sel.from.email || '—', mailto: 'mailto:' + (sel.from.email || ''),
+          phone: sel.from.phone || '—', wa: 'https://wa.me/' + String(sel.from.phone || '').replace(/\D/g, '').replace(/^0/, '62'),
+          doneLabel: sel.status === 'selesai' ? 'Buka lagi' : '✓ Tandai selesai',
+          toggleDone: () => this.hotStatus(sel.id, sel.status === 'selesai' ? 'baru' : 'selesai'),
+          msgsRev: bubbles(sel.msgs, 'admin')
+        } : {};
+        v.hotReply = st.hotReply || '';
+        v.onHotReply = e => this.setState({ hotReply: e.target.value, hotErr: '' });
+        v.hotReplySend = () => this.hotBalas();
+        v.hotReplyLabel = st.hotBusy ? 'Mengirim…' : 'Balas';
+        v.hotReplyNote = sel && sel.from.email ? 'Balasan tampil di hotline pengirim dan dikirim ke emailnya.' : '';
+      }
     }
     return v;
   }
