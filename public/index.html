@@ -10048,11 +10048,12 @@ class Component extends DCLogic {
     v.roleBadge = (this.ROLES[peran] || 'Admin') + (st.adminName ? ' · ' + st.adminName : '') + (!bolehPlatform && st.adminWsTitle ? ' · ' + st.adminWsTitle : '');
     v.roleBadgeStyle = { display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, color: bolehPlatform ? '#8E1018' : '#5C534B', background: bolehPlatform ? '#FBEFEF' : '#F1EBE3', border: '1px solid ' + (bolehPlatform ? '#F0C9CC' : '#E0D8CE'), borderRadius: '100px', padding: '6px 13px', marginBottom: '6px' };
     v.roleNote = bolehPlatform ? '' : this.ROLE_NOTE[peran] || '';
-    v.showRoleNote = !bolehPlatform;
+    /* Tampilan panitia disamakan dengan super admin dalam mode Admin event: tanpa kotak keterangan peran. */
+    v.showRoleNote = false;
     const daftarTab = [['ringkasan', 'Ringkasan'], ['workshops', 'Event'], ['control', 'Sesi & materi'], ['results', 'Hasil & rekap'], ['people', 'Peserta & kode'], ['hereg', 'Heregistrasi'], ['cert', 'Sertifikat'], ['voucher', 'Voucher & diskon'], ['pendapatan', 'Pendapatan'], ['admins', 'Akun admin']]
       .filter(([id]) => {
         if (id === 'workshops') return bolehPlatform || st.isSuper || (st.adminWsIds || []).length > 1 || ['wsadmin', 'fasilitator'].indexOf(st.adminRole) >= 0;
-        if (id === 'admins') return bolehPlatform;
+        if (id === 'admins') return bolehPlatform || bolehSusun;
         if (id === 'people' || id === 'cert') return bolehSusun;
         if (id === 'pendapatan' || id === 'voucher') return bolehSusun;
         if (id === 'control' || id === 'hereg') return bolehJalan;
@@ -10871,7 +10872,8 @@ class Component extends DCLogic {
       unduh: () => this.cetakSertifikat(curWs, p)
     }));
     v.certKosong = !db.participants.length;
-    v.roleOptions = Object.keys(this.ROLES).map(id => ({ id, label: this.ROLES[id] }));
+    /* Admin penuh hanya bisa dibuat super admin; panitia menambah rekan dengan peran di bawahnya. */
+    v.roleOptions = Object.keys(this.ROLES).filter(id => st.isSuper || id !== 'penuh').map(id => ({ id, label: this.ROLES[id] }));
     v.newAdminName = st.newAdminName || '';
     v.newAdminPass = st.newAdminPass || '';
     v.newAdminUser = st.newAdminUser || '';
@@ -12659,7 +12661,8 @@ class Component extends DCLogic {
       const unread = per === 'admin' ? list.reduce((a, t) => a + (t.unreadAdmin || 0), 0) : list.reduce((a, t) => a + (t.unreadUser || 0), 0);
       v.hotBadge = unread ? String(unread > 99 ? '99+' : unread) : '';
       v.hotOpen = !!st.hotOpen; v.hotOpenAttr = v.hotOpen ? 'true' : 'false';
-      v.hotFabLabel = per === 'admin' ? 'Hotline' : 'Bantuan';
+      /* Ponsel di dasbor: ikon saja agar tidak menutupi isi; di beranda tetap berlabel. */
+      v.hotFabLabel = sempitH && per !== 'tamu' ? '' : (per === 'admin' ? 'Hotline' : 'Bantuan');
       v.hotFabAria = per === 'admin' ? 'Buka kotak masuk hotline' : 'Hubungi panitia lewat hotline';
       const bawahNav = sempitH && (per === 'peserta' || per === 'admin');
       /* Posisi: kiri bawah di ponsel & beranda; di laptop, dasbor panitia di kanan bawah, dasbor peserta di atas tombol pindai. */
@@ -12667,7 +12670,7 @@ class Component extends DCLogic {
         : per === 'admin' ? { right: '22px', bottom: '22px' } : per === 'peserta' ? { right: '28px', bottom: '106px' } : { left: '22px', bottom: '22px' };
       const posPanel = per === 'admin' ? { right: '22px', bottom: '78px' } : per === 'peserta' ? { right: '28px', bottom: '162px' } : { left: '22px', bottom: '78px' };
       v.hotFabStyle = { position: 'fixed', left: posFab.left || 'auto', right: posFab.right || 'auto', bottom: posFab.bottom, zIndex: 70,
-        display: v.hotOpen && sempitH ? 'none' : 'flex', alignItems: 'center', gap: '8px', border: 'none', borderRadius: '100px', padding: '11px 16px',
+        display: v.hotOpen && sempitH ? 'none' : 'flex', alignItems: 'center', gap: v.hotFabLabel ? '8px' : '4px', border: 'none', borderRadius: '100px', padding: v.hotFabLabel ? '11px 16px' : '12px 13px',
         background: 'linear-gradient(135deg,#E0383E,#A5121C)', color: '#FFF', fontWeight: 700, fontSize: '14px', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", cursor: 'pointer', boxShadow: '0 14px 30px -12px rgba(120,20,20,.6)' };
       v.hotToggle = () => (st.hotOpen ? this.hotTutup() : this.hotBuka());
       v.hotClose = () => this.hotTutup();
