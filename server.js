@@ -2173,10 +2173,18 @@ function handleAction(p) {
       const incoming = p.db || {};
       /* Sandi admin lain tidak boleh terhapus hanya karena tidak ikut terkirim. */
       if (Array.isArray(incoming.admins)) {
-        db.admins = incoming.admins.map(a => {
-          const lama = (db.admins || []).find(x => x.id === a.id);
-          return { id: a.id, name: a.name || '', user: a.user || '', role: a.role || 'pemantau', sessionIds: a.sessionIds || [], pass: a.pass || (lama ? lama.pass : '') };
+        /* Hanya super admin / admin penuh yang boleh membuat, mengubah, atau menghapus akun Admin penuh. */
+        const bisaPenuh = !!siapa.superadmin || siapa.role === 'penuh';
+        const adminLama = db.admins || [];
+        const hasil = incoming.admins.filter(a => a && a.id).map(a => {
+          const lama = adminLama.find(x => x.id === a.id);
+          if (!bisaPenuh && lama && lama.role === 'penuh') return lama;
+          let role = a.role || 'pemantau';
+          if (!bisaPenuh && role === 'penuh') role = 'wsadmin';
+          return Object.assign({}, lama || {}, { id: a.id, name: a.name || '', user: a.user || '', role, sessionIds: a.sessionIds || [], pass: a.pass || (lama ? lama.pass : '') });
         });
+        if (!bisaPenuh) adminLama.filter(x => x.role === 'penuh' && !hasil.some(y => y.id === x.id)).forEach(x => hasil.push(x));
+        db.admins = hasil;
       }
       /* Susunan sesi: tolak bila admin lain sudah menyimpan versi baru sejak layar ini dimuat. */
       {
