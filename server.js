@@ -1765,11 +1765,16 @@ function handleAction(p) {
       const qList = (Array.isArray(m.regQuestions) ? m.regQuestions : []).filter(q => String(q.label || '').trim());
       const extra = {};
       qList.forEach(q => { const v = String(((p.extra || {})[q.id]) || '').trim().slice(0, 300); if (v) extra[q.id] = v; });
-      const kosongWajib = qList.find(q => q.required && !extra[q.id]);
+      const kosongWajib = qList.find(q => !extra[q.id]);
       if (kosongWajib) return { ok: false, error: '“' + kosongWajib.label + '” wajib diisi.' };
       if (m.registration === 'panitia') return { ok: false, error: 'Pendaftaran workshop ini dilakukan oleh panitia.' };
       const nama = String(p.name || '').trim();
-      if (!nama) return { ok: false, error: 'Nama belum diisi.' };
+      if (!nama) return { ok: false, error: 'Nama lengkap wajib diisi.' };
+      /* Semua data pendaftaran wajib: dipakai untuk sertifikat, tiket, dan kabar sesi/jadwal. */
+      if (!String(p.org || '').trim()) return { ok: false, error: 'Instansi / lembaga wajib diisi.' };
+      { const hp = String(p.phone || '').replace(/[^0-9]/g, '');
+        if (hp.length < 9 || hp.length > 15) return { ok: false, error: 'Nomor HP (WhatsApp) wajib diisi dengan benar.' }; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(p.email || '').trim())) return { ok: false, error: 'Email wajib diisi dengan benar.' };
       {
         const sah = (db.participants || []).filter(x => x.status !== 'menunggu');
         const hybrid = m.format === 'hybrid', qOn = hybrid ? (m.quotaOnline || 0) : 0, qOff = hybrid ? (m.quotaOffline || 0) : 0;
