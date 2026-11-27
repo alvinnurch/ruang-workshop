@@ -7601,7 +7601,8 @@ class Component extends DCLogic {
     const multiAktif = !mandiri && idsAktif.length > 1;
     if (multiAktif && live) v.liveBadge = idsAktif.length + ' sesi berlangsung bersamaan';
     v.pSesiShow = (mandiri && (db.sessions || []).length > 1) || multiAktif;
-    const daftarP = (db.sessions || []).map((s0, i) => ({ s0, i })).filter(x => !multiAktif || idsAktif.indexOf(x.s0.id) >= 0);
+    /* Semua sesi selalu tampil di dasbor peserta; yang belum dibuka panitia tampil abu-abu sebagai "terjadwal". */
+    const daftarP = (db.sessions || []).map((s0, i) => ({ s0, i }));
     const posP = Math.max(0, daftarP.findIndex(x => live && x.s0.id === live.id));
     const pindahP = id => this.setState({ pSesi: id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
     v.pSesiPos = daftarP.length > 1 ? (posP + 1) + ' dari ' + daftarP.length + (st.narrow ? ' · geser kartu' : '') : '';
@@ -7746,25 +7747,25 @@ class Component extends DCLogic {
         const done = tugas.filter(b => b.type === 'checkin' ? !!(R.checkins || {})[uid] : b.type === 'quiz' ? !!((R.quiz || {})[b.id] || {})[uid] : b.type === 'form' ? !!((R.forms || {})[b.id] || {})[uid] : b.type === 'feedback' ? !!((R.feedback || {})[b.id] || {})[uid] : (R.words || []).some(w => w.blockId === b.id && w.by === uid)).length;
         return { n: bl.length, pct: tugas.length ? Math.round(done / tugas.length * 100) : 0 };
       };
-      const TONE = { on: ['linear-gradient(135deg,#E0383E,#A5121C)', '#FFF', 'rgba(255,255,255,.18)', '#FFF'], done: ['#2A2320', '#FFF', 'rgba(255,255,255,.12)', '#FFF'], buka: ['#F2C14E', '#3B2A05', 'rgba(255,255,255,.4)', '#3B2A05'], kunci: ['#E7DCCF', '#8C8078', 'rgba(255,255,255,.5)', '#8C8078'] };
+      const TONE = { on: ['linear-gradient(135deg,#E0383E,#A5121C)', '#FFF', 'rgba(255,255,255,.18)', '#FFF'], done: ['#2A2320', '#FFF', 'rgba(255,255,255,.12)', '#FFF'], buka: ['#F2C14E', '#3B2A05', 'rgba(255,255,255,.4)', '#3B2A05'], kunci: ['#E7DCCF', '#8C8078', 'rgba(255,255,255,.5)', '#8C8078'], jadwal: ['#ECE7E1', '#8C8078', 'rgba(255,255,255,.6)', '#B3A698'] };
       Object.defineProperty(v, 'pSesiCards', { enumerable: true, configurable: true, get: () => (v.pSesiChips || []).map((c, i) => {
         const s0 = (sesiAll[i] || {}).s0 || {};
         const bg = String((c.style || {}).background || '');
         const kunci = (c.style || {}).cursor === 'not-allowed';
         const on = bg.indexOf('gradient') >= 0, done = bg === '#2A2320';
-        const k = kunci ? 'kunci' : on ? 'on' : done ? 'done' : 'buka';
+        const k = c.jadwal ? 'jadwal' : kunci ? 'kunci' : on ? 'on' : done ? 'done' : 'buka';
         const t = TONE[k], pr = selesaiku(s0);
         const orang = this.narasumberSesi ? this.narasumberSesi(s0).map(o => o.nama).join(', ') : '';
         return {
           k, title: s0.title || c.title || 'Sesi', full: c.full,
           sub: [orang || String(s0.speaker || '').trim(), String(s0.time || '').trim()].filter(Boolean).join(' · ') || ('Sesi ' + (i + 1)),
-          art: kunci ? '🔒' : done ? '✓' : on ? '▶' : String(i + 1), num: String(pr.n),
-          cta: kunci ? 'Terkunci' : done ? 'Selesai' : on ? 'Lanjutkan →' : 'Buka →',
-          go: () => { if (kunci) return; if (c.pick) c.pick(); keSesi(); },
-          style: { display: 'block', width: '100%', textAlign: 'left', border: 'none', cursor: kunci ? 'default' : 'pointer', fontFamily: 'inherit', background: t[0], color: t[1], borderRadius: '20px', padding: '16px 16px 14px', boxShadow: on ? '0 22px 34px -22px rgba(165,18,28,.9)' : 'none' },
+          art: k === 'jadwal' ? String(i + 1) : kunci ? '🔒' : done ? '✓' : on ? '▶' : String(i + 1), num: String(pr.n),
+          cta: k === 'jadwal' ? 'Terjadwal' : kunci ? 'Terkunci' : done ? 'Selesai' : on ? 'Lanjutkan →' : 'Buka →',
+          go: () => { if (kunci || c.tutup) return; if (c.pick) c.pick(); keSesi(); },
+          style: { display: 'block', width: '100%', textAlign: 'left', border: 'none', cursor: kunci || c.tutup ? 'default' : 'pointer', fontFamily: 'inherit', background: t[0], color: t[1], borderRadius: '20px', padding: '16px 16px 14px', boxShadow: on ? '0 22px 34px -22px rgba(165,18,28,.9)' : 'none' },
           artStyle: { width: '50px', height: '50px', flex: 'none', borderRadius: '15px', background: t[2], display: 'grid', placeItems: 'center', fontSize: '18px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
           numStyle: { width: '46px', height: '50px', flex: 'none', borderRadius: '12px', background: '#FFF', color: '#1B1714', display: 'grid', placeItems: 'center', alignContent: 'center' },
-          trackStyle: { flex: 1, height: '5px', borderRadius: '100px', background: k === 'kunci' || k === 'buka' ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.3)', overflow: 'hidden', display: 'block' },
+          trackStyle: { flex: 1, height: '5px', borderRadius: '100px', background: k === 'kunci' || k === 'buka' || k === 'jadwal' ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.3)', overflow: 'hidden', display: 'block' },
           barStyle: { display: 'block', height: '100%', width: (done ? 100 : pr.pct) + '%', background: t[3], borderRadius: '100px' }
         };
       }).filter(x => (st.pFilter || 'semua') === 'semua' || x.k === 'on' || x.k === 'buka') });
@@ -7788,9 +7789,9 @@ class Component extends DCLogic {
             if (m1) tglPendek = m1[1] + ' ' + m1[2].charAt(0).toUpperCase() + m1[2].slice(1, 3).toLowerCase();
           }
         }
-        const bg = { on: '#E0383E', done: '#2A2320', buka: '#F2C14E', kunci: '#E7DCCF' }[c.k];
-        const fg = c.k === 'buka' ? '#3B2A05' : c.k === 'kunci' ? '#8C8078' : '#FFF';
-        return { time: jam.replace(':', '.'), date: tglPendek, title: c.title, sub: { on: 'sedang dibuka', done: 'selesai', buka: 'terbuka', kunci: 'terkunci' }[c.k] + (String(s0.time || '').trim() ? ' · ' + String(s0.time).trim() : ''), go: c.go, style: { flex: 1, display: 'block', background: bg, color: fg, borderRadius: '14px', padding: '12px 14px' } };
+        const bg = { on: '#E0383E', done: '#2A2320', buka: '#F2C14E', kunci: '#E7DCCF', jadwal: '#ECE7E1' }[c.k];
+        const fg = c.k === 'buka' ? '#3B2A05' : c.k === 'kunci' || c.k === 'jadwal' ? '#8C8078' : '#FFF';
+        return { time: jam.replace(':', '.'), date: tglPendek, title: c.title, sub: { on: 'sedang dibuka', done: 'selesai', buka: 'terbuka', kunci: 'terkunci', jadwal: 'terjadwal · belum dibuka' }[c.k] + (String(s0.time || '').trim() ? ' · ' + String(s0.time).trim() : ''), go: c.go, style: { flex: 1, display: 'block', background: bg, color: fg, borderRadius: '14px', padding: '12px 14px' } };
       }) });
       Object.defineProperty(v, 'pJadwalMain', { enumerable: true, configurable: true, get: () => lebar && (v.pAgenda || []).length > 1 });
       Object.defineProperty(v, 'pHeroKicker', { enumerable: true, configurable: true, get: () => { const c = (v.pSesiCards || []).find(x => x.k === 'on'); return c ? c.sub : 'Sesi'; } });
@@ -7820,12 +7821,12 @@ class Component extends DCLogic {
       Object.defineProperty(v, 'pJadwal', { enumerable: true, configurable: true, get: () => (v.pSesiChips || []).map((c, i) => {
         const s0 = (sesiP[i] || {}).s0 || {};
         const bg = String((c.style || {}).background || '');
-        const kunci = (c.style || {}).cursor === 'not-allowed';
+        const kunci = (c.style || {}).cursor === 'not-allowed' || !!c.tutup;
         const on = bg.indexOf('gradient') >= 0, selesai = bg === '#2A2320';
-        const warna = kunci ? '#D8CEC2' : on ? '#E0383E' : selesai ? '#2A2320' : '#F2C14E';
+        const warna = c.jadwal ? '#D8CEC2' : kunci ? '#D8CEC2' : on ? '#E0383E' : selesai ? '#2A2320' : '#F2C14E';
         return {
           title: c.title || s0.title || 'Sesi', full: c.full,
-          sub: [String(s0.time || '').trim(), kunci ? 'terkunci' : on ? 'sedang dibuka' : selesai ? 'selesai' : ''].filter(Boolean).join(' · ') || 'Sesi ' + (i + 1),
+          sub: [String(s0.time || '').trim(), c.jadwal ? 'terjadwal' : kunci && !selesai ? 'terkunci' : on ? 'sedang dibuka' : selesai ? 'selesai' : ''].filter(Boolean).join(' · ') || 'Sesi ' + (i + 1),
           go: () => { if (!kunci && c.pick) { c.pick(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
           style: { display: 'flex', gap: '10px', alignItems: 'stretch', width: '100%', border: 'none', background: on ? '#FDF1EF' : '#FBF8F5', borderRadius: '12px', padding: '8px 10px 8px 8px', cursor: kunci ? 'default' : 'pointer', fontFamily: 'inherit', textAlign: 'left', color: kunci ? '#B3A698' : '#1B1714' },
           barStyle: { width: '4px', flex: 'none', borderRadius: '4px', background: warna }
@@ -7837,6 +7838,17 @@ class Component extends DCLogic {
       const on = live && s0.id === live.id;
       const terkunci = !!kunciB[s0.id];
       const tuntas = bertahap && this.sesiSelesaiOleh(db, s0.id, st.userId);
+      const dibuka = mandiri || idsAktif.indexOf(s0.id) >= 0;
+      if (!dibuka) {
+        const usai = !!s0.selesai;
+        return {
+          num: usai ? '✓' : String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi') + (usai ? ' — sudah selesai' : ' — belum dibuka panitia'),
+          jadwal: !usai, usai, tutup: true,
+          numStyle: { flex: 'none', width: '30px', height: '30px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", background: usai ? '#EEF5E9' : 'rgba(255,255,255,.75)', color: usai ? '#2C4D18' : '#9A8E84' },
+          style: { display: 'inline-flex', alignItems: 'center', gap: '10px', minHeight: '58px', width: st.narrow ? '72vw' : '250px', background: usai ? '#2A2320' : '#ECE7E1', border: 'none', color: usai ? '#FFF' : '#8C8078', borderRadius: '16px', padding: '10px 14px 10px 12px', fontSize: '13.5px', fontWeight: 700, cursor: 'default', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start', textAlign: 'left', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
+          pick: () => {}
+        };
+      }
       if (terkunci) return {
         num: '🔒', title: s0.title || 'Sesi', full: 'Terkunci — selesaikan sesi sebelumnya dulu',
         numStyle: { flex: 'none', width: '30px', height: '30px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', background: 'rgba(255,255,255,.6)' },
