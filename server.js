@@ -942,6 +942,11 @@ function peranDari(pass, user, wsMinta) {
   return { role: a.role || 'pemantau', name: a.name || 'Admin', id: a.id, user: a.user || '', email: a.email || '', sessionIds: a.sessionIds || [], wsId: wid, wsIds: semua, superadmin: false, mustChange: !!a.mustChange };
 }
 /* Salinan untuk dikirim ke halaman: sandi admin tidak pernah ikut keluar. */
+/* Percakapan hotline untuk pengirimnya: tanpa catatan internal panitia. */
+function hotlineUntukPengirim(th) {
+  return { id: th.id, token: th.token, wsId: th.wsId, status: th.status, createdAt: th.createdAt, updatedAt: th.updatedAt, unreadUser: th.unreadUser || 0,
+    msgs: (th.msgs || []).map(m => ({ by: m.by, name: m.by === 'admin' ? (m.name || 'Panitia') : '', text: m.text, at: m.at })) };
+}
 function dbPublik() {
   const out = Object.assign({}, db);
   out.admins = (db.admins || []).map(a => ({ id: a.id, name: a.name, user: a.user || '', role: a.role, sessionIds: a.sessionIds || [], hasPass: !!a.pass }));
@@ -991,6 +996,127 @@ function handleAction(p) {
       if (hit.length > 1) return { ok: false, error: 'Kode ini terdaftar lebih dari sekali.' };
       if (hit[0].status === 'menunggu') return { ok: false, error: 'Pendaftaran Anda belum disetujui panitia.' };
       return { ok: true, data: { id: hit[0].id, name: hit[0].name, group: hit[0].group } };
+    }
+
+    /* ── Hotline: keluhan/pertanyaan dari pengunjung (beranda) atau peserta (dasbor), dibalas panitia. ── */
+    case 'hotlineKirim': {
+      store.hotline = Array.isArray(store.hotline) ? store.hotline : [];
+      const teks = String(p.text || '').trim().slice(0, 2000);
+      if (!teks) return { ok: false, error: 'Tulis pesan Anda dulu.' };
+      const kini = new Date().toISOString();
+      let dari = null, wsH = '';
+      if (p.pid) {
+        const code = String(p.code || '').trim().toUpperCase();
+        const ps = (db.participants || []).find(x => x.id === p.pid && String(x.code || '').toUpperCase() === code);
+        if (!ps || !code) return { ok: false, error: 'Peserta tidak dikenali. Silakan masuk ulang.' };
+        dari = { name: ps.name || '', email: ps.email || '', phone: ps.phone || '', pid: ps.id, code: ps.code };
+        wsH = wid;
+      }
+      let th = null;
+      if (p.threadId) {
+        th = store.hotline.find(x => x.id === p.threadId);
+        if (!th) return { ok: false, error: 'Percakapan tidak ditemukan.' };
+        const milik = dari ? th.from.pid === dari.pid : (!!p.token && th.token === p.token);
+        if (!milik) return { ok: false, error: 'Percakapan ini bukan milik Anda.' };
+      } else if (dari) {
+        th = store.hotline.find(x => x.from && x.from.pid === dari.pid && x.wsId === wsH && x.status !== 'selesai') || null;
+      }
+      if (!th) {
+        if (!dari) {
+          const name = String(p.name || '').trim().slice(0, 120);
+          const email = String(p.email || '').trim().toLowerCase().slice(0, 160);
+          const phone = String(p.phone || '').trim().slice(0, 30);
+          const hp = phone.replace(/[^0-9]/g, '');
+          if (!name) return { ok: false, error: 'Nama wajib diisi.' };
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Email wajib diisi dengan benar.' };
+          if (hp.length < 9 || hp.length > 15) return { ok: false, error: 'Nomor WhatsApp wajib diisi dengan benar.' };
+          dari = { name, email, phone };
+          wsH = store.meta.some(m => m.id === p.hotWs) ? p.hotWs : '';
+        }
+        th = { id: 'h' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex'), token: crypto.randomBytes(16).toString('hex'),
+          wsId: wsH, from: dari, asal: p.pid ? 'dasbor' : 'beranda', createdAt: kini, status: 'baru', msgs: [], unreadAdmin: 0, unreadUser: 0 };
+        store.hotline.push(th);
+        if (store.hotline.length > 3000) store.hotline = store.hotline.filter(x => x.status !== 'selesai').slice(-3000);
+      }
+      th.msgs.push({ by: 'user', text: teks, at: kini });
+      th.status = 'baru'; th.updatedAt = kini; th.unreadAdmin = (th.unreadAdmin || 0) + 1;
+      persist();
+      console.log('[hotline] pesan baru dari ' + (th.from.name || '?') + (th.wsId ? ' · ' + namaWs(th.wsId) : ' · beranda'));
+      return { ok: true, data: hotlineUntukPengirim(th) };
+    }
+    case 'hotlineSaya': {
+      const semua = Array.isArray(store.hotline) ? store.hotline : [];
+      let milik = [];
+      if (p.pid) {
+        const code = String(p.code || '').trim().toUpperCase();
+        const ps = (db.participants || []).find(x => x.id === p.pid && String(x.code || '').toUpperCase() === code);
+        if (!ps || !code) return { ok: false, error: 'Peserta tidak dikenali.' };
+        milik = semua.filter(x => x.from && x.from.pid === ps.id);
+      } else {
+        const kunci = (Array.isArray(p.threads) ? p.threads : []).slice(0, 30);
+        milik = semua.filter(x => kunci.some(k => k && k.id === x.id && k.token === x.token));
+      }
+      let berubah = false;
+      if (p.tandaiBaca) milik.forEach(x => { if (x.unreadUser) { x.unreadUser = 0; berubah = true; } });
+      if (berubah) persist();
+      return { ok: true, data: milik.slice().sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(hotlineUntukPengirim) };
+    }
+    case 'hotlineList': {
+      if (!siapa) return { ok: false, error: 'Khusus panitia.' };
+      const boleh = th => siapa.superadmin || (th.wsId && (siapa.wsIds || [siapa.wsId]).indexOf(th.wsId) >= 0);
+      const daftar = (Array.isArray(store.hotline) ? store.hotline : []).filter(boleh)
+        .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).slice(0, 400)
+        .map(th => ({ id: th.id, wsId: th.wsId, wsTitle: th.wsId ? namaWs(th.wsId) : '', from: { name: th.from.name, email: th.from.email, phone: th.from.phone, code: th.from.code || '' },
+          asal: th.asal, status: th.status, createdAt: th.createdAt, updatedAt: th.updatedAt, unreadAdmin: th.unreadAdmin || 0, msgs: th.msgs }));
+      return { ok: true, data: daftar };
+    }
+    case 'hotlineBalas':
+    case 'hotlineStatus': {
+      if (!siapa) return { ok: false, error: 'Khusus panitia.' };
+      const th = (Array.isArray(store.hotline) ? store.hotline : []).find(x => x.id === p.threadId);
+      const boleh = th && (siapa.superadmin || (th.wsId && (siapa.wsIds || [siapa.wsId]).indexOf(th.wsId) >= 0));
+      if (!boleh) return { ok: false, error: 'Percakapan tidak ditemukan.' };
+      const kini = new Date().toISOString();
+      if (p.action === 'hotlineStatus') {
+        if (p.status === 'dibaca') th.unreadAdmin = 0;
+        else if (['baru', 'dibalas', 'selesai'].indexOf(p.status) >= 0) { th.status = p.status; th.unreadAdmin = 0; th.updatedAt = kini; }
+        persist();
+        return { ok: true };
+      }
+      const teks = String(p.text || '').trim().slice(0, 2000);
+      if (!teks) return { ok: false, error: 'Tulis balasan dulu.' };
+      th.msgs.push({ by: 'admin', name: siapa.superadmin ? 'Tim Ruang islami.co' : (siapa.name || 'Panitia'), text: teks, at: kini });
+      th.status = 'dibalas'; th.updatedAt = kini; th.unreadAdmin = 0; th.unreadUser = (th.unreadUser || 0) + 1;
+      persist();
+      if (MAIL_AKTIF && th.from && th.from.email) {
+        const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1B1714;max-width:560px">'
+          + '<p>Halo ' + esc(th.from.name || '') + ',</p><p>Panitia ' + (th.wsId ? '<b>' + esc(namaWs(th.wsId)) + '</b> ' : 'Ruang islami.co ') + 'membalas pesan Anda:</p>'
+          + '<blockquote style="margin:0;padding:12px 16px;background:#FFF7EE;border-left:4px solid #A5121C;white-space:pre-wrap">' + esc(teks) + '</blockquote>'
+          + '<p style="color:#7A6F66;font-size:13px">Balas lewat tombol Hotline di ' + (th.asal === 'dasbor' ? 'dasbor peserta' : 'halaman depan') + ' Ruang islami.co. Email ini dikirim otomatis.</p></div>';
+        kirimEmail({ to: th.from.email, subject: 'Balasan hotline Ruang islami.co', html }).then(() => console.log('[hotline] balasan dikirim ke ' + th.from.email), e => console.error('[hotline] email gagal: ' + e.message));
+      }
+      return { ok: true };
+    }
+
+    /* Peserta mengubah profilnya sendiri (nama, WhatsApp, email). Dikenali dari id + kode peserta. */
+    case 'updateProfil': {
+      const code = String(p.code || '').trim().toUpperCase();
+      const ps = (db.participants || []).find(x => x.id === p.id && String(x.code || '').toUpperCase() === code);
+      if (!ps || !code) return { ok: false, error: 'Peserta tidak dikenali. Silakan masuk ulang.' };
+      const name = String(p.name || '').trim().slice(0, 120);
+      const phone = String(p.phone || '').trim().slice(0, 30);
+      const email = String(p.email || '').trim().toLowerCase().slice(0, 160);
+      const hp = phone.replace(/[^0-9]/g, '');
+      if (!name) return { ok: false, error: 'Nama lengkap wajib diisi.' };
+      if (hp.length < 9 || hp.length > 15) return { ok: false, error: 'Nomor WhatsApp wajib diisi dengan benar.' };
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Email wajib diisi dengan benar.' };
+      const dipakai = db.participants.some(x => x.id !== ps.id && String(x.email || '').toLowerCase() === email);
+      if (dipakai) return { ok: false, error: 'Email ini sudah dipakai peserta lain di event ini.' };
+      ps.name = name; ps.phone = phone; ps.email = email; ps.profilAt = new Date().toISOString();
+      touch();
+      console.log('[profil] ' + ps.code + ' memperbarui profil');
+      return { ok: true, data: { name: ps.name, phone: ps.phone, email: ps.email, profilAt: ps.profilAt } };
     }
 
     /* Mode bertahap: peserta menandai sesi selesai agar sesi berikutnya terbuka. */
@@ -2079,6 +2205,8 @@ function handleAction(p) {
           const o = petaLama.get(x.id); if (!o) return;
           ['paidAt', 'ticketSentAt', 'ticketSentBy', 'waSentAt', 'registeredAt'].forEach(k => { if (o[k] && !x[k]) x[k] = o[k]; });
           if (o.status === 'aktif' && x.status === 'menunggu') x.status = 'aktif';
+          /* Profil yang baru diubah peserta sendiri tidak tertimpa salinan admin yang lebih lama. */
+          if (o.profilAt && o.profilAt !== x.profilAt) ['name', 'phone', 'email', 'profilAt'].forEach(k => { x[k] = o[k]; });
         });
         db.participants = masuk.filter(x => !hapus.has(x.id)).concat(dipertahankan);
       }
