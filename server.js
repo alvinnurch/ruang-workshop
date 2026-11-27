@@ -331,7 +331,9 @@ function metaPublik() {
       narsumFoto: d.narsumFoto && Object.keys(d.narsumFoto).length ? d.narsumFoto : undefined,
       pesertaLunas: (d.participants || []).filter(x => x.status !== 'menunggu' && (x.paidAt || x.paidBy)).length,
       pesertaAntre: (d.pendaftar || []).length + (d.participants || []).filter(x => x.status === 'menunggu').length,
-      programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' }))
+      programs: (Array.isArray(d.programs) ? d.programs : []).map(p => ({ title: p.title || '', jenis: p.jenis || '' })),
+      /* Tanda thumbnail pratinjau (WhatsApp/medsos) yang sudah dibuat untuk flyer saat ini. */
+      ogSig: ((store.ogImg || {})[m.id] || {}).sig || ''
     });
   });
 }
@@ -794,9 +796,18 @@ function wsUnggulan() {
   return terbit.filter(m => m.unggulan)[0] || terbit[0] || null;
 }
 /* Sumber gambar pratinjau: flyer event → ilustrasi beranda → logo platform. */
+function tandaGambar(src) { src = String(src || ''); return src ? src.length + ':' + src.slice(0, 40) + ':' + src.slice(-40) : ''; }
+/* Thumbnail ringan (1200×630 JPEG) yang dibuat dasbor admin dari flyer — dipakai bila masih cocok dengan flyer saat ini. */
+function thumbOg(kunci) {
+  const m = (store.meta || []).filter(x => x.id === kunci)[0];
+  const t = (store.ogImg || {})[kunci];
+  return m && t && t.data && t.sig === tandaGambar(m.flyer) ? t.data : '';
+}
 function gambarOg(kunci) {
   /* Beranda: kartu khusus yang meniru bagian teratas beranda, bukan flyer event. */
   if (kunci === 'home') return store.ogHome || 'assets/og-beranda.jpg';
+  const tipis = thumbOg(kunci);
+  if (tipis) return tipis;
   const m = (store.meta || []).filter(x => x.id === kunci)[0];
   return (m && m.flyer) || (m && m.partnerLogo) || store.hero || 'assets/ruang-logo.png';
 }
@@ -834,7 +845,9 @@ function kirimIndexOg(req, res, slug) {
   const desk = m
     ? (String(m.ringkasan || m.subtitle || '').trim() || [m.dateLabel, m.place, m.partnerName].filter(Boolean).join(' · ') || OG_DESK)
     : OG_DESK;
-  const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + version;
+  const tipis = m ? thumbOg(m.id) : '';
+  const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + (m ? (tandaGambar(m.flyer).length + '-' + version) : version);
+  const ukuran = !m ? [1200, 630, 'image/jpeg'] : tipis ? [1200, 630, 'image/jpeg'] : null;
   const alamat = asal + (m ? '/' + slug : '/');
   const meta = [
     '<base href="/">',
@@ -844,6 +857,9 @@ function kirimIndexOg(req, res, slug) {
     '<meta property="og:title" content="' + esc(judul) + '">',
     '<meta property="og:description" content="' + esc(String(desk || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) + '">',
     '<meta property="og:image" content="' + esc(gambar) + '">',
+    gambar.indexOf('https://') === 0 ? '<meta property="og:image:secure_url" content="' + esc(gambar) + '">' : '',
+    ukuran ? '<meta property="og:image:width" content="' + ukuran[0] + '">\n<meta property="og:image:height" content="' + ukuran[1] + '">\n<meta property="og:image:type" content="' + ukuran[2] + '">' : '',
+    '<meta property="og:image:alt" content="' + esc(judul) + '">',
     '<meta property="og:url" content="' + esc(alamat) + '">',
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="twitter:title" content="' + esc(judul) + '">',
@@ -851,7 +867,7 @@ function kirimIndexOg(req, res, slug) {
     '<meta name="twitter:image" content="' + esc(gambar) + '">',
     /* Alamat /workshop/<slug> diubah ke rute halaman sebelum aplikasi membacanya. */
     m ? '<script>if(!location.hash)history.replaceState(null,"","/' + slug + '#/workshop/' + slug + '");</script>' : ''
-  ].join('\n');
+  ].filter(Boolean).join('\n');
   let html;
   try { html = bacaIndex(); } catch (e) { res.writeHead(500); return res.end('index.html tidak ditemukan'); }
   html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(judul) + '</title>');
@@ -863,7 +879,9 @@ function kirimIndexOg(req, res, slug) {
       footer: Array.isArray(store.footer) ? store.footer : null, version
     };
     const js = JSON.stringify(boot).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-    html = html.replace(/<head([^>]*)>/i, (_, attr) => '<head' + attr + '>\n<script>window.__RUANG_BOOT=' + js + ';</scr' + 'ipt>');
+    /* Diletakkan di akhir <head>: data ini bisa berukuran megabita (flyer), sedangkan perayap WhatsApp/Facebook
+       hanya membaca bagian awal halaman — tag pratinjau harus berada di depan. */
+    html = html.replace(/<\/head>/i, () => '<script>window.__RUANG_BOOT=' + js + ';</scr' + 'ipt>\n</head>');
   } catch (e) { console.error('[boot] gagal menyisipkan data awal:', e.message); }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
   res.end(html);
@@ -1148,11 +1166,20 @@ function handleAction(p) {
     /* Pengumuman untuk peserta: langsung tersimpan. */
     case 'setPengumuman': {
       if (!siapa || !BOLEH_JALAN[siapa.role]) return { ok: false, error: 'Hanya panitia yang boleh menerbitkan pengumuman.' };
+      /* Gambar pengumuman: tautan luar, gambar pustaka media (/media/…), atau unggahan langsung
+         (data:image/…) yang disimpan dulu sebagai berkas media agar data peserta tetap ringan. */
+      const gambarAnn = a => {
+        const g = String(a.img || '').trim();
+        if (/^https?:\/\//i.test(g)) return g.slice(0, 800);
+        if (/^\/media\/[a-f0-9]{20}\.(png|jpg|webp|gif)$/.test(g)) return g;
+        if (/^data:image\//i.test(g)) { const out = simpanMedia(g, 'Pengumuman', siapa, wid); return out.ok ? out.data.url : ''; }
+        return '';
+      };
       db.pengumuman = (Array.isArray(p.list) ? p.list : []).slice(0, 30).map(a => ({
         id: String(a.id || ''), text: String(a.text || '').slice(0, 2000),
         url: /^https?:\/\//i.test(String(a.url || '')) ? String(a.url).slice(0, 600) : '',
         urlLabel: String(a.urlLabel || '').slice(0, 60),
-        img: /^https?:\/\//i.test(String(a.img || '')) ? String(a.img).slice(0, 800) : '',
+        img: gambarAnn(a),
         at: Number(a.at) || Date.now(), by: String(a.by || 'Panitia').slice(0, 60)
       }));
       touch();
@@ -1713,6 +1740,23 @@ function handleAction(p) {
 
     case 'listWorkshops':
       return { ok: true, data: { meta: metaPublik() } };
+
+    /* Thumbnail pratinjau tautan, dibuat di peramban admin dari flyer event. */
+    case 'setOgImg': {
+      if (!siapa) return { ok: false, error: 'Silakan masuk sebagai admin.' };
+      const m = store.meta.find(x => x.id === p.id);
+      if (!m) return { ok: false, error: 'Event tidak ditemukan.' };
+      const milik = siapa.superadmin ? null : ((siapa.wsIds && siapa.wsIds.length) ? siapa.wsIds : [siapa.wsId]);
+      if (milik && milik.indexOf(m.id) < 0) return { ok: false, error: 'Bukan event Anda.' };
+      const data = String(p.data || '');
+      if (!/^data:image\/jpeg;base64,/.test(data) || data.length > 700000) return { ok: false, error: 'Thumbnail tidak sah.' };
+      if (String(p.sig || '') !== tandaGambar(m.flyer)) return { ok: false, error: 'Flyer sudah berubah.' };
+      store.ogImg = store.ogImg || {};
+      store.ogImg[m.id] = { sig: p.sig, data, at: new Date().toISOString() };
+      persist();
+      console.log('[og] thumbnail pratinjau diperbarui: ' + (m.title || m.id) + ' (' + Math.round(data.length * 0.75 / 1024) + ' KB)');
+      return { ok: true };
+    }
 
     /* Simpan sebagian: hanya kolom yang berubah, per event. */
     case 'patchWorkshops': {
