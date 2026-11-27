@@ -701,22 +701,26 @@
           </sc-if>
           <sc-if value="{{ regForm }}" hint-placeholder-val="{{ true }}">
             <div style="display:grid;gap:14px">
+              <div role="note" style="display:flex;gap:11px;align-items:flex-start;background:#FFF7EE;border:1px solid #EAD9C6;border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.55;color:#4A3F46">
+                <span aria-hidden="true" style="flex:none;width:22px;height:22px;border-radius:50%;background:#A5121C;color:#FFF;display:grid;place-items:center;font-weight:800;font-size:12px;margin-top:1px">i</span>
+                <span style="min-width:0;text-wrap:pretty"><b style="color:#1B1714">Semua data wajib diisi.</b> Nama dan instansi akan dicetak di sertifikat, jadi tulis lengkap dan benar, termasuk gelar bila ingin dicantumkan. Nomor HP (WhatsApp) dan email dipakai untuk mengirim tiket, informasi sesi, dan perubahan jadwal.</span>
+              </div>
               <label style="display:grid;gap:6px">
-                <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Nama lengkap</span>
-                <input value="{{ regName }}" onChange="{{ onRegName }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Nama lengkap *</span>
+                <input value="{{ regName }}" onChange="{{ onRegName }}" required autocomplete="name" placeholder="Sesuai yang akan tercetak di sertifikat" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
               </label>
               <label style="display:grid;gap:6px">
-                <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Instansi / lembaga</span>
-                <input value="{{ regOrg }}" onChange="{{ onRegOrg }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Instansi / lembaga *</span>
+                <input value="{{ regOrg }}" onChange="{{ onRegOrg }}" required autocomplete="organization" placeholder="Juga tercetak di sertifikat" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
               </label>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">
                 <label style="display:grid;gap:6px">
-                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">No HP</span>
-                  <input value="{{ regPhone }}" onChange="{{ onRegPhone }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">No HP (WhatsApp) *</span>
+                  <input type="tel" inputmode="tel" autocomplete="tel" required value="{{ regPhone }}" onChange="{{ onRegPhone }}" placeholder="08…" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
                 <label style="display:grid;gap:6px">
-                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Email</span>
-                  <input value="{{ regEmail }}" onChange="{{ onRegEmail }}" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
+                  <span style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#5C534B">Email *</span>
+                  <input type="email" inputmode="email" autocomplete="email" required value="{{ regEmail }}" onChange="{{ onRegEmail }}" placeholder="nama@contoh.id" style="border:1px solid #E6DCD0;border-radius:11px;padding:12px 14px;font-size:15px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
                 </label>
               </div>
               <sc-if value="{{ regHybrid }}" hint-placeholder-val="{{ false }}">
@@ -4860,6 +4864,32 @@
                 <input value="{{ pplCari }}" onChange="{{ onPplCari }}" placeholder="Cari nama, kode, instansi…" style="flex:1;min-width:0;border:1px solid #E6DCD0;border-radius:12px;padding:10px 14px;font-size:13.5px;background:#FFF;outline:none;font-family:inherit" style-focus="border-color:#A5121C" />
                 <span style="font-size:12px;color:#8C8078;white-space:nowrap">{{ pplCount }}</span>
               </div>
+              <div role="group" aria-label="Tampilan daftar peserta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <span style="font-size:12px;color:#8C8078;font-weight:600;margin-right:2px">Tampilan</span>
+                <sc-for list="{{ pplViewBtns }}" as="b" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ b.go }}" aria-pressed="{{ b.on }}" style="{{ b.style }}">{{ b.label }}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ pplIsTable }}" hint-placeholder-val="{{ false }}">
+                <div style="overflow-x:auto;background:#FFF;border:1px solid #EFE5DA;border-radius:14px;-webkit-overflow-scrolling:touch">
+                  <div style="{{ pplTblInner }}">
+                    <div style="{{ pplTblHeadStyle }}">
+                      <sc-for list="{{ pplTHead }}" as="h" hint-placeholder-count="8"><span style="padding:11px 10px;min-width:0">{{ h }}</span></sc-for>
+                      <span></span>
+                    </div>
+                    <sc-for list="{{ pplRows }}" as="r" hint-placeholder-count="6">
+                      <div style="{{ r.rowStyle }}">
+                        <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="8"><span style="{{ c.style }}">{{ c.v }}</span></sc-for>
+                        <span style="padding:7px 10px 7px 0;display:flex;justify-content:flex-end"><button type="button" onClick="{{ r.pick }}" style="border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#F3EAE0;color:#3B342E" style-hover="background:#EBDFD2">Ubah</button></span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <sc-if value="{{ pplEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:24px;text-align:center;font-size:13px;color:#8C8078;background:#FFF;border-radius:14px">Tidak ada peserta yang cocok.</div>
+                </sc-if>
+              </sc-if>
+              <sc-if value="{{ pplIsCards }}" hint-placeholder-val="{{ true }}">
               <div style="{{ pplListStyle }}">
                 <sc-for list="{{ pplList }}" as="p" hint-placeholder-count="6">
                   <div onClick="{{ p.pick }}" style="{{ p.cardStyle }}">
@@ -4876,6 +4906,7 @@
                   <div style="padding:24px;text-align:center;font-size:13px;color:#8C8078;background:#FFF;border-radius:14px">Tidak ada peserta yang cocok.</div>
                 </sc-if>
               </div>
+              </sc-if>
             </div>
             <sc-if value="{{ pplHasSel }}" hint-placeholder-val="{{ false }}">
               <div onClick="{{ pplPopClose }}" style="position:fixed;inset:0;z-index:120;background:rgba(27,23,20,.42);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1B1714">
@@ -8790,7 +8821,7 @@ class Component extends DCLogic {
       const pilihan = q.type === 'choice' ? String(q.options || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean) : [];
       const isChoice = q.type === 'choice' && pilihan.length > 0;
       return {
-        label: q.label + (q.required ? ' *' : ''), value: jwb[q.id] || '', hint: q.required ? 'Wajib diisi' : 'Opsional',
+        label: q.label + ' *', value: jwb[q.id] || '', hint: 'Wajib diisi',
         isText: !isChoice, isChoice,
         onInput: e => { const t = e.target.value; this.setState(x => ({ regAns: Object.assign({}, x.regAns, { [q.id]: t }), regErr: '' })); },
         opts: pilihan.map(o => {
@@ -8834,11 +8865,19 @@ class Component extends DCLogic {
     v.regGoLogin = () => this.setState({ role: 'login', formCode: st.regCode, regCode: '' });
     v.doRegister = async () => {
       const nama = String(st.regName || '').trim();
-      if (!nama) return this.setState({ regErr: 'Nama belum diisi.' });
+      /* Semua data pendaftaran wajib: dipakai untuk sertifikat, tiket, dan kabar sesi/jadwal. */
+      if (!nama) return this.setState({ regErr: 'Nama lengkap wajib diisi.' });
+      if (!String(st.regOrg || '').trim()) return this.setState({ regErr: 'Instansi / lembaga wajib diisi.' });
+      const hp = String(st.regPhone || '').replace(/[^0-9]/g, '');
+      if (!hp) return this.setState({ regErr: 'Nomor HP (WhatsApp) wajib diisi.' });
+      if (hp.length < 9 || hp.length > 15) return this.setState({ regErr: 'Nomor HP belum benar. Tulis 9–15 angka, mis. 0812xxxxxxx.' });
+      const em = String(st.regEmail || '').trim();
+      if (!em) return this.setState({ regErr: 'Email wajib diisi.' });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return this.setState({ regErr: 'Alamat email belum benar.' });
       const kq0 = this.kuotaInfo(wsAktif);
       if (kq0.penuh) return this.setState({ regErr: 'Kuota peserta sudah penuh.' });
       if (kq0.hybrid && !st.regJalur) return this.setState({ regErr: 'Pilih ikut secara luring atau daring.' });
-      const kurang = pertanyaan.find(q => q.required && !String((st.regAns || {})[q.id] || '').trim());
+      const kurang = pertanyaan.find(q => !String((st.regAns || {})[q.id] || '').trim());
       if (kurang) return this.setState({ regErr: '“' + kurang.label + '” wajib diisi.' });
       if (donasiOn) {
         if (st.regDonasi == null) return this.setState({ regErr: wsAktif.donasiOpsional ? 'Pilih nominal donasi, atau pilih Tanpa donasi.' : 'Pilih atau tulis nominal donasi dulu.' });
@@ -11840,6 +11879,45 @@ class Component extends DCLogic {
       const wide = !st.narrow;
       v.pplGridStyle = { display: 'grid', gap: '12px' };
       v.pplListStyle = { display: 'grid', gridTemplateColumns: wide ? 'repeat(auto-fill,minmax(min(100%,320px),1fr))' : 'minmax(0,1fr)', gap: '10px', alignContent: 'start' };
+      {
+        /* Tampilan tabel: semua data peserta dalam daftar menurun. Pilihan diingat di perangkat ini. */
+        let mode = st.pplView;
+        if (!mode) { try { mode = localStorage.getItem('ruang_ppl_view') || 'kartu'; } catch (e) { mode = 'kartu'; } }
+        const pilih = m => () => { try { localStorage.setItem('ruang_ppl_view', m); } catch (e) {} this.setState({ pplView: m }); };
+        v.pplIsTable = mode === 'tabel'; v.pplIsCards = !v.pplIsTable;
+        v.pplViewBtns = [['kartu', '▦ Kartu'], ['tabel', '☰ Tabel']].map(([id, label]) => {
+          const on = mode === id;
+          return { label, on: on ? 'true' : 'false', go: pilih(id), style: { border: '1px solid ' + (on ? '#A5121C' : '#E6DCD0'), background: on ? '#A5121C' : '#FFF', color: on ? '#FFF' : '#5C534B', borderRadius: '100px', padding: '6px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' } };
+        });
+        const adaGrup = db.participants.some(p => p.group);
+        const tgl = t => { if (!t) return '—'; const d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }); };
+        const kol = [['No', '44px'], ['Nama', 'minmax(150px,1.3fr)'], ['Kode', '96px'], ['Instansi', 'minmax(150px,1.3fr)'], ['No. HP', '130px'], ['Email', 'minmax(170px,1.3fr)']]
+          .concat(adaGrup ? [['Kelompok', '110px']] : [])
+          .concat([['Ikut', '100px'], ['Terdaftar', '140px']])
+          .concat(qs.map(x => [x.label, 'minmax(150px,1fr)']));
+        const cols = kol.map(k => k[1]).join(' ') + ' 74px';
+        const minW = kol.reduce((a, k) => a + (parseInt(k[1].replace(/^minmax\(/, ''), 10) || 0), 0) + 74;
+        v.pplTHead = kol.map(k => k[0]);
+        v.pplTblInner = { minWidth: minW + 'px' };
+        v.pplTblHeadStyle = { display: 'grid', gridTemplateColumns: cols, alignItems: 'end', background: '#FBF6F0', borderBottom: '1px solid #EFE5DA', fontSize: '11px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#7A6F66', position: 'sticky', top: 0 };
+        const sel = { padding: '10px', minWidth: 0, overflowWrap: 'anywhere', lineHeight: 1.4 };
+        v.pplRows = list.map(({ p, r, i }, n) => {
+          const d = deco({ p, r, i });
+          const cells = [
+            { v: String(n + 1), style: Object.assign({}, sel, { color: '#8C8078' }) },
+            { v: p.name || 'Tanpa nama', style: Object.assign({}, sel, { fontWeight: 700, color: '#1B1714' }) },
+            { v: String(p.code || '—').toUpperCase(), style: Object.assign({}, sel, { fontFamily: 'ui-monospace,Menlo,monospace', fontSize: '12.5px' }) },
+            { v: p.org || '—', style: sel },
+            { v: p.phone || '—', style: sel },
+            { v: p.email || '—', style: sel }
+          ].concat(adaGrup ? [{ v: p.group || '—', style: sel }] : [])
+           .concat([
+            { v: d.chip, style: Object.assign({}, sel, { fontWeight: 700, fontSize: '12px', color: d.chipStyle.color }) },
+            { v: tgl(p.registeredAt || p.paidAt), style: Object.assign({}, sel, { fontSize: '12px', color: '#7A6F66' }) }
+          ]).concat(qs.map(x => ({ v: String((p.extra || {})[x.id] || '—'), style: sel })));
+          return { cells, pick: d.pick, rowStyle: { display: 'grid', gridTemplateColumns: cols, alignItems: 'start', fontSize: '13px', color: '#3B342E', background: n % 2 ? '#FFFCF8' : '#FFF', borderBottom: '1px solid #F3EAE0' } };
+        });
+      }
       v.pplDetailStyle = { width: '100%', maxWidth: '620px', boxSizing: 'border-box', background: '#FFF', borderRadius: '22px', padding: st.narrow ? '20px 18px' : '24px', boxShadow: '0 40px 90px -30px rgba(60,20,15,.6)' };
       v.pplPopClose = () => this.setState({ pplPop: false });
       v.pplPopStop = ev => ev.stopPropagation();
