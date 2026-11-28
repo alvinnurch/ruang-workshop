@@ -796,12 +796,19 @@ function wsUnggulan() {
   return terbit.filter(m => m.unggulan)[0] || terbit[0] || null;
 }
 /* Sumber gambar pratinjau: flyer event → ilustrasi beranda → logo platform. */
+/* Tanda kartu pratinjau — harus sama persis dengan tandaOg() di halaman. */
+function tandaOg(m) {
+  const f = String((m && m.flyer) || '');
+  const isi = ['k3', f.length, f.slice(0, 40), f.slice(-40), m.title, m.dateLabel, m.place, m.format, m.jenis, m.price, m.donasi ? 1 : 0, m.partnerName].map(x => String(x == null ? '' : x)).join('|');
+  let h = 5381; for (let i = 0; i < isi.length; i++) h = ((h * 33) ^ isi.charCodeAt(i)) >>> 0;
+  return 'k3-' + h.toString(36) + '-' + isi.length;
+}
 function tandaGambar(src) { src = String(src || ''); return src ? src.length + ':' + src.slice(0, 40) + ':' + src.slice(-40) : ''; }
 /* Thumbnail ringan (1200×630 JPEG) yang dibuat dasbor admin dari flyer — dipakai bila masih cocok dengan flyer saat ini. */
 function thumbOg(kunci) {
   const m = (store.meta || []).filter(x => x.id === kunci)[0];
   const t = (store.ogImg || {})[kunci];
-  return m && t && t.data && t.sig === tandaGambar(m.flyer) ? t.data : '';
+  return m && t && t.data && t.sig === tandaOg(m) ? t.data : '';
 }
 function gambarOg(kunci) {
   /* Beranda: kartu khusus yang meniru bagian teratas beranda, bukan flyer event. */
@@ -846,7 +853,7 @@ function kirimIndexOg(req, res, slug) {
     ? (String(m.ringkasan || m.subtitle || '').trim() || [m.dateLabel, m.place, m.partnerName].filter(Boolean).join(' · ') || OG_DESK)
     : OG_DESK;
   const tipis = m ? thumbOg(m.id) : '';
-  const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + (m ? (tandaGambar(m.flyer).length + '-' + version) : version);
+  const gambar = asal + '/og/' + (m ? 'ws/' + encodeURIComponent(m.id) : 'home') + '.img?v=' + (m ? (tipis ? tandaOg(m) : 'f' + tandaGambar(m.flyer).length) + '-' + version : version);
   const ukuran = !m ? [1200, 630, 'image/jpeg'] : tipis ? [1200, 630, 'image/jpeg'] : null;
   const alamat = asal + (m ? '/' + slug : '/');
   const meta = [
@@ -1750,7 +1757,7 @@ function handleAction(p) {
       if (milik && milik.indexOf(m.id) < 0) return { ok: false, error: 'Bukan event Anda.' };
       const data = String(p.data || '');
       if (!/^data:image\/jpeg;base64,/.test(data) || data.length > 700000) return { ok: false, error: 'Thumbnail tidak sah.' };
-      if (String(p.sig || '') !== tandaGambar(m.flyer)) return { ok: false, error: 'Flyer sudah berubah.' };
+      if (String(p.sig || '') !== tandaOg(m)) return { ok: false, error: 'Data event sudah berubah.' };
       store.ogImg = store.ogImg || {};
       store.ogImg[m.id] = { sig: p.sig, data, at: new Date().toISOString() };
       persist();
