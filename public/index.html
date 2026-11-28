@@ -2936,6 +2936,9 @@
                       </div>
                       <span style="{{ b.stateStyle }}">{{ b.stateLabel }}</span>
                       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                        <sc-if value="{{ b.adaZoom }}" hint-placeholder-val="{{ false }}">
+                          <a href="{{ b.zoomHref }}" target="_blank" rel="noopener" title="{{ b.zoomTip }}" style="{{ b.zoomBtnStyle }}">Buka Zoom ↗</a>
+                        </sc-if>
                         <button onClick="{{ b.toggleOpen }}" style="{{ b.openBtnStyle }}">{{ b.openLabel }}</button>
                         <button onClick="{{ b.showOnScreen }}" style="{{ b.showStyle }}">{{ b.showLabel }}</button>
                         <sc-if value="{{ b.canRun }}" hint-placeholder-val="{{ false }}">
@@ -5487,10 +5490,10 @@ class Component extends DCLogic {
   }
   sesiPeserta() {
     const st = this.state, db = st.db || {};
-    /* Sesi yang sudah ditandai selesai: dibuka ulang (bahan bacaan, video, Zoom/rekaman) bagi peserta yang mengikutinya. */
+    /* Sesi yang sudah ditandai selesai: dibuka ulang (bahan bacaan, video, Zoom/rekaman) bagi semua peserta. */
     if (st.pSesiUlas) {
       const s = (db.sessions || []).find(x => x.id === st.pSesiUlas);
-      if (s && s.selesai && this.ikutSesi(db, s.id, st.userId))
+      if (s && s.selesai)
         return Object.assign({}, s, { ulas: true, blocks: (s.blocks || []).map(b => Object.assign({}, b, { open: !!b.enabled && ['ppt', 'video', 'zoom'].indexOf(b.type) >= 0 })) });
     }
     if (db.allOpen && db.bertahap) {
@@ -7968,7 +7971,7 @@ class Component extends DCLogic {
       const dibuka = mandiri || (idsAktif.indexOf(s0.id) >= 0 && !s0.selesai);
       if (!dibuka) {
         const usai = !!s0.selesai;
-        const bisaUlas = usai && this.ikutSesi(db, s0.id, st.userId);
+        const bisaUlas = usai; /* Sesi selesai tetap bisa dibuka semua peserta */
         return {
           num: usai ? '✓' : String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi') + (bisaUlas ? ' — selesai · buka ulang bahannya' : usai ? ' — sudah selesai' : ' — belum dibuka panitia'),
           jadwal: !usai, usai, ulas: bisaUlas, tutup: !bisaUlas,
@@ -11426,9 +11429,9 @@ class Component extends DCLogic {
         else { d.allOpen = false; d.bertahap = false; }
       }, null, true);
       /* Tombol Selesai tersedia di semua mode: di mode bertahap membuka sesi berikutnya; di mode lain menandai sesi
-         usai — peserta yang mengikutinya tetap bisa membuka ulang bahannya. */
+         usai — semua peserta tetap bisa membuka ulang bahannya. */
       v.showSesiSelesai = true;
-      v.sesiSelesaiTitle = db.allOpen && db.bertahap ? 'Membuka sesi berikutnya untuk semua peserta' : 'Sesi tampil “Selesai” di dasbor peserta; peserta yang mengikutinya bisa membuka ulang bahannya';
+      v.sesiSelesaiTitle = db.allOpen && db.bertahap ? 'Membuka sesi berikutnya untuk semua peserta' : 'Sesi tampil “Selesai” di dasbor peserta; semua peserta tetap bisa membuka bahannya';
       v.sesiSelesaiLabel = cur.selesai ? 'Sesi ditutup ✓ (buka lagi)' : 'Tandai sesi ini selesai';
       v.sesiSelesaiStyle = { background: cur.selesai ? '#EEF5E9' : '#FFF', border: '1px solid ' + (cur.selesai ? '#CFE2C2' : '#E0D8CE'), color: cur.selesai ? '#2C4D18' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' };
       v.toggleSesiSelesai = () => this.save(d => { const t = d.sessions.find(x => x.id === cur.id); t.selesai = !t.selesai; }, null, true);
@@ -11461,13 +11464,18 @@ class Component extends DCLogic {
           : b.type === 'wordcloud' ? new Set(R.words.filter(w => w.blockId === b.id).map(w => w.by)).size : null;
         const meta = b.type === 'checkin' ? 'Kode barcode ' + (b.token || '—') + ' · ' + filled + ' dari ' + db.participants.length + ' peserta hadir'
           : b.type === 'ppt' ? (b.fileName || 'Belum ada berkas') + (String(b.presenter || '').trim() ? ' · ' + b.presenter : '')
-          : b.type === 'zoom' ? (b.meetingId ? 'ID ' + b.meetingId : 'Tautan belum diisi')
+          : b.type === 'zoom' ? (b.meetingId ? 'ID ' + b.meetingId : b.url ? 'Tautan terpasang' : 'Tautan belum diisi') + (b.passcode ? ' · passcode ' + b.passcode : '')
           : b.type === 'video' ? (this.ytId(b.url) ? 'YouTube · ' + this.ytId(b.url) : 'Tautan YouTube belum diisi') + (String(b.presenter || '').trim() ? ' · ' + b.presenter : '')
           : b.type === 'quiz' ? (b.questions || []).length + ' soal · ' + (b.quizKind === 'pre' ? 'pre test' : b.quizKind === 'post' ? 'post test' : 'mandiri') + ' · ' + filled + ' peserta mengisi · ' + (b.allowRetake ? 'boleh ulang' : 'sekali kerjakan')
           : b.type === 'form' ? (b.fields || []).length + ' isian · ' + filled + ' peserta mengisi'
           : filled + ' peserta mengisi';
         const row = {
           kind: this.KINDS[b.type], title: b.title, desc: b.desc || '', descText: this.polos(b.desc), presenter: b.presenter || '', meta,
+          /* Tautan Zoom bisa dibuka langsung dari daftar materi, tanpa menyalinnya dari form Ubah. */
+          adaZoom: b.type === 'zoom' && /^https?:\/\//i.test(String(b.url || '').trim()),
+          zoomHref: b.type === 'zoom' && /^https?:\/\//i.test(String(b.url || '').trim()) ? String(b.url).trim() : '#',
+          zoomTip: 'Buka ruang Zoom di tab baru' + (b.passcode ? ' · passcode ' + b.passcode : ''),
+          zoomBtnStyle: { display: 'inline-flex', alignItems: 'center', background: '#2D8CFF', color: '#FFF', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' },
           order: String(bi + 1).padStart(2, '0'),
           moveUp: () => move(bi, bi - 1), moveDown: () => move(bi, bi + 1),
           upStyle: navStyle(bi > 0), downStyle: navStyle(bi < arr.length - 1),
