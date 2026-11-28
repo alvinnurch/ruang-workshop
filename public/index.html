@@ -225,15 +225,16 @@
                 <span style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.9">{{ w.kategori }}</span>
               </button>
               <div style="padding:20px;display:flex;flex-direction:column;gap:13px;flex:1">
-                <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17.5px;line-height:1.3;margin:0;font-weight:700;color:#3B3238;text-wrap:balance">{{ w.title }}</h3>
-                <div style="display:flex;gap:10px;align-items:center">
+                <!-- Judul dibatasi dua baris (selengkapnya di tooltip & halaman profil) supaya kartu sejajar. -->
+                <h3 onClick="{{ w.open }}" title="{{ w.title }}" style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:17.5px;line-height:1.3;margin:0;font-weight:700;color:#3B3238;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;min-height:2.6em;cursor:pointer;overflow-wrap:anywhere">{{ w.title }}</h3>
+                <div style="display:flex;gap:10px;align-items:center;min-height:40px">
                   <div role="img" aria-label="{{ w.partner }}" style="{{ w.logoStyle }}"></div>
                   <span style="{{ w.inisialStyle }}">{{ w.inisial }}</span>
-                  <span style="font-size:13px;color:#6B6168;line-height:1.4">{{ w.partner }}</span>
+                  <span title="{{ w.partner }}" style="font-size:13px;color:#6B6168;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-width:0">{{ w.partner }}</span>
                 </div>
                 <div style="display:grid;gap:5px;font-size:12.5px;color:#7A6F76;border-top:1px solid #F3E8DC;padding-top:12px">
-                  <div>{{ w.tanggal }}</div>
-                  <div>{{ w.lokasi }}</div>
+                  <div title="{{ w.tanggal }}" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden">{{ w.tanggal }}</div>
+                  <div title="{{ w.lokasi }}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ w.lokasi }}</div>
                   <sc-if value="{{ w.hasPendaftar }}" hint-placeholder-val="{{ false }}">
                     <div style="display:flex;gap:8px;align-items:center;margin-top:3px">
                       <div style="flex:1;height:5px;background:#F3E8DC;border-radius:100px;overflow:hidden"><div style="{{ w.pendaftarBar }}"></div></div>
@@ -4261,8 +4262,9 @@
           <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
             <div style="flex:1 1 380px;min-width:0;background:#FFF;border:1px solid #F0E8DF;box-shadow:0 18px 36px -30px rgba(120,40,30,.4);border-radius:16px;padding:20px 22px">
               <div style="{{ certPreviewStyle }}">
-                <div onMouseDown="{{ certGeserNama }}" onTouchStart="{{ certGeserNama }}" title="Seret untuk memindahkan nama" style="{{ certNamePosStyle }}">{{ certContohNama }}</div>
+                <div onMouseDown="{{ certGeserNama }}" onTouchStart="{{ certGeserNama }}" title="Seret untuk memindahkan nama" style="{{ certNamePosStyle }}">{{ certContohNama }}<span onMouseDown="{{ certTarikNamaKiri }}" onTouchStart="{{ certTarikNamaKiri }}" title="Tarik untuk mengubah lebar" style="{{ certPeganganKiri }}"></span><span onMouseDown="{{ certTarikNamaKanan }}" onTouchStart="{{ certTarikNamaKanan }}" title="Tarik untuk mengubah lebar" style="{{ certPeganganKanan }}"></span></div>
                 <div onMouseDown="{{ certGeserMeta }}" onTouchStart="{{ certGeserMeta }}" title="Seret untuk memindahkan keterangan" style="{{ certMetaPosStyle }}">
+                  <span onMouseDown="{{ certTarikMetaKiri }}" onTouchStart="{{ certTarikMetaKiri }}" title="Tarik untuk mengubah lebar" style="{{ certPeganganKiri }}"></span><span onMouseDown="{{ certTarikMetaKanan }}" onTouchStart="{{ certTarikMetaKanan }}" title="Tarik untuk mengubah lebar" style="{{ certPeganganKanan }}"></span>
                   <sc-for list="{{ certContohRows }}" as="r" hint-placeholder-count="2">
                     <div style="{{ certItemStyle }}">
                       <div style="{{ r.labelStyle }}">{{ r.label }}</div>
@@ -4273,7 +4275,7 @@
                 <div style="{{ certQrPreviewStyle }}"></div>
               </div>
               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;font-size:12px;color:#8C8078;line-height:1.5">
-                <span style="flex:1;min-width:min(100%,220px)">✥ Seret nama atau kotak keterangan langsung di pratinjau untuk mengatur letaknya.</span>
+                <span style="flex:1;min-width:min(100%,220px)">✥ Seret nama atau kotak keterangan untuk memindahkannya. Tarik pegangan merah di sisi kiri/kanan kotak untuk mengatur lebarnya.</span>
                 <button onClick="{{ certPosisiReset }}" style="background:#FFF;border:1px solid #E0D8CE;color:#5C534B;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer">Kembalikan posisi awal</button>
               </div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
@@ -4332,16 +4334,6 @@
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Baris penutup (opsional)</span>
                   <input value="{{ certPenerbit }}" onChange="{{ onCertPenerbit }}" placeholder="mis. Diterbitkan oleh Wahid Foundation & Islamidotco" style="border:1px solid #E6DCD0;border-radius:10px;padding:10px 12px;font-size:14px;background:#FFF;outline:none" style-focus="border-color:#A5121C;background:#FFF" />
-                </label>
-              </div>
-              <div style="display:grid;gap:12px;margin-top:16px;border-top:1px solid #F1EBE3;padding-top:16px">
-                <label style="display:grid;gap:6px">
-                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Posisi nama peserta — {{ certNameY }}% dari atas</span>
-                  <input value="{{ certNameY }}" onChange="{{ onCertNameY }}" type="range" min="5" max="95" step="1" style="width:100%;accent-color:#A5121C" />
-                </label>
-                <label style="display:grid;gap:6px">
-                  <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Posisi keterangan workshop — {{ certMetaY }}% dari atas</span>
-                  <input value="{{ certMetaY }}" onChange="{{ onCertMetaY }}" type="range" min="5" max="95" step="1" style="width:100%;accent-color:#A5121C" />
                 </label>
               </div>
               <sc-if value="{{ certMsg }}" hint-placeholder-val="{{ false }}">
@@ -6343,10 +6335,14 @@ class Component extends DCLogic {
     const kx = jenis === 'nama' ? 'certNameX' : 'certMetaX', ky = jenis === 'nama' ? 'certNameY' : 'certMetaY';
     let x = ws[kx] == null ? xBawaan : Number(ws[kx]);
     let y = ws[ky] == null ? (jenis === 'nama' ? 46 : 62) : Number(ws[ky]);
-    if (geser && geser.jenis === jenis) { x = geser.x; y = geser.y; }
+    const kw = jenis === 'nama' ? 'certNameW' : 'certMetaW';
+    let w = ws[kw] == null || ws[kw] === '' ? null : Number(ws[kw]);
+    if (geser && geser.jenis === jenis) { x = geser.x; y = geser.y; if (geser.w != null) w = geser.w; }
     const tx = rata === 'left' ? '0%' : rata === 'right' ? '-100%' : '-50%';
     const lebar = Math.max(20, rata === 'left' ? 100 - x - 3 : rata === 'right' ? x - 3 : 2 * Math.min(x, 100 - x) - 4);
-    return { x, y, tx, lebar, rata, flex: rata === 'left' ? 'flex-start' : rata === 'right' ? 'flex-end' : 'center' };
+    /* w = lebar kotak teks (% lembar) bila panitia menariknya; kosong = selebar isinya. */
+    const ukuranCss = w ? 'width:' + w + '%;max-width:none' : 'width:max-content;max-width:' + lebar + '%';
+    return { x, y, w, tx, lebar, rata, ukuranCss, flex: rata === 'left' ? 'flex-start' : rata === 'right' ? 'flex-end' : 'center' };
   }
   certBaris(ws, p, field) {
     const c = this.capaianPeserta(p);
@@ -6445,7 +6441,12 @@ class Component extends DCLogic {
       '<style>@page{size:A4 landscape;margin:0}*{box-sizing:border-box}' +
       'html,body{margin:0;padding:0;width:297mm;height:210mm}' +
       '.sheet{position:relative;width:297mm;height:210mm;overflow:hidden;background:#FBF7F1;' +
-      (ws.certTemplate ? 'background-image:url("' + ws.certTemplate + '");background-size:cover;background-position:center' : 'border:2mm solid #A5121C') + '}' +
+      (ws.certTemplate ? '' : 'border:2mm solid #A5121C') + '}' +
+      /* Template dipasang sebagai <img>, bukan latar CSS: latar CSS tidak ikut tercetak bila opsi
+         "Background graphics" di dialog cetak tidak dicentang. */
+      '.sheet .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0}' +
+      '.sheet>*:not(.bg){z-index:1}' +
+      'html,body,.sheet,.p2{-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
       '.hd{position:absolute;top:18mm;left:0;right:0;text-align:center;font-family:"Plus Jakarta Sans",system-ui,sans-serif}' +
       '.hd b{display:block;font-size:20pt;font-weight:800;letter-spacing:-.01em;color:#1B1714}' +
       '.hd i{display:block;font-style:normal;font-size:9pt;letter-spacing:.2em;text-transform:uppercase;color:#7A6F66;margin-top:2mm}' +
@@ -6485,9 +6486,10 @@ class Component extends DCLogic {
       '.p2 .ft{position:absolute;bottom:12mm;left:20mm;right:20mm;display:flex;justify-content:space-between;' +
       'font-size:7pt;color:#8C8078;letter-spacing:.06em;border-top:.25mm solid #E0D8CE;padding-top:3mm}' +
       '</style></head><body><div class="sheet">' +
+      (ws.certTemplate ? '<img class="bg" alt="" src="' + E(/^\//.test(ws.certTemplate) ? location.origin + ws.certTemplate : ws.certTemplate) + '" />' : '') +
       (ws.certTemplate ? '' : '<div class="hd"><i>Sertifikat</i><b>' + E(ws.title || 'Workshop') + '</b></div>') +
-      (() => { const L = this.certLetak(ws, 'nama'); return '<div class="nm" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;width:max-content;max-width:' + L.lebar + '%;padding:0;transform:translate(' + L.tx + ',-50%)">' + E(p.name) + '</div>'; })() +
-      (() => { const L = this.certLetak(ws, 'meta'); return '<div class="mt" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;width:max-content;max-width:' + L.lebar + '%;padding:0;transform:translate(' + L.tx + ',-50%)">' + blokData + '</div>'; })() +
+      (() => { const L = this.certLetak(ws, 'nama'); return '<div class="nm" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;' + L.ukuranCss + ';padding:0;transform:translate(' + L.tx + ',-50%)">' + E(p.name) + '</div>'; })() +
+      (() => { const L = this.certLetak(ws, 'meta'); return '<div class="mt" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;' + L.ukuranCss + ';padding:0;transform:translate(' + L.tx + ',-50%)">' + blokData + '</div>'; })() +
       '<div class="cd">' + E(String(ws.certPenerbit || '').trim() || (p.code ? 'Kode peserta ' + p.code : '')) + '</div>' +
       (qr ? '<div class="qr" style="' + qrPos + '"><img src="' + qr + '" alt="Kode verifikasi" /><span>' + E(p.code || '') + '</span></div>' : '') +
       '</div>' + lembar2 + '</body></html>';
@@ -6502,9 +6504,11 @@ class Component extends DCLogic {
     d.open(); d.write(html); d.close();
     const fire = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { this.setState({ certMsg: 'Peramban menolak membuka dialog cetak.' }); } };
     const siap = () => {
-      const fonts = f.contentWindow.document.fonts;
-      if (fonts && fonts.ready) Promise.race([fonts.ready, new Promise(r => setTimeout(r, 2500))]).then(() => setTimeout(fire, 300));
-      else setTimeout(fire, 800);
+      const doc = f.contentWindow.document;
+      const fonts = doc.fonts;
+      /* Tunggu font dan gambar template benar-benar termuat sebelum dialog cetak dibuka. */
+      const gambar = [...doc.images].map(im => im.complete && im.naturalWidth ? Promise.resolve() : new Promise(r => { im.onload = im.onerror = r; }));
+      Promise.race([Promise.all([fonts && fonts.ready ? fonts.ready : Promise.resolve()].concat(gambar)), new Promise(r => setTimeout(r, 6000))]).then(() => setTimeout(fire, 300));
     };
     if (d.readyState === 'complete') siap(); else f.onload = siap;
     this.setState({ certMsg: 'Sertifikat ' + p.name + ' disiapkan — pilih “Save as PDF” pada dialog cetak.' });
@@ -11038,7 +11042,10 @@ class Component extends DCLogic {
     const gsr = st.certGeser && st.certGeser.ws === curWs.id ? st.certGeser : null;
     const LN = this.certLetak(curWs, 'nama', gsr), LM = this.certLetak(curWs, 'meta', gsr);
     const rataP = LN.rata;
-    const kotakGeser = (L, aktif) => ({ left: L.x + '%', right: 'auto', top: L.y + '%', width: 'max-content', maxWidth: L.lebar + '%', padding: '4px 6px', transform: 'translate(' + L.tx + ',-50%)', pointerEvents: 'auto', cursor: aktif ? 'grabbing' : 'grab', touchAction: 'none', userSelect: 'none', borderRadius: '6px', outline: aktif ? '2px solid #A5121C' : '1.5px dashed rgba(165,18,28,.45)', background: aktif ? 'rgba(255,255,255,.55)' : 'transparent' });
+    const kotakGeser = (L, aktif) => Object.assign({ left: L.x + '%', right: 'auto', top: L.y + '%', padding: 0, transform: 'translate(' + L.tx + ',-50%)', pointerEvents: 'auto', cursor: aktif ? 'grabbing' : 'grab', touchAction: 'none', userSelect: 'none', borderRadius: '3px', outline: aktif ? '2px solid #A5121C' : '1.5px dashed rgba(165,18,28,.45)', outlineOffset: '4px', background: aktif ? 'rgba(255,255,255,.55)' : 'transparent', overflowWrap: 'anywhere' },
+      L.w ? { width: L.w + '%', maxWidth: 'none' } : { width: 'max-content', maxWidth: L.lebar + '%' });
+    v.certPegangan = sisi => ({ position: 'absolute', top: '50%', [sisi]: '-11px', transform: 'translateY(-50%)', width: '10px', height: '60%', minHeight: '16px', maxHeight: '34px', borderRadius: '4px', background: '#A5121C', border: '2px solid #FFF', boxShadow: '0 1px 4px rgba(0,0,0,.25)', cursor: 'ew-resize', touchAction: 'none' });
+    v.certPeganganKiri = v.certPegangan('left'); v.certPeganganKanan = v.certPegangan('right');
     v.certNamePosStyle = Object.assign({}, v.certNamePosStyle, { textAlign: rataP }, kotakGeser(LN, gsr && gsr.jenis === 'nama'));
     v.certMetaPosStyle = Object.assign({}, v.certMetaPosStyle, { alignItems: LM.flex }, kotakGeser(LM, gsr && gsr.jenis === 'meta'));
     v.certItemStyle = { textAlign: rataP };
@@ -11054,6 +11061,7 @@ class Component extends DCLogic {
       if (e.cancelable) e.preventDefault();
       const r = box.getBoundingClientRect();
       const L0 = this.certLetak(curWs, jenis);
+      const w0 = L0.w;
       const titik = ev => (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || ev;
       const sx = titik(e).clientX, sy = titik(e).clientY;
       let akhir = { ws: curWs.id, jenis, x: L0.x, y: L0.y };
@@ -11061,7 +11069,7 @@ class Component extends DCLogic {
       const gerak = ev => {
         if (ev.cancelable && ev.touches) ev.preventDefault();
         const q = titik(ev);
-        akhir = { ws: curWs.id, jenis, x: batas(L0.x + (q.clientX - sx) / r.width * 100), y: batas(L0.y + (q.clientY - sy) / r.height * 100) };
+        akhir = { ws: curWs.id, jenis, x: batas(L0.x + (q.clientX - sx) / r.width * 100), y: batas(L0.y + (q.clientY - sy) / r.height * 100), w: w0 };
         this.setState({ certGeser: akhir });
       };
       const lepas = () => {
@@ -11072,10 +11080,42 @@ class Component extends DCLogic {
       ['mousemove', 'touchmove'].forEach(n => window.addEventListener(n, gerak, { passive: false })); ['mouseup', 'touchend', 'touchcancel'].forEach(n => window.addEventListener(n, lepas));
       this.setState({ certGeser: akhir });
     };
+    /* Tarik tepi kiri/kanan kotak untuk mengatur lebarnya; teks melipat di dalam kotak. */
+    const mulaiTarik = (jenis, sisi) => e => {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
+      const el = e.currentTarget && e.currentTarget.parentElement, box = el && el.parentElement;
+      if (!box) return;
+      const r = box.getBoundingClientRect(), er = el.getBoundingClientRect();
+      const L0 = this.certLetak(curWs, jenis);
+      const kiri0 = (er.left - r.left) / r.width * 100, kanan0 = (er.right - r.left) / r.width * 100;
+      const titik = ev => (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || ev;
+      const sx = titik(e).clientX;
+      const bulat = n => Math.round(n * 10) / 10;
+      let akhir = null;
+      const gerak = ev => {
+        if (ev.cancelable && ev.touches) ev.preventDefault();
+        const d = (titik(ev).clientX - sx) / r.width * 100;
+        let kiri = kiri0, kanan = kanan0;
+        if (sisi === 'kiri') kiri = Math.max(1, Math.min(kanan0 - 8, kiri0 + d)); else kanan = Math.min(99, Math.max(kiri0 + 8, kanan0 + d));
+        const w = kanan - kiri;
+        const x = L0.rata === 'left' ? kiri : L0.rata === 'right' ? kanan : (kiri + kanan) / 2;
+        akhir = { ws: curWs.id, jenis, x: bulat(x), y: L0.y, w: bulat(w) };
+        this.setState({ certGeser: akhir });
+      };
+      const lepas = () => {
+        ['mousemove', 'touchmove'].forEach(n => window.removeEventListener(n, gerak)); ['mouseup', 'touchend', 'touchcancel'].forEach(n => window.removeEventListener(n, lepas));
+        this.setState({ certGeser: null });
+        if (akhir) ubahWs(jenis === 'nama' ? { certNameX: akhir.x, certNameW: akhir.w } : { certMetaX: akhir.x, certMetaW: akhir.w });
+      };
+      ['mousemove', 'touchmove'].forEach(n => window.addEventListener(n, gerak, { passive: false })); ['mouseup', 'touchend', 'touchcancel'].forEach(n => window.addEventListener(n, lepas));
+    };
+    v.certTarikNamaKiri = mulaiTarik('nama', 'kiri'); v.certTarikNamaKanan = mulaiTarik('nama', 'kanan');
+    v.certTarikMetaKiri = mulaiTarik('meta', 'kiri'); v.certTarikMetaKanan = mulaiTarik('meta', 'kanan');
     v.certGeserNama = mulaiGeser('nama');
     v.certGeserMeta = mulaiGeser('meta');
     v.certNameY = Math.round(LN.y); v.certMetaY = Math.round(LM.y);
-    v.certPosisiReset = () => ubahWs({ certNameX: null, certNameY: 46, certMetaX: null, certMetaY: 62, certNameSize: null, certMetaSize: null });
+    v.certPosisiReset = () => ubahWs({ certNameX: null, certNameY: 46, certMetaX: null, certMetaY: 62, certNameW: null, certMetaW: null, certNameSize: null, certMetaSize: null });
     v.certAlignOpts = [['kiri', '⇤ Rata kiri'], ['tengah', '↔ Tengah'], ['kanan', 'Rata kanan ⇥']].map(([id, label]) => {
       const on = (curWs.certAlign || 'tengah') === id;
       /* Ganti perataan: titik jangkar kembali ke posisi bawaan perataan itu. */
