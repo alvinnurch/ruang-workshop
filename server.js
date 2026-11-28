@@ -1029,7 +1029,7 @@ function handleAction(p) {
   const salahWs = !!siapa && !siapa.superadmin && siapa.wsId && siapa.wsId !== wid;
   const namaWs = id => { const m = store.meta.filter(x => x.id === id)[0]; return m ? m.title : id; };
   if (salahWs && /^(putDb|putLive|putWorkshops|reset|markPaid|setAdminPass|zoomCreate|zoomStart|zoomPasscode|zoomRecording)$/.test(String(p.action || ''))) {
-    return { ok: false, error: 'Akun ini hanya untuk workshop “' + namaWs(siapa.wsId) + '”.' };
+    return { ok: false, error: 'Akun ini hanya untuk event “' + namaWs(siapa.wsId) + '”.' };
   }
   /* Di event yang bukan miliknya, akun panitia diperlakukan seperti pengunjung biasa. */
   if (salahWs && p.action !== 'adminLogin') siapa = null;
@@ -1839,7 +1839,7 @@ function handleAction(p) {
         const punya = (Array.isArray(p.meta) ? p.meta : []).filter(x => x.id === siapa.wsId)[0];
         if (!punya) return { ok: false, error: 'Akun ini hanya boleh menyunting workshopnya sendiri.' };
         const asli = store.meta.filter(x => x.id === siapa.wsId)[0];
-        if (!asli) return { ok: false, error: 'Workshop tidak ditemukan.' };
+        if (!asli) return { ok: false, error: 'Event tidak ditemukan.' };
         /* Harga, kuota, penerbitan, dan biaya layanan tetap kewenangan super admin. */
         const kunci = ['id', 'price', 'published', 'unggulan', 'slug', 'platformFee', 'platformFeeStatus', 'platformFeeNote'];
         Object.keys(punya).forEach(k => {
@@ -1982,13 +1982,13 @@ function handleAction(p) {
 
     case 'register': {
       const m = store.meta.filter(x => x.id === wid)[0];
-      if (!m) return { ok: false, error: 'Workshop tidak ditemukan.' };
+      if (!m) return { ok: false, error: 'Event tidak ditemukan.' };
       const qList = (Array.isArray(m.regQuestions) ? m.regQuestions : []).filter(q => String(q.label || '').trim());
       const extra = {};
       qList.forEach(q => { const v = String(((p.extra || {})[q.id]) || '').trim().slice(0, 300); if (v) extra[q.id] = v; });
       const kosongWajib = qList.find(q => !extra[q.id]);
       if (kosongWajib) return { ok: false, error: '“' + kosongWajib.label + '” wajib diisi.' };
-      if (m.registration === 'panitia') return { ok: false, error: 'Pendaftaran workshop ini dilakukan oleh panitia.' };
+      if (m.registration === 'panitia') return { ok: false, error: 'Pendaftaran event ini dilakukan oleh panitia.' };
       const nama = String(p.name || '').trim();
       if (!nama) return { ok: false, error: 'Nama lengkap wajib diisi.' };
       /* Semua data pendaftaran wajib: dipakai untuk sertifikat, tiket, dan kabar sesi/jadwal. */
@@ -2077,8 +2077,8 @@ function handleAction(p) {
 
     case 'payQris': {
       const m = store.meta.filter(x => x.id === wid)[0];
-      if (!m) return { ok: false, error: 'Workshop tidak ditemukan.' };
-      if (!(m.price > 0) && !m.donasi) return { ok: false, error: 'Workshop ini tidak berbiaya.' };
+      if (!m) return { ok: false, error: 'Event tidak ditemukan.' };
+      if (!(m.price > 0) && !m.donasi) return { ok: false, error: 'Event ini tidak berbiaya.' };
       const pesertaD = cariPeserta(db, p.id);
       /* Donasi: nominal dari peserta (atau yang tercatat saat mendaftar), minimal Rp 2.000. */
       const tagihan = m.donasi
@@ -2253,7 +2253,7 @@ function handleAction(p) {
       if (baru.length < 6) return { ok: false, error: 'Kata sandi minimal 6 karakter.' };
       if (baru === ADMIN) return { ok: false, error: 'Kata sandi itu dipakai super admin. Pilih yang lain.' };
       const target = (db.admins || []).find(x => x.id === p.adminId);
-      if (!target) return { ok: false, error: 'Akun tidak ditemukan di workshop ini. Muat ulang halaman lalu coba lagi.' };
+      if (!target) return { ok: false, error: 'Akun tidak ditemukan di event ini. Muat ulang halaman lalu coba lagi.' };
       for (const wid of Object.keys(store.data)) {
         if ((store.data[wid].admins || []).some(x => x.id !== target.id && x.pass === baru)) return { ok: false, error: 'Kata sandi itu sudah dipakai akun lain.' };
       }
