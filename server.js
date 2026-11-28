@@ -199,6 +199,50 @@ setInterval(() => {
   });
   if (ubah) touch();
 }, 6 * 3600e3);
+/* ── Buka sesi otomatis sesuai jadwal (mode "Dibuka admin") ──
+   Sesi aktif 5 menit sebelum jam mulai; 15 menit setelah jam selesai sesi itu ditutup dan ditandai Selesai.
+   Hanya sekali per jadwal (kunci = tanggal+jam): bila panitia menutup/membuka manual, jadwal tidak memaksanya lagi.
+   Panitia bisa mematikannya per event (db.autoBuka = false). */
+const AUTO_SEBELUM = 5 * 60e3, AUTO_SESUDAH = 15 * 60e3;
+function waktuSesi(s, jam) {
+  const tgl = String(s.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const j = String(jam || '').match(/^(\d{1,2})[:.](\d{2})/);
+  if (!tgl || !j) return null;
+  const off = { WIB: 7, WITA: 8, WIT: 9 }[String(s.tz || 'WIB').toUpperCase()] || 7;
+  return Date.UTC(+tgl[1], +tgl[2] - 1, +tgl[3], +j[1] - off, +j[2]);
+}
+function jadwalOtomatis() {
+  const kini = Date.now(); let ubah = false;
+  Object.keys(store.data || {}).forEach(wid => {
+    const d = store.data[wid];
+    if (!d || d.allOpen || d.autoBuka === false) return;
+    const ids = (Array.isArray(d.activeIds) && d.activeIds.length ? d.activeIds : d.activeSessionId ? [d.activeSessionId] : [])
+      .filter(id => (d.sessions || []).some(x => x.id === id));
+    let ubahIni = false;
+    (d.sessions || []).forEach(s => {
+      const mulai = waktuSesi(s, s.start); if (mulai == null) return;
+      let akhir = waktuSesi(s, s.end); if (akhir == null || akhir <= mulai) akhir = mulai + 2 * 3600e3;
+      const kunci = s.date + ' ' + s.start + '-' + (s.end || '');
+      if (s.autoBuka !== kunci && !s.selesai && kini >= mulai - AUTO_SEBELUM && kini < akhir) {
+        s.autoBuka = kunci; s.autoTutup = '';
+        if (ids.indexOf(s.id) < 0) ids.push(s.id);
+        if (ids.indexOf(d.activeSessionId) < 0 || !d.activeSessionId) d.activeSessionId = s.id;
+        ubahIni = true; console.log('[jadwal] ' + wid + ' sesi dibuka otomatis: ' + (s.title || s.id));
+      }
+      if (s.autoBuka === kunci && s.autoTutup !== kunci && kini >= akhir + AUTO_SESUDAH) {
+        s.autoTutup = kunci;
+        const i = ids.indexOf(s.id);
+        if (i >= 0) { ids.splice(i, 1); s.selesai = true; console.log('[jadwal] ' + wid + ' sesi ditutup otomatis: ' + (s.title || s.id)); }
+        if (ids.indexOf(d.activeSessionId) < 0) d.activeSessionId = ids[0] || d.activeSessionId;
+        ubahIni = true;
+      }
+    });
+    if (ubahIni) { d.activeIds = ids; ubah = true; }
+  });
+  if (ubah) touch();
+}
+setInterval(() => { try { jadwalOtomatis(); } catch (e) { console.error('[jadwal]', e.message); } }, 30e3);
+setTimeout(() => { try { jadwalOtomatis(); } catch (e) {} }, 5e3);
 setTimeout(() => {
   try {
     const dir = process.env.WA_AUTH_DIR || path.join(path.dirname(DATA_FILE), 'wa-auth');
@@ -2246,6 +2290,8 @@ function handleAction(p) {
           return { ok: false, conflict: true, error: (db.sessionsBy || 'Admin lain') + ' baru saja menyimpan susunan sesi (pukul ' + jam + '). Salin perubahan Anda, muat ulang halaman, lalu simpan lagi — agar pekerjaannya tidak tertimpa.' };
         }
         if (berubah) { snapshotDulu('sesi'); db.sessionsAt = new Date().toISOString(); db.sessionsBy = siapa.name || siapa.user || ''; }
+        /* Penanda jadwal otomatis milik server — jangan hilang karena layar admin belum menerimanya. */
+        baru.forEach(s => { const l = (db.sessions || []).find(x => x.id === s.id); if (l) { if (l.autoBuka && !s.autoBuka) s.autoBuka = l.autoBuka; if (l.autoTutup && !s.autoTutup) s.autoTutup = l.autoTutup; } });
         db.sessions = baru;
       }
       /* Jangan pernah menimpa peserta yang tidak dikenal layar admin (mis. baru mendaftar/membayar
@@ -2286,6 +2332,7 @@ function handleAction(p) {
       /* Saklar "Semua sesi terbuka" ikut tersimpan saat admin penuh menyimpan susunan. */
       if (typeof incoming.allOpen === 'boolean') db.allOpen = incoming.allOpen;
       if (typeof incoming.bertahap === 'boolean') db.bertahap = incoming.bertahap;
+      if (typeof incoming.autoBuka === 'boolean') db.autoBuka = incoming.autoBuka;
       { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(incoming.activeIds)) db.activeIds = sahIds(incoming.activeIds); }
       const keep = db.responses || {};
       db.responses = {};
@@ -2306,6 +2353,7 @@ function handleAction(p) {
       if (typeof p.activeSessionId !== 'undefined') db.activeSessionId = p.activeSessionId || null;
       if (typeof p.allOpen === 'boolean') db.allOpen = p.allOpen;
       if (typeof p.bertahap === 'boolean') db.bertahap = p.bertahap;
+      if (typeof p.autoBuka === 'boolean') db.autoBuka = p.autoBuka;
       if (Array.isArray(p.selesaiIds)) db.sessions.forEach(s => { s.selesai = p.selesaiIds.indexOf(s.id) >= 0; });
       { const sahIds = (arr) => (Array.isArray(arr) ? arr : []).map(String).filter(id => (db.sessions || []).some(x => x.id === id)); if (Array.isArray(p.activeIds)) db.activeIds = sahIds(p.activeIds); }
       db.sessions.forEach(s => {
