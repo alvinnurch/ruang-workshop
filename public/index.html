@@ -5507,6 +5507,20 @@ class Component extends DCLogic {
       const u = URL.createObjectURL(b); simpan(u, ext); setTimeout(() => URL.revokeObjectURL(u), 60000);
     }).catch(() => window.open(src, '_blank', 'noopener'));
   }
+  /* Daftar event untuk dasbor super admin: suntingan terbaru (wsMeta) + angka peserta dari data platform. */
+  metaGabung() {
+    const st = this.state, P = st.platform || {};
+    const pm = Array.isArray(P.meta) ? P.meta : [];
+    const wm = Array.isArray(st.wsMeta) ? st.wsMeta : [];
+    if (!wm.length) return pm;
+    return wm.map(m => {
+      const q = pm.find(x => x.id === m.id) || {};
+      return Object.assign({}, q, m, {
+        participantCount: m.participantCount != null ? m.participantCount : q.participantCount,
+        sessionCount: m.sessionCount != null ? m.sessionCount : q.sessionCount
+      });
+    });
+  }
   ikutSesi(db, sid, pid) {
     if (!pid) return false;
     const s = (db.sessions || []).find(x => x.id === sid);
@@ -8102,7 +8116,7 @@ class Component extends DCLogic {
     });
     const WARNA = ['#A5121C', '#C07A12', '#2E6B4F', '#28406B', '#7A3E8E', '#3B342E'];
     const evItem = (m, on, go, i) => ({
-      title: m.title || 'Event', initial: String(m.title || 'E').trim()[0].toUpperCase(),
+      title: m.title || 'Event', initial: (String(m.title || '').trim()[0] || 'E').toUpperCase(),
       sub: [this.jenisOf(m), String(m.dateLabel || '').trim()].filter(Boolean).join(' · ') || (m.published ? 'Terbit' : 'Draf'),
       pick: go,
       style: { width: '100%', display: 'flex', alignItems: 'center', gap: '11px', border: 'none', background: on ? '#FFF' : 'transparent', boxShadow: on ? '0 8px 18px -14px rgba(120,40,30,.5)' : 'none', borderRadius: '12px', padding: '9px 10px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '4px' },
@@ -8304,8 +8318,8 @@ class Component extends DCLogic {
     const rupiah = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
     const lunas = (P.payments || []).filter(x => x.status === 'lunas');
     v.superKpis = [
-      { label: 'Event', value: (P.meta || []).length, note: (P.meta || []).filter(m => m.published).length + ' terbit' },
-      { label: 'Peserta', value: (P.meta || []).reduce((n, m) => n + (m.participantCount || 0), 0), note: 'seluruh event' },
+      { label: 'Event', value: this.metaGabung().length, note: this.metaGabung().filter(m => m.published).length + ' terbit' },
+      { label: 'Peserta', value: this.metaGabung().reduce((n, m) => n + (m.participantCount || 0), 0), note: 'seluruh event' },
       { label: 'Pembayaran lunas', value: lunas.length, note: rupiah(lunas.reduce((n, x) => n + (x.amount || 0), 0)) },
       { label: 'Menunggu bayar', value: (P.payments || []).length - lunas.length, note: 'tagihan terbuka' }
     ].map((k, i) => Object.assign(k, {
@@ -8412,7 +8426,7 @@ class Component extends DCLogic {
       style: { background: 'none', border: 'none', borderBottom: '2px solid ' + (platTabId === id ? '#A5121C' : 'transparent'), color: platTabId === id ? '#A5121C' : '#7A6F66', padding: '11px 4px', marginBottom: '-1px', marginRight: '14px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }
     }));
     const kata = String(st.superCari || '').trim().toLowerCase();
-    const semuaMeta = P.meta || [];
+    const semuaMeta = this.metaGabung();
     const metaCari = semuaMeta.filter(m => !kata || [m.title, m.partnerName, m.place].join(' ').toLowerCase().indexOf(kata) >= 0);
     v.superCari = st.superCari || '';
     v.onSuperCari = e => this.setState({ superCari: e.target.value });
@@ -8454,7 +8468,8 @@ class Component extends DCLogic {
       v.superList = daftar.map(({ m, w, k }) => {
         const on = m.id === selId, c = WARNA[k % WARNA.length];
         return Object.assign({}, w, {
-          lembaga: m.partnerName || 'Islami Institute', initial: String(m.title || '?').trim()[0].toUpperCase(), tgl: tgl(m),
+          _id: m.id,
+          lembaga: m.partnerName || 'Islami Institute', initial: (String(m.title || '').trim()[0] || '?').toUpperCase(), tgl: tgl(m),
           foot: this.jenisOf(m) + ' · ' + (m.participantCount || 0) + ' peserta',
           avStyle: { width: '36px', height: '36px', flex: 'none', borderRadius: '10px', background: c, color: '#FFF', display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: '14px', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
           cardStyle: { display: 'block', width: '100%', textAlign: 'left', fontFamily: 'inherit', cursor: 'pointer', background: '#FFF', borderRadius: '18px', padding: '18px 20px', border: '1.5px solid ' + (on ? '#F2B9BC' : 'transparent'), boxShadow: on ? '0 22px 40px -26px rgba(165,18,28,.55)' : '0 14px 30px -28px rgba(120,40,30,.5)' },
@@ -8474,8 +8489,9 @@ class Component extends DCLogic {
         const vc = Array.isArray(m.vouchers) ? m.vouchers.filter(x => x.active !== false).length : 0;
         const row = (ico, title, sub) => ({ ico, title, sub, go: sel.w.edit });
         v.superSel = Object.assign({}, sel.w, {
-          lembaga: m.partnerName || 'Islami Institute', initial: String(m.title || '?').trim()[0].toUpperCase(),
-          avStyle: v.superList.find(x => x.title === m.title) ? v.superList.find(x => x.title === m.title).avStyle : {},
+          _id: m.id,
+          lembaga: m.partnerName || 'Islami Institute', initial: (String(m.title || '').trim()[0] || '?').toUpperCase(),
+          avStyle: (v.superList.find(x => x._id === m.id) || {}).avStyle || {},
           tiles: [
             tile((m.participantCount || 0) + (kq.total ? '/' + kq.total : ''), kq.total ? Math.max(0, kq.total - (m.participantCount || 0)) + ' kursi tersisa' : 'peserta'),
             tile(rp(kotor), 'kotor'),
@@ -8517,7 +8533,7 @@ class Component extends DCLogic {
           registration: jenis === 'workshop' ? 'panitia' : 'mandiri', price: 0, quota: 0,
           format: jenis === 'webinar' ? 'online' : jenis === 'workshop' ? 'offline' : 'hybrid'
         };
-        const daftar = (P.meta || st.wsMeta || []).map(m => { const x = Object.assign({}, m); delete x.sessionCount; delete x.participantCount; return x; }).concat([baru]);
+        const daftar = this.metaGabung().map(m => { const x = Object.assign({}, m); delete x.sessionCount; delete x.participantCount; return x; }).concat([baru]);
         if (this.api()) {
           const out = await this.apiPost({ action: 'putWorkshops', password: this._pw || '', meta: daftar });
           if (!out || !out.ok) return this.setState({ superCreateMsg: (out && out.error) || 'Kegiatan gagal dibuat.' });
@@ -10550,6 +10566,8 @@ class Component extends DCLogic {
     v.addWorkshop = () => simpanMeta((list) => {
       const idBaru = 'ws' + Date.now().toString(36);
       this.setState(x => ({ wsOpen: Object.assign({}, x.wsOpen, { [idBaru]: true }) }));
+      /* Langsung terpilih dan formulir profilnya terbuka — tanda tombol bekerja. */
+      this.setState({ superPick: idBaru, supSec: null, superFilter: 'semua', superCari: '', wsFokus: st.role === 'admin' ? idBaru : st.wsFokus, evPop: { id: idBaru, sec: 'profil' } });
       list.push({ id: idBaru, jenis: 'workshop', title: 'Workshop baru', subtitle: '', partnerName: '', partnerLogo: '', place: '', dateLabel: '', published: false, registration: 'panitia', price: 0, quota: 0 });
     });
     /* Seminar: pendaftaran mandiri dan tanpa batas kuota sebagai titik awal. */
@@ -12463,7 +12481,7 @@ class Component extends DCLogic {
           const on = m.id === fokusId, c = W[(st.wsMeta || []).indexOf(m) % W.length];
           return {
             title: m.title || 'Tanpa judul', lembaga: m.partnerName || 'Islami Institute',
-            initial: String(m.title || '?').trim()[0].toUpperCase(),
+            initial: (String(m.title || '').trim()[0] || '?').toUpperCase(),
             chip: m.published ? 'Terbit' : 'Draf',
             chipStyle: { flex: 'none', fontSize: '11.5px', fontWeight: 700, padding: '4px 11px', borderRadius: '100px', background: m.published ? '#EEF5E9' : '#F3EEE8', color: m.published ? '#2C4D18' : '#7A6F66' },
             meta: (this.jenisOf ? this.jenisOf(m) : 'Event') + ' · ' + ({ online: 'Daring', offline: 'Luring', hybrid: 'Hybrid' }[m.format || 'online'] || ''),
@@ -12644,7 +12662,7 @@ class Component extends DCLogic {
         () => this.setState({ tab: 'admins', evSec: null }));
     }
     if (v.superSel && v.superSel.rows) {
-      const supM = (st.wsMeta || []).find(x => x.title === v.superSel.title) || null;
+      const supM = (st.wsMeta || []).find(x => x.id === v.superSel._id) || null;
       const supRow = supM && (v.wsRows || []).find(r => r.id === supM.id);
       if (supM && supRow) {
         const lama = v.superSel.rows;
