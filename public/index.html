@@ -922,16 +922,22 @@
         <div style="display:grid;gap:10px;margin-bottom:4px">
           <sc-for list="{{ pengList }}" as="a" hint-placeholder-count="1">
             <div style="background:#FFF;border:1px solid #F0D9A8;border-left-width:1px;border-radius:14px;overflow:hidden;display:flex;flex-wrap:wrap">
-              <span style="{{ a.imgStyle }}"></span>
+              <span onClick="{{ a.bukaImg }}" title="Klik untuk melihat gambar penuh" style="{{ a.imgStyle }}"></span>
               <div style="flex:1 1 200px;padding:16px 18px;display:grid;gap:8px;align-content:start">
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                   <span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#7A4708;background:#FFF1D6;border-radius:100px;padding:3px 10px">Pengumuman</span>
                   <span style="font-size:12px;color:#8C8078">{{ a.meta }}</span>
                 </div>
                 <div style="font-size:14.5px;color:#1B1714;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;text-wrap:pretty">{{ a.text }}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                 <sc-if value="{{ a.hasUrl }}" hint-placeholder-val="{{ false }}">
                   <a href="{{ a.url }}" target="_blank" rel="noopener" style="justify-self:start;display:inline-flex;background:#A5121C;color:#FFF;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:700;text-decoration:none">{{ a.urlLabel }} ↗</a>
                 </sc-if>
+                <sc-if value="{{ a.hasImg }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ a.bukaImg }}" style="display:inline-flex;background:#FFF;border:1px solid #E0D8CE;color:#3B342E;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="background:#F6F1EA">Lihat gambar ↗</button>
+                  <button onClick="{{ a.unduhImg }}" style="display:inline-flex;background:#2A2320;border:none;color:#FFF;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="background:#000">↓ Unduh gambar</button>
+                </sc-if>
+                </div>
               </div>
             </div>
           </sc-for>
@@ -2906,6 +2912,9 @@
                       <option value="bertahap">Terbuka bertahap</option>
                     </select>
                   </label>
+                  <sc-if value="{{ showAutoBuka }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ toggleAutoBuka }}" title="{{ autoBukaTitle }}" style="{{ autoBukaStyle }}">{{ autoBukaLabel }}</button>
+                  </sc-if>
                   <sc-if value="{{ showSesiSelesai }}" hint-placeholder-val="{{ false }}">
                     <button onClick="{{ toggleSesiSelesai }}" title="{{ sesiSelesaiTitle }}" style="{{ sesiSelesaiStyle }}">{{ sesiSelesaiLabel }}</button>
                   </sc-if>
@@ -5480,6 +5489,24 @@ class Component extends DCLogic {
   }
   /* Peserta dianggap mengikuti sesi bila tercatat hadir (check in) atau pernah berpartisipasi (kuis, word cloud,
      umpan balik, formulir). Sesi tanpa check in tidak mencatat kehadiran, jadi terbuka bagi semua peserta. */
+  /* Gambar (data: URL atau alamat berkas) dibuka penuh di tab baru. Peramban menolak membuka data: langsung, jadi diubah ke blob dulu. */
+  async gambarBlob(src) {
+    const r = await fetch(src, { credentials: 'same-origin' });
+    if (!r.ok) throw new Error('gagal');
+    return r.blob();
+  }
+  bukaGambar(src) {
+    if (!/^data:/i.test(src)) { window.open(src, '_blank', 'noopener'); return; }
+    const w = window.open('', '_blank');
+    this.gambarBlob(src).then(b => { const u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); setTimeout(() => URL.revokeObjectURL(u), 60000); }).catch(() => { if (w) w.close(); });
+  }
+  unduhGambar(src, nama) {
+    const simpan = (href, ext) => { const a = document.createElement('a'); a.href = href; a.download = (nama || 'gambar') + ext; document.body.appendChild(a); a.click(); a.remove(); };
+    this.gambarBlob(src).then(b => {
+      const ext = /png/.test(b.type) ? '.png' : /webp/.test(b.type) ? '.webp' : /gif/.test(b.type) ? '.gif' : '.jpg';
+      const u = URL.createObjectURL(b); simpan(u, ext); setTimeout(() => URL.revokeObjectURL(u), 60000);
+    }).catch(() => window.open(src, '_blank', 'noopener'));
+  }
   ikutSesi(db, sid, pid) {
     if (!pid) return false;
     const s = (db.sessions || []).find(x => x.id === sid);
@@ -7154,7 +7181,7 @@ class Component extends DCLogic {
         const s = d.sessions.find(x => x.id === d.activeSessionId) || null;
         this.apiPost({
           action: 'putLive', password: this._pw || '',
-          activeSessionId: d.activeSessionId, activeIds: this.aktifIds(d), allOpen: !!d.allOpen, bertahap: !!d.bertahap,
+          activeSessionId: d.activeSessionId, activeIds: this.aktifIds(d), allOpen: !!d.allOpen, bertahap: !!d.bertahap, autoBuka: d.autoBuka !== false,
           selesaiIds: (d.sessions || []).filter(x => x.selesai).map(x => x.id),
           sessionId: s ? s.id : '',
           multiOpen: s ? s.multiOpen !== false : true,
@@ -9329,7 +9356,10 @@ class Component extends DCLogic {
       v.pengList = ann.map(a => ({
         text: a.text || '', hasUrl: !!a.url, url: a.url || '#', urlLabel: a.urlLabel || 'Buka tautan',
         meta: (a.by ? a.by + ' · ' : '') + new Date(a.at || Date.now()).toLocaleString('id-ID', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }),
-        imgStyle: a.img ? { flex: '1 1 220px', maxWidth: '100%', minHeight: '160px', backgroundImage: 'url("' + a.img + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#F6F1EA' } : { display: 'none' }
+        hasImg: !!a.img,
+        bukaImg: () => a.img && this.bukaGambar(a.img),
+        unduhImg: () => a.img && this.unduhGambar(a.img, 'pengumuman-' + new Date(a.at || Date.now()).toISOString().slice(0, 10)),
+        imgStyle: a.img ? { cursor: 'zoom-in', flex: '1 1 220px', maxWidth: '100%', minHeight: '160px', backgroundImage: 'url("' + a.img + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#F6F1EA' } : { display: 'none' }
       }));
     }
     const me = st.userId ? db.participants.find(p => p.id === st.userId) : null;
@@ -11423,6 +11453,15 @@ class Component extends DCLogic {
       v.allOpenStyle = { background: db.allOpen ? '#FFF6E5' : '#FFF', border: '1px solid ' + (db.allOpen ? '#F0D9A8' : '#E0D8CE'), color: db.allOpen ? '#7A4E00' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' };
       v.modeBuka = modeBuka;
       v.onModeBuka = e => { const m = e.target.value; this.save(d => { d.allOpen = m !== 'admin'; d.bertahap = m === 'bertahap'; }, null, true); };
+      /* Jadwal otomatis (diatur server): sesi aktif 5 menit sebelum mulai, ditutup & ditandai Selesai 15 menit setelah usai. */
+      const autoOn = db.autoBuka !== false;
+      v.showAutoBuka = modeBuka === 'admin';
+      v.autoBukaLabel = autoOn ? '⏱ Buka otomatis: aktif' : '⏱ Buka otomatis: mati';
+      v.autoBukaTitle = autoOn
+        ? 'Sesi terbuka sendiri 5 menit sebelum jam mulai, lalu ditutup dan ditandai Selesai 15 menit setelah jam selesai. Klik untuk mematikan.'
+        : 'Sesi hanya dibuka manual oleh panitia. Klik untuk menyalakan buka otomatis sesuai jadwal.';
+      v.autoBukaStyle = { background: autoOn ? '#EEF5E9' : '#FFF', border: '1px solid ' + (autoOn ? '#CFE2C2' : '#E0D8CE'), color: autoOn ? '#2C4D18' : '#8C8078', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' };
+      v.toggleAutoBuka = () => this.save(d => { d.autoBuka = d.autoBuka === false; }, null, true);
       v.toggleAllOpen = () => this.save(d => {
         if (!d.allOpen) { d.allOpen = true; d.bertahap = false; }
         else if (!d.bertahap) d.bertahap = true;
