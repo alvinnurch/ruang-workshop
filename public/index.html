@@ -12616,7 +12616,22 @@ class Component extends DCLogic {
       const kq = this.kuotaInfo ? this.kuotaInfo(m) : { total: m.quota || 0 };
       const regLbl = { panitia: 'Panitia memasukkan peserta', mandiri: 'Daftar mandiri, kode langsung', 'mandiri-setuju': 'Daftar mandiri, disetujui panitia' };
       const harga = (Number(m.price) || 0) > 0 ? 'Rp' + Number(m.price).toLocaleString('id-ID') : 'Gratis';
+      /* Status penerbitan: terbitkan, jadikan draf, atau tarik dari etalase. Admin lembaga mengajukannya ke super admin. */
+      const pilStyle = onx => ({ border: '1px solid ' + (onx ? '#A5121C' : '#E6DCD0'), background: onx ? '#A5121C' : '#FFF', color: onx ? '#FFF' : '#5C534B', borderRadius: '100px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' });
+      const statusFields = row.canEdit !== false
+        ? [{ label: 'Status', isText: false, isArea: false, isNote: false, isSelect: true, wrap: { display: 'grid', gap: '6px', gridColumn: '1 / -1' },
+            opts: [
+              { label: m.published ? '● Terbit di etalase' : 'Terbitkan di etalase', go: () => { if (!m.published && row.togglePub) row.togglePub(); }, style: pilStyle(!!m.published) },
+              { label: m.published ? 'Tarik jadi draf' : '○ Draf', go: () => { if (m.published && row.togglePub) row.togglePub(); }, style: pilStyle(!m.published) }
+            ] },
+           NOTE('Keterangan', m.published
+             ? 'Event tampil di etalase dan bisa didaftari. Pilih “Tarik jadi draf” untuk menyembunyikannya — data peserta dan sesi tetap aman.'
+             : 'Event masih draf: belum tampil di etalase. Lengkapi profil, jadwal, dan biaya, lalu pilih “Terbitkan di etalase”.')]
+        : [NOTE('Status', m.published ? 'Terbit di etalase' : 'Draf — belum tampil di etalase'),
+           { label: 'Ajukan ke super admin', isText: false, isArea: false, isNote: false, isSelect: true, wrap: { display: 'grid', gap: '6px', gridColumn: '1 / -1' },
+             opts: [{ label: m.published ? 'Ajukan tarik dari etalase' : 'Ajukan terbit di etalase', go: () => row.reqPub && row.reqPub(), style: pilStyle(false) }] }];
       const SEC = [
+        ['status', m.published ? '●' : '○', 'Status penerbitan', m.published ? 'Terbit · tampil di etalase' : 'Draf · belum tampil di etalase', statusFields],
         ['profil', '◧', 'Profil event', [m.title, m.kategori].filter(Boolean).join(' · ') || 'Judul, ringkasan, deskripsi',
           [F('Nama event', 'title', row.onTitle, null, '', true), F('Kategori', 'kategori', row.onKategori), SEL('Jenis', 'jenis', row.onJenis, [['workshop', 'Workshop'], ['seminar', 'Seminar'], ['webinar', 'Webinar'], ['diskusi', 'Diskusi'], ['rangkaian', 'Rangkaian']]), F('Ringkasan', 'ringkasan', row.onRingkasan, 'area'), F('Deskripsi', 'deskripsi', row.onDeskripsi, 'area')]],
         ['jadwal', '◷', 'Jadwal & lokasi', [m.dateLabel, m.place, m.placeOnline].filter(x => String(x || '').trim()).join(' · ') || 'Tanggal, format, lokasi',
