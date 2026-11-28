@@ -2907,7 +2907,7 @@
                     </select>
                   </label>
                   <sc-if value="{{ showSesiSelesai }}" hint-placeholder-val="{{ false }}">
-                    <button onClick="{{ toggleSesiSelesai }}" title="Membuka sesi berikutnya untuk semua peserta" style="{{ sesiSelesaiStyle }}">{{ sesiSelesaiLabel }}</button>
+                    <button onClick="{{ toggleSesiSelesai }}" title="{{ sesiSelesaiTitle }}" style="{{ sesiSelesaiStyle }}">{{ sesiSelesaiLabel }}</button>
                   </sc-if>
                   <button onClick="{{ closeAll }}" style="background:#FFF;border:1px solid #E6DCD0;color:#5C534B;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:600" style-hover="background:#F6F1EA">Tutup semua</button>
                 </div>
@@ -7964,7 +7964,8 @@ class Component extends DCLogic {
       const on = live && s0.id === live.id;
       const terkunci = !!kunciB[s0.id];
       const tuntas = bertahap && this.sesiSelesaiOleh(db, s0.id, st.userId);
-      const dibuka = mandiri || idsAktif.indexOf(s0.id) >= 0;
+      /* Di mode "Dibuka admin", tanda Selesai dari panitia mengalahkan status aktif. */
+      const dibuka = mandiri || (idsAktif.indexOf(s0.id) >= 0 && !s0.selesai);
       if (!dibuka) {
         const usai = !!s0.selesai;
         const bisaUlas = usai && this.ikutSesi(db, s0.id, st.userId);
@@ -11229,8 +11230,8 @@ class Component extends DCLogic {
         moveUp: () => moveSession(si, si - 1), moveDown: () => moveSession(si, si + 1),
         upStyle: navS(si > 0), downStyle: navS(si < arr.length - 1),
         title: s.title, mode: s.mode, meta: (s.blocks || []).filter(b => b.enabled).length + ' materi · ' + Object.keys(this.resp(s.id).checkins).length + ' hadir',
-        stateLabel: onScreen ? 'Di proyektor' : isActive ? 'Berlangsung' : 'Terjadwal',
-        stateStyle: { whiteSpace: 'nowrap',  flex: 'none', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '100px', background: onScreen ? '#1B1714' : isActive ? '#FDECEC' : '#F1EBE3', color: onScreen ? '#FFF' : isActive ? '#A5121C' : '#8C8078' },
+        stateLabel: onScreen ? 'Di proyektor' : isActive ? 'Berlangsung' : s.selesai ? 'Selesai ✓' : 'Terjadwal',
+        stateStyle: { whiteSpace: 'nowrap',  flex: 'none', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '100px', background: onScreen ? '#1B1714' : isActive ? '#FDECEC' : s.selesai ? '#EEF5E9' : '#F1EBE3', color: onScreen ? '#FFF' : isActive ? '#A5121C' : s.selesai ? '#2C4D18' : '#8C8078' },
         num: si + 1,
         numStyle: { width: '26px', height: '26px', flex: 'none', borderRadius: '8px', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", background: isActive ? '#A5121C' : '#EFE5DA', color: isActive ? '#FFF' : '#8C7B6B' },
         speakerShow: String(s.speaker || '').trim() || (s.mode || 'Sesi'),
@@ -11424,7 +11425,10 @@ class Component extends DCLogic {
         else if (!d.bertahap) d.bertahap = true;
         else { d.allOpen = false; d.bertahap = false; }
       }, null, true);
-      v.showSesiSelesai = !!(db.allOpen && db.bertahap);
+      /* Tombol Selesai tersedia di semua mode: di mode bertahap membuka sesi berikutnya; di mode lain menandai sesi
+         usai — peserta yang mengikutinya tetap bisa membuka ulang bahannya. */
+      v.showSesiSelesai = true;
+      v.sesiSelesaiTitle = db.allOpen && db.bertahap ? 'Membuka sesi berikutnya untuk semua peserta' : 'Sesi tampil “Selesai” di dasbor peserta; peserta yang mengikutinya bisa membuka ulang bahannya';
       v.sesiSelesaiLabel = cur.selesai ? 'Sesi ditutup ✓ (buka lagi)' : 'Tandai sesi ini selesai';
       v.sesiSelesaiStyle = { background: cur.selesai ? '#EEF5E9' : '#FFF', border: '1px solid ' + (cur.selesai ? '#CFE2C2' : '#E0D8CE'), color: cur.selesai ? '#2C4D18' : '#5C534B', borderRadius: '8px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' };
       v.toggleSesiSelesai = () => this.save(d => { const t = d.sessions.find(x => x.id === cur.id); t.selesai = !t.selesai; }, null, true);
