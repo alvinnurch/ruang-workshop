@@ -6583,43 +6583,104 @@ class Component extends DCLogic {
   }
   /* ── Thumbnail pratinjau tautan (WhatsApp/medsos): 1200×630 JPEG ringan dari flyer, dibuat di peramban admin. ── */
   tandaGambar(src) { src = String(src || ''); return src ? src.length + ':' + src.slice(0, 40) + ':' + src.slice(-40) : ''; }
-  buatThumbOg(src) {
-    return new Promise((ok, gagal) => {
+  /* Tanda kartu pratinjau: berubah bila flyer atau data yang tercetak di kartu berubah (sama persis dengan server). */
+  tandaOg(m) {
+    const f = String((m && m.flyer) || '');
+    const isi = ['k3', f.length, f.slice(0, 40), f.slice(-40), m.title, m.dateLabel, m.place, m.format, m.jenis, m.price, m.donasi ? 1 : 0, m.partnerName].map(x => String(x == null ? '' : x)).join('|');
+    let h = 5381; for (let i = 0; i < isi.length; i++) h = ((h * 33) ^ isi.charCodeAt(i)) >>> 0;
+    return 'k3-' + h.toString(36) + '-' + isi.length;
+  }
+  /* Kartu pratinjau 1200×630 bergaya Ruang: flyer utuh (tidak dipotong) + judul, tanggal, tempat, harga. */
+  muatGambar(src) {
+    return new Promise(ok => {
+      if (!src) return ok(null);
       const img = new Image();
       if (/^https?:\/\//i.test(src) && src.indexOf(location.origin) !== 0) img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const W = 1200, H = 630, c = document.createElement('canvas');
-          c.width = W; c.height = H;
-          const g = c.getContext('2d');
-          g.fillStyle = '#FFF7EE'; g.fillRect(0, 0, W, H);
-          const sk = Math.max(W / img.naturalWidth, H / img.naturalHeight);
-          const w = img.naturalWidth * sk, h = img.naturalHeight * sk;
-          g.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
-          let q = 0.84, data = c.toDataURL('image/jpeg', q);
-          while (data.length > 330000 && q > 0.45) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
-          ok(data);
-        } catch (e) { gagal(e); }
-      };
-      img.onerror = () => gagal(new Error('Flyer tidak bisa dibaca'));
+      img.onload = () => ok(img); img.onerror = () => ok(null);
       img.src = src;
     });
+  }
+  async buatThumbOg(m) {
+    const W = 1200, H = 630, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    try { await Promise.all(['800 56px "Plus Jakarta Sans"', '700 26px "Plus Jakarta Sans"', '500 24px "IBM Plex Sans"', '600 24px "IBM Plex Sans"'].map(f => document.fonts.load(f))); } catch (e) {}
+    const JUDUL = '"Plus Jakarta Sans", system-ui, sans-serif', TEKS = '"IBM Plex Sans", system-ui, sans-serif';
+    const kotak = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    /* latar krem + aksen merah */
+    g.fillStyle = '#FFF7EE'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#F6E7D6'; g.beginPath(); g.arc(W + 40, -60, 300, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#A5121C'; g.fillRect(0, H - 14, W, 14);
+    /* flyer utuh di kiri */
+    const [flyer, logo] = await Promise.all([this.muatGambar(m.flyer), this.muatGambar('assets/ruang-logo.png')]);
+    let kiri = 64;
+    if (flyer) {
+      const maxW = 520, maxH = H - 2 * 56 - 14;
+      const s = Math.min(maxW / flyer.naturalWidth, maxH / flyer.naturalHeight);
+      const fw = Math.round(flyer.naturalWidth * s), fh = Math.round(flyer.naturalHeight * s);
+      const fx = 56, fy = Math.round((H - 14 - fh) / 2);
+      g.save(); g.shadowColor = 'rgba(80,30,20,.28)'; g.shadowBlur = 34; g.shadowOffsetY = 14;
+      kotak(fx, fy, fw, fh, 18); g.fillStyle = '#FFF'; g.fill(); g.restore();
+      g.save(); kotak(fx, fy, fw, fh, 18); g.clip(); g.drawImage(flyer, fx, fy, fw, fh); g.restore();
+      kiri = fx + fw + 52;
+    }
+    const kanan = W - 64, lebar = kanan - kiri;
+    let y = 74;
+    /* logo Ruang */
+    if (logo) { const lh = 50, lw = logo.naturalWidth * lh / logo.naturalHeight; g.drawImage(logo, kiri, y - 4, lw, lh); y += 78; }
+    else { g.fillStyle = '#1B1714'; g.font = '800 40px ' + JUDUL; g.fillText('ruang', kiri, y + 34); y += 78; }
+    /* label jenis · format */
+    const JENIS = { workshop: 'Workshop', seminar: 'Seminar', webinar: 'Webinar', diskusi: 'Diskusi', rangkaian: 'Rangkaian' };
+    const FORMAT = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
+    const label = ((JENIS[m.jenis || 'workshop'] || 'Event') + ' · ' + (FORMAT[m.format || 'online'] || '')).toUpperCase();
+    g.font = '700 19px ' + JUDUL;
+    const lw2 = g.measureText(label).width + 36;
+    kotak(kiri, y, lw2, 40, 20); g.fillStyle = '#A5121C'; g.fill();
+    g.fillStyle = '#FFF7EE'; g.textBaseline = 'middle'; g.fillText(label, kiri + 18, y + 21); g.textBaseline = 'alphabetic';
+    y += 66;
+    /* judul: dikecilkan sampai muat 3 baris */
+    const bungkus = (teks, maks) => { const kata = String(teks || '').split(/\s+/); const baris = []; let b = ''; kata.forEach(k => { const t = b ? b + ' ' + k : k; if (g.measureText(t).width > maks && b) { baris.push(b); b = k; } else b = t; }); if (b) baris.push(b); return baris; };
+    let uk = flyer ? 54 : 64, baris;
+    for (;;) { g.font = '800 ' + uk + 'px ' + JUDUL; baris = bungkus(m.title || 'Event', lebar); if (baris.length <= 3 || uk <= 34) break; uk -= 4; }
+    if (baris.length > 3) { baris = baris.slice(0, 3); baris[2] = baris[2].replace(/\s*\S*$/, '') + '…'; }
+    g.fillStyle = '#1B1714';
+    baris.forEach(b => { y += uk * 1.08; g.fillText(b, kiri, y); });
+    y += 18;
+    if (m.partnerName) { g.font = '600 24px ' + TEKS; g.fillStyle = '#7A6F66'; y += 30; g.fillText(bungkus('oleh ' + m.partnerName, lebar)[0], kiri, y); }
+    /* tanggal & tempat */
+    const baris2 = [['◷', m.dateLabel], ['◎', m.format === 'online' ? 'Online' : m.place]].filter(x => x[1]);
+    y += 16;
+    baris2.forEach(([ik, t]) => {
+      y += 40;
+      g.font = '700 24px ' + TEKS; g.fillStyle = '#A5121C'; g.fillText(ik, kiri, y);
+      g.font = '500 24px ' + TEKS; g.fillStyle = '#3B342E'; g.fillText(bungkus(t, lebar - 38)[0], kiri + 36, y);
+    });
+    /* harga + ajakan di dasar */
+    const harga = m.donasi ? 'Donasi sukarela' : Number(m.price) > 0 ? 'Rp' + Number(m.price).toLocaleString('id-ID') : 'Gratis';
+    const dasar = H - 14 - 46;
+    g.font = '800 34px ' + JUDUL; g.fillStyle = '#A5121C'; g.fillText(harga, kiri, dasar);
+    g.font = '600 22px ' + TEKS; g.fillStyle = '#7A6F66';
+    const ajak = 'Daftar di ruang.islami.co';
+    g.fillText(ajak, Math.max(kiri + g.measureText(harga).width + 40, kanan - g.measureText(ajak).width), dasar);
+    let q = 0.86, data = c.toDataURL('image/jpeg', q);
+    while (data.length > 330000 && q > 0.45) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
+    return data;
   }
   async cekThumbOg() {
     const st = this.state;
     if (!this.api() || !this._pw || (st.role !== 'admin' && st.role !== 'super') || this._ogJalan) return;
     const milik = st.isSuper ? null : (st.adminWsIds && st.adminWsIds.length ? st.adminWsIds : [st.wsId]);
     this._ogSelesai = this._ogSelesai || {};
-    const antre = (st.wsMeta || []).filter(m => m.flyer && (!milik || milik.indexOf(m.id) >= 0)
-      && m.ogSig !== this.tandaGambar(m.flyer) && !this._ogSelesai[m.id + '|' + this.tandaGambar(m.flyer)]);
+    const antre = (st.wsMeta || []).filter(m => (!milik || milik.indexOf(m.id) >= 0)
+      && m.ogSig !== this.tandaOg(m) && !this._ogSelesai[m.id + '|' + this.tandaOg(m)]);
     if (!antre.length) return;
     this._ogJalan = true;
     try {
       for (const m of antre) {
-        const sig = this.tandaGambar(m.flyer);
+        const sig = this.tandaOg(m);
         this._ogSelesai[m.id + '|' + sig] = true;
         try {
-          const data = await this.buatThumbOg(m.flyer);
+          const data = await this.buatThumbOg(m);
           await this.apiPost({ action: 'setOgImg', password: this._pw, id: m.id, sig, data, diam: true });
         } catch (e) { /* flyer dari situs lain yang menolak dibaca: pratinjau memakai flyer aslinya */ }
       }
