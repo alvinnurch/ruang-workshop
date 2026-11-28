@@ -54,7 +54,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto">
       <sc-if value="{{ isPickWs }}" hint-placeholder-val="{{ false }}">
         <nav style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap">
-          <button onClick="{{ etalaseScroll }}" style="{{ navLinkStyle }}" style-hover="color:#A5121C">Jelajahi Workshop</button>
+          <button onClick="{{ etalaseScroll }}" style="{{ navLinkStyle }}" style-hover="color:#A5121C">Jelajahi Event</button>
           <button onClick="{{ etalaseCara }}" style="{{ navLinkStyle }}" style-hover="color:#A5121C">Cara Kerja</button>
           <button onClick="{{ etalaseMasukPeserta }}" style="{{ navMasukStyle }}" style-hover="background:#F6F1EA">Masuk</button>
           <button onClick="{{ keKatalog }}" style="{{ navDaftarStyle }}" style-hover="filter:brightness(1.07)">Daftar</button>
@@ -71,7 +71,7 @@
     </div>
     <sc-if value="{{ navMenuOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:absolute;left:0;right:0;top:100%;z-index:19;background:#FFF;border-bottom:1px solid #E6DFD6;box-shadow:0 14px 26px -18px rgba(59,50,56,.35);display:grid;padding:6px 16px 12px">
-      <button onClick="{{ navGoScroll }}" style="background:none;border:none;border-bottom:1px solid #F1EBE3;text-align:left;padding:14px 4px;font-size:15px;font-weight:600;color:#3B3238;cursor:pointer">Jelajahi Workshop</button>
+      <button onClick="{{ navGoScroll }}" style="background:none;border:none;border-bottom:1px solid #F1EBE3;text-align:left;padding:14px 4px;font-size:15px;font-weight:600;color:#3B3238;cursor:pointer">Jelajahi Event</button>
       <button onClick="{{ navGoCara }}" style="background:none;border:none;text-align:left;padding:14px 4px;font-size:15px;font-weight:600;color:#3B3238;cursor:pointer">Cara Kerja</button>
     </div>
     </sc-if>
@@ -130,11 +130,11 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:min(5vw,40px);align-items:center">
           <div>
-            <div style="display:inline-flex;align-items:center;gap:8px;background:#FDECEC;color:#9B1B20;border-radius:100px;padding:7px 15px;font-size:12px;font-weight:700;letter-spacing:.02em">Etalase workshop, seminar, dan webinar</div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:#FDECEC;color:#9B1B20;border-radius:100px;padding:7px 15px;font-size:12px;font-weight:700;letter-spacing:.02em">Etalase workshop, seminar, webinar, dan diskusi</div>
             <h1 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(30px,4.6vw,52px);line-height:1.08;letter-spacing:-.025em;margin:20px 0 16px;font-weight:700;color:#3B3238;text-wrap:balance">Belajar Mendalam Lewat Workshop &amp; Seminar Bersama <span style="color:#B31F24">Lembaga Terpercaya</span></h1>
             <p style="font-size:15.5px;line-height:1.65;color:#6B6168;margin:0 0 26px;max-width:52ch;text-wrap:pretty">Bandingkan penyelenggara, biaya, format, dan tanggal mulai dalam satu halaman. Pilih yang cocok, lalu daftar dalam beberapa langkah.</p>
             <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <button onClick="{{ etalaseScroll }}" style="background:#B31F24;color:#FFF7EE;border:none;border-radius:100px;padding:15px 26px;font-size:14.5px;font-weight:700" style-hover="background:#8E171C">Jelajahi Workshop</button>
+              <button onClick="{{ etalaseScroll }}" style="background:#B31F24;color:#FFF7EE;border:none;border-radius:100px;padding:15px 26px;font-size:14.5px;font-weight:700" style-hover="background:#8E171C">Jelajahi Event</button>
               <button onClick="{{ etalaseMasukPeserta }}" style="background:#FFF;border:1px solid #EAD9C6;color:#4A3F46;border-radius:100px;padding:15px 24px;font-size:14.5px;font-weight:700" style-hover="background:#FDF3E7">Sudah punya kode</button>
             </div>
           </div>
@@ -262,7 +262,7 @@
 
       <div id="cara" style="max-width:1200px;margin:min(5vw,44px) auto 0;background:#FFF7EE;border-radius:min(6vw,52px);padding:min(5vw,44px) min(5vw,46px)">
         <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(22px,3vw,32px);margin:0 0 8px;font-weight:700;color:#3B3238;letter-spacing:-.02em">Dua Pintu Masuk, Satu Data</h2>
-        <p style="font-size:14px;color:#6B6168;margin:0 0 26px;line-height:1.6;max-width:66ch;text-wrap:pretty">Lembaga mengajukan workshop, panitia mengelola sesinya, peserta mengikutinya — semuanya pada satu data yang sama.</p>
+        <p style="font-size:14px;color:#6B6168;margin:0 0 26px;line-height:1.6;max-width:66ch;text-wrap:pretty">Lembaga mengajukan kegiatan, panitia mengelola sesinya, peserta mengikutinya — semuanya pada satu data yang sama.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px">
           <sc-for list="{{ pintu }}" as="p" hint-placeholder-count="2">
             <div style="background:#FFF;border-radius:26px;padding:24px;display:flex;flex-direction:column;gap:12px">
@@ -281,7 +281,7 @@
       <div style="max-width:1140px;margin:min(5vw,40px) auto 0;background:#B31F24;color:#FFF7EE;border-radius:min(5vw,40px);padding:min(4vw,34px) min(5vw,40px);display:flex;gap:20px;justify-content:space-between;align-items:center;flex-wrap:wrap">
         <div>
           <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(19px,2.3vw,26px);font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Lembaga Anda punya kegiatan workshop, seminar, atau diskusi?</div>
-          <div style="font-size:13.5px;opacity:.9;line-height:1.6;max-width:56ch;text-wrap:pretty">Ajukan lewat panel admin. Setelah diverifikasi super admin, workshop tampil di etalase ini.</div>
+          <div style="font-size:13.5px;opacity:.9;line-height:1.6;max-width:56ch;text-wrap:pretty">Ajukan lewat panel admin. Setelah diverifikasi super admin, kegiatan tampil di etalase ini.</div>
         </div>
         <button onClick="{{ bukaFormLembaga }}" style="background:#FFF7EE;color:#B31F24;border:none;border-radius:100px;padding:14px 24px;font-size:14px;font-weight:700;white-space:nowrap" style-hover="background:#FFF">Daftarkan Lembaga</button>
       </div>
@@ -308,7 +308,7 @@
           <sc-if value="{{ verifGagal }}" hint-placeholder-val="{{ false }}">
             <div style="display:inline-flex;align-items:center;gap:8px;background:#FDECEC;color:#9B1B20;border-radius:100px;padding:7px 15px;font-size:12px;font-weight:700">Tidak ditemukan</div>
             <h1 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(22px,3.2vw,30px);line-height:1.2;margin:18px 0 8px;font-weight:700;color:#3B3238">Sertifikat tidak dikenali</h1>
-            <p style="font-size:14.5px;color:#6B6168;margin:0;line-height:1.6;text-wrap:pretty">Kode <b>{{ verifKode }}</b> tidak terdaftar sebagai peserta workshop ini. Periksa kembali barcode yang dipindai, atau hubungi panitia penyelenggara.</p>
+            <p style="font-size:14.5px;color:#6B6168;margin:0;line-height:1.6;text-wrap:pretty">Kode <b>{{ verifKode }}</b> tidak terdaftar sebagai peserta {{ verifJenis }} ini. Periksa kembali barcode yang dipindai, atau hubungi panitia penyelenggara.</p>
           </sc-if>
           <button onClick="{{ verifBack }}" style="background:#B31F24;color:#FFF7EE;border:none;border-radius:100px;padding:13px 22px;font-size:13.5px;font-weight:700;margin-top:22px" style-hover="background:#8E171C">Ke beranda platform</button>
         </div>
@@ -364,8 +364,8 @@
               </label>
             </div>
             <div style="border-top:1px solid #F0E2D2;padding-top:18px;margin-top:4px">
-              <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:18px;margin:0 0 4px;font-weight:700;color:#3B3238">Rencana workshop</h2>
-              <p style="font-size:13px;color:#7A6F76;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Keterangan di bawah ini yang akan mengisi halaman profil workshop Anda di etalase setelah disetujui.</p>
+              <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:18px;margin:0 0 4px;font-weight:700;color:#3B3238">Rencana kegiatan</h2>
+              <p style="font-size:13px;color:#7A6F76;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Keterangan di bawah ini yang akan mengisi halaman profil kegiatan Anda di etalase setelah disetujui.</p>
               <div style="display:grid;gap:14px">
                 <label style="display:grid;gap:6px">
                   <span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F76">Judul event</span>
@@ -423,7 +423,7 @@
                 </label>
                 <label style="display:grid;gap:6px">
                   <span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F76">Deskripsi lengkap</span>
-                  <textarea value="{{ lbRencana }}" onChange="{{ onLbRencana }}" rows="4" placeholder="Uraikan isi workshop, sasaran peserta, dan cara pelaksanaannya." style="width:100%;box-sizing:border-box;border:1px solid #EAD9C6;border-radius:12px;padding:13px 15px;font-size:14.5px;font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.65;background:#FFF;outline:none;resize:vertical" style-focus="border-color:#B31F24"></textarea>
+                  <textarea value="{{ lbRencana }}" onChange="{{ onLbRencana }}" rows="4" placeholder="Uraikan isi kegiatan, sasaran peserta, dan cara pelaksanaannya." style="width:100%;box-sizing:border-box;border:1px solid #EAD9C6;border-radius:12px;padding:13px 15px;font-size:14.5px;font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.65;background:#FFF;outline:none;resize:vertical" style-focus="border-color:#B31F24"></textarea>
                 </label>
                 <label style="display:grid;gap:6px">
                   <span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6F76">Yang akan dipelajari — satu poin per baris</span>
@@ -812,7 +812,7 @@
           <p style="font-size:13.5px;color:#7A6F66;margin:0 0 14px;line-height:1.55">Masukkan kode peserta yang dibagikan panitia.</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
             <button onClick="{{ backToPickWs }}" style="background:none;border:none;color:#A5121C;font-size:12.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0">Kembali ke beranda</button>
-            <button onClick="{{ keKatalog }}" style="background:none;border:none;color:#3E6B22;font-size:12.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0">Belum punya kode? Pilih workshop</button>
+            <button onClick="{{ keKatalog }}" style="background:none;border:none;color:#3E6B22;font-size:12.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0">Belum punya kode? Pilih event</button>
           </div>
           <div style="display:grid;gap:16px">
             <label style="display:grid;gap:6px">
@@ -901,7 +901,7 @@
         <div style="display:flex;align-items:flex-start;gap:12px;padding:26px 24px 16px">
           <div style="flex:1;min-width:0">
             <sc-if value="{{ pNarrow }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8C8078;font-weight:600">{{ pHalo }}</div></sc-if>
-            <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.015em;line-height:1.2">Aktivitas Workshop</div>
+            <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.015em;line-height:1.2">{{ aktivitasJudul }}</div>
             <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:14px;color:#A5121C;margin-top:4px">{{ pToday }}</div>
             <div style="{{ pModeStyle }}">
               <span aria-hidden="true" style="font-size:16px;flex:none">{{ pModeGlyph }}</span>
@@ -2292,7 +2292,7 @@
                 <thead>
                   <tr style="background:#FAF6F0">
                     <th style="text-align:left;padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Peserta</th>
-                    <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Workshop</th>
+                    <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Event</th>
                     <th style="text-align:right;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Nominal</th>
                     <th style="text-align:left;padding:11px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Status</th>
                     <th style="text-align:left;padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7A6F66">Waktu</th>
@@ -2312,7 +2312,7 @@
               </table>
             </div>
             <sc-if value="{{ noPayments }}" hint-placeholder-val="{{ false }}">
-              <div style="padding:26px;text-align:center;font-size:13.5px;color:#8C8078">Belum ada tagihan. Pembayaran muncul di sini begitu peserta mendaftar ke workshop berbiaya.</div>
+              <div style="padding:26px;text-align:center;font-size:13.5px;color:#8C8078">Belum ada tagihan. Pembayaran muncul di sini begitu peserta mendaftar ke event berbiaya.</div>
             </sc-if>
           </div>
         </sc-if>
@@ -2423,7 +2423,7 @@
             </div>
             <div style="background:#FFF;border:1px solid #F0E8DF;box-shadow:0 18px 36px -30px rgba(120,40,30,.4);border-radius:16px;padding:22px">
               <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Biaya layanan platform</h3>
-              <p style="font-size:13px;color:#7A6F66;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Persentase yang dipotong dari pembayaran peserta sebagai biaya layanan platform. Admin workshop melihat angka ini pada laporan pendapatannya, tetapi tidak dapat mengubahnya.</p>
+              <p style="font-size:13px;color:#7A6F66;margin:0 0 16px;line-height:1.6;text-wrap:pretty">Persentase yang dipotong dari pembayaran peserta sebagai biaya layanan platform. Admin event melihat angka ini pada laporan pendapatannya, tetapi tidak dapat mengubahnya.</p>
               <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
                 <label style="display:grid;gap:5px">
                   <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Persen (%)</span>
@@ -2495,8 +2495,8 @@
               </div>
             </div>
             <div style="background:#FFF;border:1px solid #F0E8DF;box-shadow:0 18px 36px -30px rgba(120,40,30,.4);border-radius:16px;padding:22px">
-              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Akun panitia di seluruh workshop</h3>
-              <p style="font-size:13px;color:#7A6F66;margin:0 0 14px;line-height:1.6">Akun dibuat dari panel masing-masing workshop, tab <b>Akun admin</b>. Super admin memakai nama pengguna <b>{{ superUser }}</b> dengan sandi dari pengaturan server.</p>
+              <h3 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700">Akun panitia di seluruh event</h3>
+              <p style="font-size:13px;color:#7A6F66;margin:0 0 14px;line-height:1.6">Akun dibuat dari panel masing-masing event, tab <b>Akun admin</b>. Super admin memakai nama pengguna <b>{{ superUser }}</b> dengan sandi dari pengaturan server.</p>
               <div style="display:grid;gap:9px">
                 <sc-for list="{{ platAdmins }}" as="a" hint-placeholder-count="2">
                   <div style="display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;background:#FAF6F0;border:1px solid #EDE6DD;border-radius:10px;padding:12px 15px">
@@ -4209,7 +4209,7 @@
                 </div>
                 <div style="display:grid;gap:12px;margin-top:12px">
                   <label style="display:grid;gap:5px">
-                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil workshop</span>
+                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil event</span>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                       <div style="{{ w.flyerPreviewStyle }}"></div>
                       <button onClick="{{ w.pickFlyer }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#2A2320;color:#FFF;border:none;border-radius:11px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#000">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ w.upFlyer }}" style="display:none" /></label>
@@ -4256,7 +4256,7 @@
       <sc-if value="{{ tabCert }}" hint-placeholder-val="{{ false }}">
         <div>
           <div style="margin-bottom:22px">
-            <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:74ch;text-wrap:pretty">Unggah rancangan sertifikat Anda sebagai gambar lanskap (rasio A4, 297×210 mm — misalnya 2480×1754 piksel). Nama peserta, judul workshop, tanggal, dan kode diambil langsung dari sistem, lalu dicetak di atas template itu sebagai PDF.</p>
+            <p style="font-size:13.5px;color:#7A6F66;margin:0;line-height:1.6;max-width:74ch;text-wrap:pretty">Unggah rancangan sertifikat Anda sebagai gambar lanskap (rasio A4, 297×210 mm — misalnya 2480×1754 piksel). Nama peserta, judul event, tanggal, dan kode diambil langsung dari sistem, lalu dicetak di atas template itu sebagai PDF.</p>
           </div>
 
           <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
@@ -4358,7 +4358,7 @@
                 </sc-for>
               </div>
               <sc-if value="{{ certKosong }}" hint-placeholder-val="{{ false }}">
-                <div style="padding:24px;text-align:center;font-size:13px;color:#8C8078">Belum ada peserta pada workshop ini.</div>
+                <div style="padding:24px;text-align:center;font-size:13px;color:#8C8078">Belum ada peserta pada event ini.</div>
               </sc-if>
             </div>
           </div>
@@ -5103,7 +5103,7 @@
                     </sc-if>
                   </div></div></sc-if>
             <sc-if value="{{ evPopIsFlyer }}" hint-placeholder-val="{{ false }}"><label style="display:grid;gap:5px">
-                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil workshop</span>
+                    <span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C534B">Flyer lanskap (16:9) — tampil di profil event</span>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                       <div style="{{ w.flyerPreviewStyle }}"></div>
                       <button onClick="{{ w.pickFlyer }}" title="Pilih gambar yang sudah pernah diunggah" style="background:#2A2320;color:#FFF;border:none;border-radius:11px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#000">Pilih dari pustaka</button><label title="Unggah gambar baru — otomatis masuk pustaka" style="background:#F3EDE5;border:1px solid #E0D8CE;color:#3B342E;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#F6F1EA">Unggah baru<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange="{{ w.upFlyer }}" style="display:none" /></label>
@@ -5638,10 +5638,10 @@ class Component extends DCLogic {
   }
   /* Selalu WIB, apa pun zona waktu perangkat atau server. */
   jamKini() { return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }); }
-  ROLES = { penuh: 'Admin penuh', wsadmin: 'Admin workshop', narasumber: 'Narasumber', pemantau: 'Pemantau' };
+  ROLES = { penuh: 'Admin penuh', wsadmin: 'Admin event', narasumber: 'Narasumber', pemantau: 'Pemantau' };
   ROLE_NOTE = {
-    penuh: 'Seluruh platform: semua workshop, akun admin, biaya layanan, dan pengaturan.',
-    wsadmin: 'Terbatas pada satu workshop: menyusun sesi, materi, kuis, peserta, sertifikat, serta melihat pendapatan workshopnya. Tidak bisa membuka workshop lain maupun mengubah pengaturan platform.',
+    penuh: 'Seluruh platform: semua event, akun admin, biaya layanan, dan pengaturan.',
+    wsadmin: 'Terbatas pada event yang dikelolanya: menyusun sesi, materi, kuis, peserta, sertifikat, serta melihat pendapatan eventnya. Tidak bisa membuka event lain maupun mengubah pengaturan platform.',
     narasumber: 'Hanya sesi yang ditugaskan kepadanya: membuka materi dan menjalankan kuis.',
     pemantau: 'Hanya melihat hasil dan mengunduh rekap.'
   };
@@ -6325,6 +6325,12 @@ class Component extends DCLogic {
   }
   /* Letak nama/keterangan di sertifikat (persen lembar). x = titik jangkar sesuai perataan:
      rata kiri → tepi kiri teks, tengah → titik tengah, rata kanan → tepi kanan. */
+  /* Label data sertifikat mengikuti jenis event: "Workshop", "Seminar", "Diskusi", dst. */
+  certLabel(ws, f) {
+    if (f === 'workshop') return this.jenisOf(ws);
+    if (f === 'sesi') return 'Jumlah Sesi';
+    return this.CERT_LABEL[f] || '';
+  }
   certUkuran(ws) {
     const n = Number(ws.certNameSize), i = Number(ws.certMetaSize);
     return { nama: n >= 10 && n <= 80 ? n : 34, isi: i >= 6 && i <= 30 ? i : 12.5 };
@@ -6379,7 +6385,7 @@ class Component extends DCLogic {
     const rata = ws.certAlign === 'kiri' ? 'left' : ws.certAlign === 'kanan' ? 'right' : 'center';
     const rataFlex = rata === 'left' ? 'flex-start' : rata === 'right' ? 'flex-end' : 'center';
     const blokData = dipilih
-      .map(f => ({ label: this.CERT_LABEL[f] || '', nilai: this.certBaris(ws, p, f) }))
+      .map(f => ({ label: this.certLabel(ws, f), nilai: this.certBaris(ws, p, f) }))
       .filter(x => x.nilai)
       .map(x => '<div class="it"><span class="lb">' + E(x.label) + ':</span><span class="vl">' + E(x.nilai) + '</span></div>')
       .join('');
@@ -6402,7 +6408,7 @@ class Component extends DCLogic {
       const daftarCapaian = capaian.length
         ? '<ul>' + capaian.map(x => '<li>' + E(x) + '</li>').join('') + '</ul>'
         : '<p style="font-size:9pt;color:#7A6F66;line-height:1.55;margin:0">' +
-          E(String(ws.ringkasan || ws.deskripsi || '').trim() || 'Capaian pembelajaran belum dituliskan pada profil workshop.') + '</p>';
+          E(String(ws.ringkasan || ws.deskripsi || '').trim() || 'Capaian pembelajaran belum dituliskan pada profil ' + this.jenisOf(ws).toLowerCase() + '.') + '</p>';
       const c2 = this.capaianPeserta(p);
       const ident = [
         { l: 'Nama Peserta', v: p.name },
@@ -6487,7 +6493,7 @@ class Component extends DCLogic {
       'font-size:7pt;color:#8C8078;letter-spacing:.06em;border-top:.25mm solid #E0D8CE;padding-top:3mm}' +
       '</style></head><body><div class="sheet">' +
       (ws.certTemplate ? '<img class="bg" alt="" src="' + E(/^\//.test(ws.certTemplate) ? location.origin + ws.certTemplate : ws.certTemplate) + '" />' : '') +
-      (ws.certTemplate ? '' : '<div class="hd"><i>Sertifikat</i><b>' + E(ws.title || 'Workshop') + '</b></div>') +
+      (ws.certTemplate ? '' : '<div class="hd"><i>Sertifikat</i><b>' + E(ws.title || this.jenisOf(ws)) + '</b></div>') +
       (() => { const L = this.certLetak(ws, 'nama'); return '<div class="nm" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;' + L.ukuranCss + ';padding:0;transform:translate(' + L.tx + ',-50%)">' + E(p.name) + '</div>'; })() +
       (() => { const L = this.certLetak(ws, 'meta'); return '<div class="mt" style="top:' + L.y + '%;left:' + L.x + '%;right:auto;' + L.ukuranCss + ';padding:0;transform:translate(' + L.tx + ',-50%)">' + blokData + '</div>'; })() +
       '<div class="cd">' + E(String(ws.certPenerbit || '').trim() || (p.code ? 'Kode peserta ' + p.code : '')) + '</div>' +
@@ -8322,7 +8328,9 @@ class Component extends DCLogic {
       : { display: 'none' };
 
     const chip = { display: 'inline-flex', alignItems: 'center', fontSize: '12px', fontWeight: 700, color: '#5C534B', background: '#F1EBE3', border: '1px solid #E0D8CE', borderRadius: '100px', padding: '6px 13px' };
-    v.wsNowLabel = wsAktif ? wsAktif.title : 'Workshop belum dipilih';
+    v.wsNowLabel = wsAktif ? wsAktif.title : 'Event belum dipilih';
+    v.verifJenis = wsAktif ? this.jenisOf(wsAktif).toLowerCase() : 'event';
+    v.aktivitasJudul = 'Aktivitas ' + (wsAktif ? this.jenisOf(wsAktif) : 'Event');
     v.wsNowChipStyle = wsAktif ? chip : { display: 'none' };
     v.wsSwitchStyle = meta.length > 1
       ? { background: 'none', border: 'none', color: '#A5121C', fontSize: '12.5px', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px', cursor: 'pointer', padding: 0 }
@@ -8414,7 +8422,7 @@ class Component extends DCLogic {
       lembaga: a.lembaga, pic: a.pic,
       kontak: [a.email, a.phone, a.kota].filter(Boolean).join(' · ') || '—',
       rencana: a.rencana || a.ringkasan || 'Tidak ada keterangan rencana.',
-      judul: a.judul || 'Judul workshop belum diisi',
+      judul: a.judul || 'Judul kegiatan belum diisi',
       rincian: [
         this.JENIS[a.jenis || 'workshop'] || 'Workshop',
         a.format ? (this.FORMATS[a.format] || a.format) : '',
@@ -8616,7 +8624,7 @@ class Component extends DCLogic {
     v.xenditStyle = { fontSize: '11.5px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '5px 12px', borderRadius: '100px', background: xAktif ? '#EEF5E9' : '#F1EBE3', color: xAktif ? '#2C4D18' : '#8C8078', border: '1px solid ' + (xAktif ? '#CFE2C2' : '#E0D8CE') };
     v.xenditNote = xAktif
       ? (P.xendit.callback ? 'Kunci dan token callback terpasang.' : 'Kunci terpasang, tetapi token callback belum — pembayaran bisa dibuat namun kabar masuknya tidak terverifikasi.')
-      : 'Workshop berbiaya memakai verifikasi manual panitia.';
+      : 'Event berbiaya memakai verifikasi manual panitia.';
     v.callbackUrl = (typeof location !== 'undefined' ? location.origin : '') + '/api/xendit-callback';
     v.midtransCallbackUrl = (typeof location !== 'undefined' ? location.origin : '') + '/api/midtrans-callback';
     const aktifVia = P.payProvider || 'manual';
@@ -8644,7 +8652,7 @@ class Component extends DCLogic {
     v.superUser = P.superUser || 'superadmin';
     const feeDemo = (() => { try { return localStorage.getItem('ws_fee_demo'); } catch (e) { return null; } })();
     v.feeInput = st.feeInput == null ? String(P.fee != null ? P.fee : (st.fee || (!this.api() && feeDemo) || 0)) : st.feeInput;
-    v.feeNote = st.feeMsg || 'Berlaku untuk semua workshop berbiaya.';
+    v.feeNote = st.feeMsg || 'Berlaku untuk semua event berbiaya.';
     v.onFeeInput = e => this.setState({ feeInput: e.target.value, feeMsg: '' });
     v.simpanFee = async () => {
       /* Terima koma maupun titik sebagai pemisah desimal (mis. "2,5"). */
@@ -8897,8 +8905,8 @@ class Component extends DCLogic {
     v.katalogMeta = hasil.length + ' dari ' + terbit.length + ' event' + (jFilter === 'semua' ? '' : ' · ' + this.JENIS[jFilter]) + (fFilter === 'semua' ? '' : ' · format ' + this.FORMATS[fFilter]);
     v.katalogKosong = !hasil.length;
     v.katalogKosongNote = terbit.length
-      ? 'Tidak ada workshop yang cocok dengan pencarian atau filter ini.'
-      : 'Belum ada workshop yang dibuka. Panitia sedang menyiapkannya.';
+      ? 'Tidak ada event yang cocok dengan pencarian atau filter ini.'
+      : 'Belum ada event yang dibuka. Panitia sedang menyiapkannya.';
     v.katalog = hasil.map(m => {
       const w = fmtOf(m);
       return {
@@ -8928,8 +8936,8 @@ class Component extends DCLogic {
       };
     });
     v.pintu = [
-      { icon: '✦', title: 'Peserta', sistem: 'Platform Workshop', desc: 'Jadwal sesi, tautan live, materi, presensi, kuis, dan umpan balik.', label: 'Masuk dengan kode', go: () => { if (terbit[0]) this.pilihWs(terbit[0].id, 'login'); else this.setState({ role: 'login' }); } },
-      { icon: '◆', title: 'Admin Lembaga', sistem: 'Panel Admin Workshop', desc: 'Membuat dan mengelola workshop: profil, biaya, kuota, jadwal, narasumber, peserta, pembayaran.', label: 'Masuk panel admin', go: () => this.setState({ role: 'adminLogin', adminError: '' }) }
+      { icon: '✦', title: 'Peserta', sistem: 'Platform Peserta', desc: 'Jadwal sesi, tautan live, materi, presensi, kuis, dan umpan balik.', label: 'Masuk dengan kode', go: () => { if (terbit[0]) this.pilihWs(terbit[0].id, 'login'); else this.setState({ role: 'login' }); } },
+      { icon: '◆', title: 'Admin Lembaga', sistem: 'Panel Admin Event', desc: 'Membuat dan mengelola event: profil, biaya, kuota, jadwal, narasumber, peserta, pembayaran.', label: 'Masuk panel admin', go: () => this.setState({ role: 'adminLogin', adminError: '' }) }
     ];
 
     /* ── Profil workshop ── */
@@ -8955,8 +8963,8 @@ class Component extends DCLogic {
       v.profilHasKategori = !!v.profilKategori;
       v.profilPartner = m.partnerName || 'Penyelenggara';
       v.profilInisial = this.inisial(m.partnerName || m.title);
-      v.profilRingkasan = this.polos(m.ringkasan) || String(m.subtitle || '').trim() || 'Workshop ini dikelola melalui ruang islami.co — sesi, materi, presensi, dan evaluasi dalam satu tempat.';
-      v.profilDeskripsi = String(m.deskripsi || '').trim() || 'Panitia belum menuliskan uraian lengkap workshop ini. Hubungi penyelenggara untuk keterangan lebih jauh.';
+      v.profilRingkasan = this.polos(m.ringkasan) || String(m.subtitle || '').trim() || this.jenisOf(m) + ' ini dikelola melalui ruang islami.co — sesi, materi, presensi, dan evaluasi dalam satu tempat.';
+      v.profilDeskripsi = String(m.deskripsi || '').trim() || 'Panitia belum menuliskan uraian lengkap ' + this.jenisOf(m).toLowerCase() + ' ini. Hubungi penyelenggara untuk keterangan lebih jauh.';
       v.profilDeskripsiEl = this.richEl(v.profilDeskripsi);
       const capaian = Array.isArray(m.capaian) ? m.capaian.filter(x => String(x || '').trim()) : [];
       v.profilCapaian = capaian;
@@ -9065,7 +9073,7 @@ class Component extends DCLogic {
       if (orang) {
         const c = this.capaianPeserta(orang);
         v.verifNama = orang.name;
-        v.verifSub = 'Tercatat sebagai peserta ' + (wsAktif ? wsAktif.title : 'workshop ini') + '. Data di bawah diambil langsung dari sistem penyelenggara.';
+        v.verifSub = 'Tercatat sebagai peserta ' + (wsAktif ? wsAktif.title : 'event ini') + '. Data di bawah diambil langsung dari sistem penyelenggara.';
         v.verifRows = [
           { label: 'Kode peserta', value: orang.code || '—' },
           { label: 'Event', value: (wsAktif && wsAktif.title) || '—' },
@@ -9150,7 +9158,7 @@ class Component extends DCLogic {
     v.kirimLembaga = async () => {
       if (!String(st.lbNama || '').trim()) return this.setState({ lembagaErr: 'Nama lembaga belum diisi.' });
       if (!String(st.lbPic || '').trim()) return this.setState({ lembagaErr: 'Nama penanggung jawab belum diisi.' });
-      if (!String(st.lbJudul || '').trim()) return this.setState({ lembagaErr: 'Judul workshop belum diisi.' });
+      if (!String(st.lbJudul || '').trim()) return this.setState({ lembagaErr: 'Judul kegiatan belum diisi.' });
       if (!this.api()) return this.setState({ lembagaErr: 'Pengajuan hanya bisa dikirim saat platform tersambung ke server.' });
       const out = await this.apiPost({
         action: 'ajukanLembaga', password: st.lbDariAdmin ? (this._pw || '') : '', user: st.lbDariAdmin ? (this._user || '') : '',
@@ -9209,7 +9217,7 @@ class Component extends DCLogic {
         : (wsAktif.registration === 'mandiri-setuju' || (wsAktif.price > 0))
         ? 'Kode Anda terbit setelah panitia menyetujui pendaftaran.'
         : 'Kode peserta langsung terbit dan bisa dipakai masuk.')
-      : 'Pilih workshop terlebih dahulu.';
+      : 'Pilih event terlebih dahulu.';
     v.regName = st.regName || ''; v.regOrg = st.regOrg || '';
     v.regPhone = st.regPhone || ''; v.regEmail = st.regEmail || '';
     v.regErr = st.regErr || ''; v.regCode = st.regCode || '';
@@ -9315,7 +9323,7 @@ class Component extends DCLogic {
     v.payCheck = () => this.cekBayar(false);
     v.regStatusNote = st.regStatus === 'menunggu'
       ? 'Simpan kode ini. Anda bisa masuk setelah panitia menyetujui pendaftaran.'
-      : 'Simpan kode ini — dipakai setiap kali masuk ke workshop.';
+      : 'Simpan kode ini — dipakai setiap kali masuk ke event.';
     v.onRegName = e => this.setState({ regName: e.target.value, regErr: '' });
     v.onRegOrg = e => this.setState({ regOrg: e.target.value });
     v.onRegPhone = e => this.setState({ regPhone: e.target.value });
@@ -9566,7 +9574,7 @@ class Component extends DCLogic {
     }
     if (st.role === 'admin') {
       v.userLabel = st.adminName || 'Administrator';
-      v.userSub = (this.ROLES[st.adminRole] || 'Panitia workshop') + (st.adminUser ? ' · ' + st.adminUser : '');
+      v.userSub = (this.ROLES[st.adminRole] || 'Panitia event') + (st.adminUser ? ' · ' + st.adminUser : '');
     }
     if (st.role === 'super') {
       v.userLabel = 'Super admin';
@@ -10866,7 +10874,7 @@ class Component extends DCLogic {
         /* Dari daftar ringkas: buka isian event ini saja, atau langsung ke panel sesinya. */
         editFokus: () => { if (m.id !== st.wsId) this.pilihWs(m.id, 'admin'); this.setState(x => ({ tab: 'workshops', wsFokus: m.id, wsOpen: Object.assign({}, x.wsOpen, { [m.id]: true }) })); window.scrollTo({ top: 0 }); },
         kelola: () => { this.pilihWs(m.id, 'admin'); this.setState({ tab: 'control', wsFokus: null }); },
-        manageLabel: dipilih ? 'Sedang dikelola' : 'Kelola workshop ini',
+        manageLabel: dipilih ? 'Sedang dikelola' : 'Kelola event ini',
         manageStyle: { background: dipilih ? '#F6F1EA' : '#3E6B22', border: dipilih ? '1px solid #E0D8CE' : 'none', color: dipilih ? '#8C8078' : '#FFF', borderRadius: '8px', padding: '9px 14px', fontSize: '12.5px', fontWeight: 700, cursor: dipilih ? 'default' : 'pointer' },
         flyerPreviewStyle: m.flyer
           ? { width: '128px', height: '72px', borderRadius: '10px', border: '1px solid #E0D8CE', backgroundImage: 'url("' + m.flyer + '")', backgroundSize: 'cover', backgroundPosition: 'center', flex: 'none' }
@@ -10899,13 +10907,13 @@ class Component extends DCLogic {
           ? { height: '30px', width: '130px', backgroundImage: 'url("' + m.partnerLogo + '")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'left center' }
           : { display: 'none' },
         remove: () => {
-          if (metaAdmin.length < 2) return this.setState({ wsMsg: 'Minimal satu workshop harus ada.' });
-          if (!window.confirm('Hapus workshop “' + m.title + '” beserta seluruh sesi, peserta, dan jawabannya?')) return;
+          if (metaAdmin.length < 2) return this.setState({ wsMsg: 'Minimal satu event harus ada.' });
+          if (!window.confirm('Hapus event “' + m.title + '” beserta seluruh sesi, peserta, dan jawabannya?')) return;
           simpanMeta(list => { const i = list.findIndex(y => y.id === m.id); if (i >= 0) list.splice(i, 1); });
         }
       };
     });
-    v.manageChipLabel = wsAktif ? 'Mengelola: ' + wsAktif.title : 'Workshop belum dipilih';
+    v.manageChipLabel = wsAktif ? 'Mengelola: ' + wsAktif.title : 'Event belum dipilih';
     v.manageChipStyle = !st.narrow ? { display: 'none' } : { display: 'inline-block', maxWidth: '260px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 700, color: '#5C534B', background: '#F1EBE3', border: '1px solid #E0D8CE', borderRadius: '100px', padding: '6px 12px', marginBottom: '6px' };
     v.backToSuper = () => { this.setState({ role: 'super', platTab: 'workshops' }); this.muatPlatform(); };
     v.backToSuperStyle = st.isSuper
@@ -11129,7 +11137,7 @@ class Component extends DCLogic {
       else ubahWs('certJp', val);
     };
     v.certContohRows = certPilih
-      .map(f => ({ label: (this.CERT_LABEL[f] || '') + ':', value: this.certBaris(curWs, contoh, f) }))
+      .map(f => ({ label: this.certLabel(curWs, f) + ':', value: this.certBaris(curWs, contoh, f) }))
       .filter(x => x.value)
       .map(x => Object.assign(x, {
         labelStyle: { fontSize: cq(UK.isi * 0.6), fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A6F66', lineHeight: 1.2 },
@@ -11139,7 +11147,7 @@ class Component extends DCLogic {
       const on = certPilih.indexOf(id) >= 0;
       const isi = this.certBaris(curWs, contoh, id);
       return {
-        label: this.CERT_FIELDS[id],
+        label: String(this.CERT_FIELDS[id] || '').replace(/\bworkshop\b/, this.jenisOf(curWs).toLowerCase()),
         contoh: isi ? isi : 'belum ada datanya',
         style: {
           textAlign: 'left', background: on ? '#A5121C' : '#FFF', color: on ? '#FFF' : '#5C534B',
