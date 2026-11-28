@@ -5475,8 +5475,24 @@ class Component extends DCLogic {
     ses.forEach(s => { out[s.id] = !buka; buka = buka && this.sesiSelesaiOleh(db, s.id, pid); });
     return out;
   }
+  /* Peserta dianggap mengikuti sesi bila tercatat hadir (check in) atau pernah berpartisipasi (kuis, word cloud,
+     umpan balik, formulir). Sesi tanpa check in tidak mencatat kehadiran, jadi terbuka bagi semua peserta. */
+  ikutSesi(db, sid, pid) {
+    if (!pid) return false;
+    const s = (db.sessions || []).find(x => x.id === sid);
+    const R = (db.responses || {})[sid] || {};
+    if ((R.checkins || {})[pid]) return true;
+    if (JSON.stringify(R).indexOf('"' + pid + '"') >= 0) return true;
+    return !!s && !(s.blocks || []).some(b => b.type === 'checkin' && b.enabled);
+  }
   sesiPeserta() {
     const st = this.state, db = st.db || {};
+    /* Sesi yang sudah ditandai selesai: dibuka ulang (bahan bacaan, video, Zoom/rekaman) bagi peserta yang mengikutinya. */
+    if (st.pSesiUlas) {
+      const s = (db.sessions || []).find(x => x.id === st.pSesiUlas);
+      if (s && s.selesai && this.ikutSesi(db, s.id, st.userId))
+        return Object.assign({}, s, { ulas: true, blocks: (s.blocks || []).map(b => Object.assign({}, b, { open: !!b.enabled && ['ppt', 'video', 'zoom'].indexOf(b.type) >= 0 })) });
+    }
     if (db.allOpen && db.bertahap) {
       const kunci = this.kunciBertahap(db, st.userId);
       const terbuka = (db.sessions || []).filter(x => !kunci[x.id]);
@@ -7669,7 +7685,7 @@ class Component extends DCLogic {
     const mandiri = !!db.allOpen && st.role === 'peserta';
     v.profilOrgLogos = []; v.profilOrgNoLogo = true;
     v.hasActiveSession = !!live; v.noActiveSession = !live;
-    v.liveBadge = live ? (live.mode === 'Daring' ? 'Sesi daring berlangsung' : 'Sesi berlangsung') : 'Belum ada sesi aktif';
+    v.liveBadge = live ? (live.ulas ? 'Sesi selesai · dibuka ulang' : live.mode === 'Daring' ? 'Sesi daring berlangsung' : 'Sesi berlangsung') : 'Belum ada sesi aktif';
     v.sessionTitle = live ? live.title : 'ruang islami.co';
     v.sessionDesc = live ? String(live.desc || '') : 'Panitia belum membuka sesi. Silakan tunggu arahan dari fasilitator.';
     v.sessionSubline = live ? [String(live.speaker || '').trim(), String(live.time || '').trim()].filter(Boolean).join(' · ') : '';
@@ -7714,7 +7730,7 @@ class Component extends DCLogic {
     /* Semua sesi selalu tampil di dasbor peserta; yang belum dibuka panitia tampil abu-abu sebagai "terjadwal". */
     const daftarP = (db.sessions || []).map((s0, i) => ({ s0, i }));
     const posP = Math.max(0, daftarP.findIndex(x => live && x.s0.id === live.id));
-    const pindahP = id => this.setState({ pSesi: id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
+    const pindahP = id => this.setState({ pSesi: id, pSesiUlas: null, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' });
     v.pSesiPos = daftarP.length > 1 ? (posP + 1) + ' dari ' + daftarP.length + (st.narrow ? ' · geser kartu' : '') : '';
     const bertahap = mandiri && !!db.bertahap;
     const kunciB = bertahap ? this.kunciBertahap(db, st.userId) : {};
@@ -7870,7 +7886,7 @@ class Component extends DCLogic {
           k, title: s0.title || c.title || 'Sesi', full: c.full,
           sub: [orang || String(s0.speaker || '').trim(), String(s0.time || '').trim()].filter(Boolean).join(' · ') || ('Sesi ' + (i + 1)),
           art: k === 'jadwal' ? String(i + 1) : kunci ? '🔒' : done ? '✓' : on ? '▶' : String(i + 1), num: String(pr.n),
-          cta: k === 'jadwal' ? 'Terjadwal' : kunci ? 'Terkunci' : done ? 'Selesai' : on ? 'Lanjutkan →' : 'Buka →',
+          cta: k === 'jadwal' ? 'Terjadwal' : kunci ? 'Terkunci' : c.ulas ? (on ? 'Sedang dibuka ulang' : 'Selesai · buka ulang →') : done ? 'Selesai' : on ? 'Lanjutkan →' : 'Buka →',
           go: () => { if (kunci || c.tutup) return; if (c.pick) c.pick(); keSesi(); },
           style: { display: 'block', width: '100%', textAlign: 'left', border: 'none', cursor: kunci || c.tutup ? 'default' : 'pointer', fontFamily: 'inherit', background: t[0], color: t[1], borderRadius: '20px', padding: '16px 16px 14px', boxShadow: on ? '0 22px 34px -22px rgba(165,18,28,.9)' : 'none' },
           artStyle: { width: '50px', height: '50px', flex: 'none', borderRadius: '15px', background: t[2], display: 'grid', placeItems: 'center', fontSize: '18px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
@@ -7951,12 +7967,13 @@ class Component extends DCLogic {
       const dibuka = mandiri || idsAktif.indexOf(s0.id) >= 0;
       if (!dibuka) {
         const usai = !!s0.selesai;
+        const bisaUlas = usai && this.ikutSesi(db, s0.id, st.userId);
         return {
-          num: usai ? '✓' : String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi') + (usai ? ' — sudah selesai' : ' — belum dibuka panitia'),
-          jadwal: !usai, usai, tutup: true,
+          num: usai ? '✓' : String(i + 1), title: s0.title || 'Sesi', full: (i + 1) + '. ' + (s0.title || 'Sesi') + (bisaUlas ? ' — selesai · buka ulang bahannya' : usai ? ' — sudah selesai' : ' — belum dibuka panitia'),
+          jadwal: !usai, usai, ulas: bisaUlas, tutup: !bisaUlas,
           numStyle: { flex: 'none', width: '30px', height: '30px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", background: usai ? '#EEF5E9' : 'rgba(255,255,255,.75)', color: usai ? '#2C4D18' : '#9A8E84' },
-          style: { display: 'inline-flex', alignItems: 'center', gap: '10px', minHeight: '58px', width: st.narrow ? '72vw' : '250px', background: usai ? '#2A2320' : '#ECE7E1', border: 'none', color: usai ? '#FFF' : '#8C8078', borderRadius: '16px', padding: '10px 14px 10px 12px', fontSize: '13.5px', fontWeight: 700, cursor: 'default', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start', textAlign: 'left', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
-          pick: () => {}
+          style: { display: 'inline-flex', alignItems: 'center', gap: '10px', minHeight: '58px', width: st.narrow ? '72vw' : '250px', background: usai ? '#2A2320' : '#ECE7E1', border: on ? '2px solid #E0383E' : 'none', color: usai ? '#FFF' : '#8C8078', borderRadius: '16px', padding: '10px 14px 10px 12px', fontSize: '13.5px', fontWeight: 700, cursor: bisaUlas ? 'pointer' : 'default', whiteSpace: 'nowrap', flex: 'none', scrollSnapAlign: 'start', textAlign: 'left', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" },
+          pick: bisaUlas ? () => this.setState({ pSesiUlas: s0.id, panel: null, draft: {}, fbSent: false, formSent: false, formError: '' }) : () => {}
         };
       }
       if (terkunci) return {
@@ -8352,7 +8369,8 @@ class Component extends DCLogic {
     v.sEvents = (st.wsMeta || []).slice(0, 14).map((m, i) => this._evItem(m, pilihSuper && m.id === supSelId,
       () => pilihSuper ? this.setState({ superPick: m.id, supSec: null }) : this.pilihWs(m.id, 'admin'), i));
     v.sEventsTitle = 'Kelola event';
-    v.sNavShow = platTabId !== 'payments';
+    /* Bilah samping: menu penyaring hanya di halaman Event; Pembayaran, Ajuan lembaga, dan Pengaturan platform cukup menampilkan Kelola event. */
+    v.sNavShow = platTabId === 'workshops';
     v.sNavTitle = { workshops: 'Event', payments: 'Pembayaran', lembaga: 'Pengajuan', settings: 'Platform' }[platTabId] || 'Menu';
     Object.defineProperty(v, 'sPrimShow', { enumerable: true, configurable: true, get: () => platTabId === 'workshops' && !!v.addWorkshop });
     v.sPrimLabel = 'Event baru'; v.sPrimGo = () => v.addWorkshop && v.addWorkshop();
